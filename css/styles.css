@@ -20,6 +20,9 @@
   --silver:#8a939e; --silver-hi:#cdd4db; --silver-lo:#5d6771; --silver-bg:#edeff2; --silver-ink:#454e57;
   --bronze:#a8683c; --bronze-hi:#d69a68; --bronze-lo:#7c4a23; --bronze-bg:#f2e4d8; --bronze-ink:#63391a;
 
+  /* фиолет: купюра 500 ₽ (301–500) — не монета, а бумажка */
+  --bill:#6f5f9a; --bill-hi:#9d8fc4; --bill-lo:#4a3e70; --bill-bg:#ece8f4; --bill-ink:#443a66;
+
   --ok:#3d7a3f;
   --stamp-hi:#e0564a;       /* красный для тёмного фона */
   --paper-dim:#b3b1aa;      /* приглушённый текст на чернильном */
@@ -102,6 +105,7 @@ body{
 .chip--gold.is-on{background:var(--gold-bg); border-color:var(--gold)}
 .chip--silver.is-on{background:var(--silver-bg); border-color:var(--silver)}
 .chip--bronze.is-on{background:var(--bronze-bg); border-color:var(--bronze)}
+.chip--bill.is-on{background:var(--bill-bg); border-color:var(--bill)}
 .chip:not(.is-on){opacity:.75}
 
 .pill-select{
@@ -118,6 +122,10 @@ body{
 .coin--gold{background:radial-gradient(circle at 35% 30%, var(--gold-hi), var(--gold))}
 .coin--silver{background:radial-gradient(circle at 35% 30%, var(--silver-hi), var(--silver))}
 .coin--bronze{background:radial-gradient(circle at 35% 30%, var(--bronze-hi), var(--bronze))}
+/* маленькая фиолетовая купюра в чипе */
+.bill-icon{width:22px;height:13px;border-radius:2px;flex:none;
+  background:linear-gradient(105deg, var(--bill-hi), var(--bill) 55%, var(--bill-lo));
+  box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.35)}
 .coin--big{width:44px;height:44px;display:block;margin:0 auto 12px}
 
 /* ============ сцена / карта ============ */
@@ -163,6 +171,7 @@ body{
 .price--100{background:var(--gold-bg); color:var(--gold-ink)}
 .price--200{background:var(--silver-bg); color:var(--silver-ink)}
 .price--300{background:var(--bronze-bg); color:var(--bronze-ink)}
+.price--500{background:var(--bill-bg); color:var(--bill-ink)}
 
 /* штампы свежести */
 .fresh{display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap}
@@ -200,6 +209,13 @@ body{
 .coinpin--100 .coinpin-coin{background:radial-gradient(circle at 35% 28%, var(--gold-hi), var(--gold) 62%, var(--gold-lo))}
 .coinpin--200 .coinpin-coin{background:radial-gradient(circle at 35% 28%, var(--silver-hi), var(--silver) 62%, var(--silver-lo))}
 .coinpin--300 .coinpin-coin{background:radial-gradient(circle at 35% 28%, var(--bronze-hi), var(--bronze) 62%, var(--bronze-lo))}
+/* пин-купюра: 301–500 — уже не монета */
+.coinpin--500 .coinpin-coin{
+  width:46px; height:28px; border-radius:3px;
+  background:linear-gradient(105deg, var(--bill-hi), var(--bill) 55%, var(--bill-lo));
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.3), inset 0 -3px 5px rgba(0,0,0,.2);
+  font-size:14px;
+}
 .coinpin-price{
   font:700 11px/1 var(--font-mono); font-variant-numeric:tabular-nums; color:var(--ink);
   background:var(--paper-raised); border:1px solid var(--ink); border-radius:var(--r-sm);

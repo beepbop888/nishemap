@@ -5,4 +5,7 @@ window.NISHEMAP_CONFIG = {
   YANDEX_API_KEY: "946d02bd-cb64-49d1-b2b8-05bcf5183035",
   CITY_CENTER: [55.751244, 37.618423], // Москва [lat, lon] — порядок API 2.1
   CITY_ZOOM: 12,
+  // Supabase (см. supabase/BACKEND.md): заполнить после создания проекта
+  SUPABASE_URL: "",
+  SUPABASE_ANON_KEY: "",
 };

@@ -10,7 +10,7 @@
   var LS_INBOX = "nishemap.inbox";      // [{item,price,category,venue,address,at}]
 
   var state = {
-    bands: { 100: true, 200: true, 300: true },
+    bands: { 100: true, 200: true, 300: true, 500: true },
     query: "",
     category: "",
     district: "",
@@ -20,7 +20,7 @@
   };
 
   /* ---------- helpers ---------- */
-  function bandOf(price) { return price <= 100 ? 100 : price <= 200 ? 200 : 300; }
+  function bandOf(price) { return price <= 100 ? 100 : price <= 200 ? 200 : price <= 300 ? 300 : 500; }
 
   function confirms() {
     try { return JSON.parse(localStorage.getItem(LS_CONFIRM)) || {}; } catch (e) { return {}; }
@@ -240,8 +240,28 @@
     var f = form.elements;
     var price = parseInt(f.price.value, 10);
     var ok = f.dish.value.trim() && f.venue.value.trim() && f.address.value.trim() &&
-      price >= 1 && price <= 300;
+      price >= 1 && price <= 500;
     if (!ok) { formError.hidden = false; return; }
+    var record = {
+      dish: f.dish.value.trim(),
+      price: price,
+      category: f.category.value,
+      venue: f.venue.value.trim(),
+      address: f.address.value.trim(),
+    };
+    // бэкенд подключён — шлём в общую копилку (вердикт совета: мгновенно, без очереди)
+    if (CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY) {
+      fetch(CFG.SUPABASE_URL + "/rest/v1/submissions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": CFG.SUPABASE_ANON_KEY,
+          "Authorization": "Bearer " + CFG.SUPABASE_ANON_KEY,
+          "Prefer": "return=minimal",
+        },
+        body: JSON.stringify(record),
+      }).catch(function () { /* оффлайн — хотя бы локально сохранится ниже */ });
+    }
     var inbox;
     try { inbox = JSON.parse(localStorage.getItem(LS_INBOX)) || []; } catch (err) { inbox = []; }
     inbox.push({

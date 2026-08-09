@@ -8,9 +8,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=PT+Mono:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=9">
+<link rel="stylesheet" href="css/styles.css?v=10">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23d9a514' stroke='%23f2cf5c' stroke-width='5'/><text x='50' y='68' font-size='52' font-weight='bold' text-anchor='middle' fill='%236e5104' font-family='Menlo,monospace'>₽</text></svg>">
-<script src="config.js?v=9"></script>
+<script src="config.js?v=10"></script>
 </head>
 <body>
 
@@ -18,7 +18,7 @@
   <div class="brand">
     <span class="brand-coin" aria-hidden="true">₽</span>
     <h1 class="brand-name"><span class="brand-nishe">Нище</span>Map</h1>
-    <span class="build" aria-hidden="true">сб.9</span>
+    <span class="build" aria-hidden="true">сб.10</span>
   </div>
   <p class="tagline">Еда до 300 ₽. Для тех, кто считает медяки.</p>
   <div class="filters">
@@ -33,6 +33,9 @@
       </button>
       <button class="chip chip--bronze is-on" data-band="300" aria-pressed="true">
         <span class="coin coin--bronze" aria-hidden="true"></span>201–300 ₽
+      </button>
+      <button class="chip chip--bill is-on" data-band="500" aria-pressed="true" title="Почти не нищий">
+        <span class="bill-icon" aria-hidden="true"></span>301–500 ₽
       </button>
       <select id="f-category" class="pill-select" aria-label="Категория еды">
         <option value="">Вся еда</option>
@@ -102,7 +105,7 @@
   <div class="modal-card">
     <button class="sheet-close" data-close-form aria-label="Закрыть">✕</button>
     <h2 id="form-title" class="form-title">Сдать точку</h2>
-    <p class="form-sub">Нашёл еду до 300 ₽? Район должен знать.</p>
+    <p class="form-sub">Нашёл еду до 500 ₽? Район должен знать.</p>
     <form id="submit-form" novalidate>
       <label class="field">
         <span class="field-label">Что за еда</span>
@@ -111,7 +114,7 @@
       <div class="field-row">
         <label class="field field--price">
           <span class="field-label">Цена, ₽</span>
-          <input name="price" required type="number" min="1" max="300" inputmode="numeric" placeholder="179">
+          <input name="price" required type="number" min="1" max="500" inputmode="numeric" placeholder="179">
         </label>
         <label class="field">
           <span class="field-label">Категория</span>
@@ -134,7 +137,7 @@
         <span class="field-label">Адрес или ссылка на Яндекс Карты</span>
         <input name="address" required maxlength="160" placeholder="ул. Бауманская, 13 или ссылка">
       </label>
-      <p class="form-error" id="form-error" role="alert" hidden>Цена до 300 ₽ и все поля — иначе никак.</p>
+      <p class="form-error" id="form-error" role="alert" hidden>Цена до 500 ₽ и все поля — иначе никак.</p>
       <button type="submit" class="btn btn-primary btn-wide">Отправить в народ</button>
       <p class="form-note">Точка появится после проверки. Не наглей с ценами — район всё видит.</p>
     </form>
@@ -149,7 +152,7 @@
 
 <div id="backdrop" class="backdrop" hidden></div>
 
-<script src="data/seed.js?v=9"></script>
-<script src="js/app.js?v=9"></script>
+<script src="data/seed.js?v=10"></script>
+<script src="js/app.js?v=10"></script>
 </body>
 </html>
