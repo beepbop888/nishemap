@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Council Report — Jaison</title>
+<style>
+  :root{--ink:#1a1f2b;--muted:#5b6472;--line:#e4e7ec;--bg:#ffffff;--soft:#f7f8fa;
+    --exec:#0e7490;--fp:#7c3aed;--exp:#b45309;--out:#0f766e;--con:#b91c1c;--accent:#1d4ed8;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:860px;margin:0 auto;padding:48px 24px 80px}
+  h1{font-size:1.7rem;margin:0 0 4px}
+  h2{font-size:1.15rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+  h3{font-size:1rem;margin:1.4em 0 .4em}
+  .sub{color:var(--muted);margin:0 0 28px}
+  .q{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin:24px 0}
+  .q p{margin:.4em 0}
+  .tag{display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+    color:var(--accent);border:1px solid currentColor;border-radius:99px;padding:1px 10px;margin-bottom:10px}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:.92rem}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:var(--soft);font-weight:600}
+  .yes{color:#15803d;font-weight:600}.no{color:var(--con);font-weight:600}.na{color:var(--muted)}
+  details{border:1px solid var(--line);border-radius:10px;margin:10px 0;background:#fff}
+  summary{cursor:pointer;padding:12px 16px;font-weight:600;list-style:none;display:flex;align-items:center;gap:10px}
+  summary::before{content:"▸";transition:transform .15s;color:var(--muted)}
+  details[open] summary::before{transform:rotate(90deg)}
+  details .body{padding:0 20px 16px;border-top:1px solid var(--line)}
+  .dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+  .verdict{border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:8px 24px 18px;margin:16px 0}
+  .verdict h3{color:var(--accent)}
+  .first{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 20px;margin:18px 0}
+  ul{padding-left:1.3em}
+  li{margin:.35em 0}
+  footer{margin-top:56px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line);padding-top:16px}
+  em{color:inherit}
+  @media(max-width:600px){.wrap{padding:28px 14px 60px}.hidecol{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<span class="tag">LLM Council · 5 advisors · 5 peer reviews · chairman synthesis</span>
+<h1>Jaison — Council Report</h1>
+<p class="sub">Cheap-eats map for Moscow &amp; St. Petersburg · counciled 2026-08-07 23:23</p>
+
+<div class="q">
+<strong>The question.</strong>
+<p><strong>Decision 1 — bootstrap data strategy:</strong> (a) scraper-led on Yandex Eda + venue websites · (b) seed-led: hand-seed 150–300 items/city + crowdsourcing from day 1 (Geojimap's model) · (c) hybrid: quiet scraper bootstrap, then migrate and retire.</p>
+<p><strong>Decision 2 — go-to-market:</strong> "Jaison" vs Russian beggar-humor naming; what makes a broke student submit a price; Telegram/VK launch sequencing.</p>
+<p style="color:var(--muted)">Constraints: solo dev, 0₽ budget, no free Yandex menu-price API, scraping = RU Civil Code Art. 1334 + ToS exposure, cheapest venues absent from Eda and the web.</p>
+</div>
+
+<h2>Advisor positions at a glance</h2>
+<table>
+<tr><th>Advisor</th><th>Decision 1</th><th>Rename before launch?</th><th class="hidecol">Reviewers' "strongest" votes</th></tr>
+<tr><td>🔴 The Contrarian</td><td class="yes">(b) — (a)/(c) are "the same fatal wound"</td><td class="na">not addressed</td><td class="hidecol"><strong>4 / 5</strong></td></tr>
+<tr><td>🟠 The Expansionist</td><td class="yes">(b) — user-owned data is the moat</td><td class="yes">Yes</td><td class="hidecol">1 / 5</td></tr>
+<tr><td>🟣 The First Principles Thinker</td><td class="yes">(b) — framing is the product</td><td class="yes">Yes (highest-leverage lever)</td><td class="hidecol">0</td></tr>
+<tr><td>🟢 The Outsider</td><td class="yes">(b) — scraper can't reach the venues that matter</td><td class="yes">Yes ("nothing to screenshot")</td><td class="hidecol">0</td></tr>
+<tr><td>🔵 The Executor</td><td class="yes">(b) "full stop" — location question gates everything</td><td class="na">not addressed</td><td class="hidecol">0</td></tr>
+</table>
+<p><strong>5 / 5 for seed-led.</strong> Zero advisors defended the scraper or the hybrid. Naming: 3 of the 3 who addressed it said rename.</p>
+
+<h2>Chairman's verdict</h2>
+<div class="verdict">
+<h3>Where the council agrees</h3>
+<ul>
+<li><strong>Seed-led (b) wins, unanimously.</strong> A rare five-for-five convergence — treat as settled. The Outsider's kill shot: the scraper can't even reach столовые and shawarma stands (no websites, not on Eda) — the risky option doesn't buy coverage.</li>
+<li><strong>"Jaison" should not be the public name.</strong> The beggar-humor framing was Geojimap's growth engine, not decoration. "Jaison" sounds like a fintech app; it gives a student nothing to screenshot into a group chat.</li>
+<li><strong>The founder-location unknown is load-bearing.</strong> If the founder isn't in Moscow/SPB, seeding degrades into listicle-scraping — option (a)'s legal exposure with worse data.</li>
+</ul>
+<h3>Where the council clashes</h3>
+<ul>
+<li><strong>Framing-first (First Principles) vs execution-first (Executor).</strong> Both are right about different failure modes: a perfect map with a dead name won't spread; a perfect name with 40 pins won't retain. Resolution: sequencing, not choosing.</li>
+<li><strong>Does pre-seeding kill communal ownership?</strong> Majority: no — Geojimap itself launched with ~2,500 hand-vetted venues. Surviving nuance: present the seed as "first 200 entries — now it's yours," not a finished catalog.</li>
+<li><strong>Dataset-as-moat:</strong> a genuine reason to prefer (b) — user-originated data is unambiguously yours and travels city to city — but a reason, not a roadmap. Keep the argument, discard the pitch deck.</li>
+</ul>
+<h3>Blind spots caught in peer review</h3>
+<ul>
+<li><strong>The hybrid's hidden branch:</strong> "justify the build until crowdsourcing works" = launching on the leg you intend to amputate. If crowdsourcing stalls at month 2, the scraper quietly becomes permanent — decided under pressure, not now.</li>
+<li><strong>No kill-switch plan</strong> for the day Yandex legal or a venue owner notices. Needs to be written before launch.</li>
+<li><strong>Fraud/moderation — missed by all five advisors:</strong> with no accounts, nothing stops planted prices, griefing, or joke submissions in launch week.</li>
+<li><strong>Contribution decay:</strong> the reconfirm badge assumes contributors return; nobody priced the post-virality drought.</li>
+<li><strong>Remote seeding is solvable</strong> (campus partnerships, Telegram bounties), not a binary gate.</li>
+</ul>
+<h3>The recommendation</h3>
+<p><strong>Decision 1: seed-led (b). No scraper, ever — not even "temporarily."</strong> Legally radioactive exactly at success, blind to the cheapest venues, an open-ended maintenance job, and it poisons the one defensible asset: a user-originated dataset that is unambiguously yours. Seed Moscow only (150–300 items); prove stranger-submissions before touching SPB.</p>
+<p><strong>Decision 2: keep "Jaison" as the project name, ship a Russian self-deprecating product name</strong> (нищемап / карта нищеброда register — validate the exact word with real Moscow students). The contribution loop <em>is</em> the framing: submitting a price should feel like a punchline. Sequence: seeded web soft-launch → Telegram Mini App + one publicity push into student-meme channels (Telegram before VK) → VK/RuStore after the loop is proven. Don't spend the one publicity shot on an empty map.</p>
+<p><strong>Pre-launch artifacts required:</strong> (1) a one-page takedown-response plan; (2) a no-accounts moderation scheme — new prices start "unconfirmed" until N independent one-tap confirms, IP/device rate-limiting, founder hand-vets the first weeks. That's the honest cost of (b): you are the vetting layer until the crowd is.</p>
+</div>
+
+<div class="first">
+<strong>The one thing to do first:</strong> answer the location question today — it selects the entire seeding plan. In Moscow? Walk into 10 venues this week and hand-record 50 items (seeds the map, validates the primary-item rule, defines the submission UI). Not in Moscow? Don't touch code — recruit your first local seeder with a bounty in one student Telegram chat (co-credit for the first 50 verified prices).
+</div>
+
+<h2>Full advisor responses</h2>
+
+<details><summary><span class="dot" style="background:var(--con)"></span>The Contrarian</summary><div class="body">
+<p>Decision 1 is a false choice dressed up as three options — (a) and (c) both open the same fatal wound: the moment this scraper touches Yandex Eda or restaurant sites and republishes prices on a map, you're in Art. 1334 territory, and the constraints doc itself says enforcement is invisible until virality — which is exactly when the founder has the least leverage, no legal budget, and a product whose entire value proposition (the map, live) becomes the thing that gets pulled. "Justify the build until crowdsourcing works" is the tell: it's a plan to launch on the leg you intend to amputate. If crowdsourcing doesn't actually work by month 2, does the scraper quietly become permanent? Nobody answers that question in the plan, which means the answer will be decided under pressure, not now.</p>
+<p>(b) is the only option that doesn't require a legal bet, but the plan hand-waves its own bottleneck: "founder hand-seeds 150-300 items per city... on-foot checks" — while the founder's physical presence in Moscow/SPB is listed as an unknown. If they're not there, seeding degrades to listicle-scraping (same legal exposure, worse data) or seeding never reaches critical mass and the map launches empty, which kills the cold-start loop before it starts — nobody submits a price to a map with 40 pins.</p>
+<p>Missing entirely: what happens when the map is good enough to notice and a venue owner or Yandex legal notices it. There's no kill-switch plan, no "what do we do when we get a takedown request" contingency. A solo dev with zero legal budget needs that written down before launch, not discovered via a cease-and-desist.</p>
+</div></details>
+
+<details><summary><span class="dot" style="background:var(--fp)"></span>The First Principles Thinker</summary><div class="body">
+<p>You're solving the wrong layer of the problem. Everyone in this brief is treating "Jaison" as a data-sourcing and legal-risk problem. It isn't. Geojimap's actual innovation wasn't the scraper or the taxonomy — it was that it converted a shared cultural feeling ("나도 거지야," we're all broke together) into 2,500 acts of unpaid labor within weeks. The database was a byproduct of a social movement, not the other way around.</p>
+<p><strong>Assumption 1:</strong> "We need a data strategy first, then virality follows." Backwards. Geojimap launched with almost nothing and the crowd built the database in real time because the <em>framing itself</em> was the product. If you seed 150-300 items quietly before opening submissions, you've already answered the question "is this mine or ours?" — and the answer is "mine," which kills the exact mechanism you're trying to copy.</p>
+<p><strong>Assumption 2:</strong> "Jaison" is a founder-branding decision. It's actually the single highest-leverage lever in this entire brief, and it's being treated as an afterthought under Decision 2. A generically-named map with tier pricing is a spreadsheet. A self-deprecating, shame-inverting cultural artifact is a movement. You cannot A/B test your way into that — it has to be right at launch because there's no second first-impression in virality.</p>
+<p><strong>Assumption 3:</strong> The legal/scraping question is decidable independent of the naming question. It isn't. If the product is community-owned from day one (seed-led, decision 1b), the Art. 1334 risk mostly evaporates <em>and</em> the crowd-labor mechanism activates simultaneously. Scraper-led (1a) solves a problem you don't need solved yet while sabotaging the actual growth engine.</p>
+<p>Real question: not "how do we get data safely" but "what shameful, funny, true thing about being broke in Moscow/SPB in 2026 does this app let people say out loud together?" Answer that first. Everything else — including the scraper debate — resolves itself.</p>
+</div></details>
+
+<details><summary><span class="dot" style="background:var(--exp)"></span>The Expansionist</summary><div class="body">
+<p>Pick (b), seed-led — but not because it's the safe choice. It's the choice that lets you scale past what everyone's imagining.</p>
+<p>Here's the upside nobody in the framing is pricing in: the scraper strategy caps you at "Yandex data, slightly reorganized." The seed-led crowdsourcing loop caps you at nothing — Geojimap didn't stay a map, it became infrastructure for a culture of communal price-transparency, and it hit 1.3M visitors <em>because the crowd made it their own</em>. A scraper produces a product. A contribution loop produces a movement, and movements compound.</p>
+<p>Think about what "no accounts, item-level, primary-item-rule" data actually is once you have a few thousand vetted entries: the only structured, granular, freshness-tagged cheap-food dataset in Russia that isn't locked inside Yandex's paid API. That's a licensable dataset, an API other apps would pay for, a "cheapest lunch near me" widget for student-life Telegram bots, even a signal source for inflation-tracking journalists. None of that exists if the underlying asset is "scraped Yandex listings with legal asterisks on it." It exists only if the data is originated by users and therefore unambiguously yours.</p>
+<p>And don't undersell the two-city constraint — Moscow/SPB is the beachhead, not the ceiling. A seed-led loop is the only version of this that's a repeatable playbook: drop the same mechanic into Kazan, Novosibirsk, Yekaterinburg, or frankly Minsk and Almaty, with zero incremental legal risk each time. The scraper version doesn't travel — every new city is a new legal roll of the dice. The seed version is a franchise.</p>
+<p>Also: don't let "Jaison" be the name that ships. The self-deprecating beggar-humor framing IS the growth engine, not decoration — it's what makes a student screenshot it to a group chat unprompted. Rename before launch, or you're leaving the viral hook Geojimap already proved on the table.</p>
+</div></details>
+
+<details><summary><span class="dot" style="background:var(--out)"></span>The Outsider</summary><div class="body">
+<p>I have no idea what a Geojimap is and I've never been to Moscow, so let me just tell you what actually confused me reading this.</p>
+<p>You buried the naming question at the bottom of GTM, but I think it's upstream of everything. "Jaison" tells me nothing. It sounds like a fintech app or a guy's name — it does not sound like "here's where broke people eat." The entire Korean thing worked, per your own brief, because the self-deprecating "beggar map" framing was <em>load-bearing to virality</em> — it gave people a funny, shareable, identity-affirming reason to open it and post about it. You're proposing to throw that mechanism away and keep the founder's name instead. That's not a neutral choice, that's cutting the engine out of the car and hoping the chassis still drives. If the humor-framing is what makes a stranger screenshot it into a group chat, "Jaison" gives them nothing to screenshot with. Test the RU-culture name FIRST, before writing a line of code, because it changes what you're building the UI's voice around (copy, badge language, share cards).</p>
+<p>Second confusion: you've built an elaborate legal defense for scraping (Decision 1) but the actual product bottleneck, by your own admission, is that the cheapest venues have no websites and aren't on delivery apps. So the scraper — the risky option — can't even reach the venues that matter most. That's not really a three-way decision, that's (b) with extra steps that expose you to Art. 1334 for no coverage gain.</p>
+<p>Third: nobody outside this document knows what a "primary item rule" is, and neither will your users. Don't let that logic leak into the UI.</p>
+</div></details>
+
+<details><summary><span class="dot" style="background:var(--exec)"></span>The Executor</summary><div class="body">
+<p>Decision 1: (b), full stop. Don't even entertain the scraper.</p>
+<p>Here's Monday morning under (a) or (c): you write a scraper against Yandex Eda and venue sites, which means you're now maintaining a scraper — handling anti-bot measures, site structure changes, rate limiting — for data you're not even legally allowed to store per Art. 1334 and the ToS you already flagged. You've turned a solo dev's spare time into a part-time job fighting Yandex's infrastructure, in the exact risk zone you identified as "invisible while small, dangerous exactly when viral." The worst possible failure mode is your app taking off and then getting nuked for the data practice that got you there. That's not a bootstrap strategy, that's a time bomb with a fuse tied to your own success.</p>
+<p>(b) has an actual first step you can do today: pick 5 listicles, open Yandex Maps, walk into 10 venues near you this week, write down 150 items with prices. That's a task with an end state, not an open-ended maintenance burden. It also forces you to build the submission/verification UI on day 1 instead of bolting it on later — which is the actual product, not the scraper.</p>
+<p>One gate before anything else: the "unknown — is founder physically in Moscow/SPB" question. If the answer is no, decision 1 doesn't matter because there's no seeding happening at all — you can't hand-verify a shawarma stand's price from another country. Answer that question before you write a single line of code. If yes: go seed Moscow first, one city, prove the loop works with real submissions before touching SPB.</p>
+</div></details>
+
+<h2>Peer review highlights</h2>
+<details><summary>What the anonymous cross-review found</summary><div class="body">
+<ul>
+<li><strong>Strongest response:</strong> The Contrarian took 4 of 5 votes — uniquely, it treated the decision as a decision <em>under uncertainty</em> (the hybrid's undefined exit ramp; the missing kill-switch). The Expansionist took the remaining vote for being the only advisor who reasoned past the two-city beachhead.</li>
+<li><strong>Biggest blind spots:</strong> The Expansionist (3 votes) — licensable-dataset vision named "speculative scope creep" that never priced the downside; The First Principles Thinker (2 votes) — "substitutes philosophy for a first step."</li>
+<li><strong>Missed by ALL five advisors, caught by reviewers:</strong> submission fraud &amp; moderation without accounts (named independently by 3 reviewers); the primary-item rule as a moderation-workload problem, not just UI language; contribution decay after the virality spike; remote-seeding alternatives (bounties, campus partners); and the fact that nobody weighed option (c) on its own merits — every advisor collapsed it into (a).</li>
+</ul>
+</div></details>
+
+<footer>
+LLM Council session · 2026-08-07 23:23 · Counciled: Jaison bootstrap data strategy + go-to-market · 5 advisors → anonymized peer review → chairman synthesis · Full transcript: <code>council-transcript-2026-08-07-2323.md</code>
+</footer>
+</div>
+</body>
+</html>

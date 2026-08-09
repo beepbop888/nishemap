@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Council Report #2 — НищеMap improvements</title>
+<style>
+  :root{--ink:#1a1f2b;--muted:#5b6472;--line:#e4e7ec;--bg:#ffffff;--soft:#f7f8fa;--accent:#1d4ed8;--con:#b91c1c;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:860px;margin:0 auto;padding:48px 24px 80px}
+  h1{font-size:1.7rem;margin:0 0 4px}
+  h2{font-size:1.15rem;margin:2.2em 0 .6em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+  h3{font-size:1rem;margin:1.4em 0 .4em}
+  .sub{color:var(--muted);margin:0 0 28px}
+  .q{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin:24px 0}
+  .tag{display:inline-block;font-size:.72rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);border:1px solid currentColor;border-radius:99px;padding:1px 10px;margin-bottom:10px}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:.92rem}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:var(--soft);font-weight:600}
+  details{border:1px solid var(--line);border-radius:10px;margin:10px 0;background:#fff}
+  summary{cursor:pointer;padding:12px 16px;font-weight:600;list-style:none}
+  summary::before{content:"▸ ";color:var(--muted)}
+  details[open] summary::before{content:"▾ "}
+  details .body{padding:0 20px 16px;border-top:1px solid var(--line)}
+  .verdict{border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:8px 24px 18px;margin:16px 0}
+  .verdict h3{color:var(--accent)}
+  .first{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 20px;margin:18px 0}
+  ul{padding-left:1.3em} li{margin:.35em 0}
+  footer{margin-top:56px;color:var(--muted);font-size:.85rem;border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<span class="tag">LLM Council #2 · 5 advisors · 5 peer reviews · chairman</span>
+<h1>НищеMap — Improvement Council</h1>
+<p class="sub">Counciled 2026-08-10 00:23 · goal: viral crowd-fed cheap-eats map for Moscow</p>
+
+<div class="q">
+<strong>Questions:</strong> (1) add a 301–500₽ fourth tier? (2) how to mass-populate the map (founder walk / OSM gray pins / chain locators / TG bounties)? (3) highest-leverage website improvement.
+<br><span style="color:var(--muted)">Context: web v1 live, 36 venues / 86 items / 16 districts, press research exhausted, NO backend — submissions die in localStorage.</span>
+</div>
+
+<h2>Verdict at a glance</h2>
+<table>
+<tr><th>Question</th><th>Council answer</th><th>Vote</th></tr>
+<tr><td>301–500₽ tier</td><td><strong>YES — as a punchline, not a cap raise.</strong> Separate dull-copper coin, escalated beggar-humor label («почти нищий»); gold/silver/bronze stay the sacred ≤300₽ core</td><td>4/5 yes; Contrarian's dissent resolved via branding</td></tr>
+<tr><td>Mass-populate</td><td><strong>Sequence, don't choose:</strong> backend → founder walk (15–20 verified anchor entries) → OSM gray "add the price" pins → TG bounties at launch → chains last</td><td>Clash resolved by ordering</td></tr>
+<tr><td>#1 improvement</td><td><strong>The thinnest live backend, today.</strong> Supabase free tier, one table; submission → visible public pin in minutes, NO approval queue; guards: rate limit + price bounds + flag button</td><td><strong>5/5 — unanimous</strong></td></tr>
+</table>
+
+<h2>Chairman's verdict</h2>
+<div class="verdict">
+<h3>Where the council agrees</h3>
+<ul>
+<li><strong>The backend is the product, and it doesn't exist.</strong> All five advisors converged: submissions dying in localStorage make the crowd-fed strategy fiction. Fix sized at under a day. Launching in TG meme channels before it exists burns the one viral spike you get.</li>
+<li><strong>Tier 4: yes, with a joke.</strong> Excluding шаурма makes the map "wrong about its own subject" (Outsider). The new tier must be MORE self-deprecating, not a quiet loosening.</li>
+<li><strong>OSM gray pins are bait, not inventory</strong> — a call-to-action baked into the map, never content to brag about.</li>
+</ul>
+<h3>Where the council clashes</h3>
+<ul>
+<li><strong>Gray pins: alive or abandoned?</strong> Executor/Expansionist vs Outsider/Contrarian. Resolution: gray pins are poison <em>before</em> the submission loop works, bait <em>after</em>.</li>
+<li><strong>Chains:</strong> fastest coverage (Expansionist) vs off-story wallpaper (Executor). Both right — phase-3 move.</li>
+<li><strong>Approval queue vs instant visibility:</strong> the deepest split. First Principles' reframe won the reviews: Geojimap's engine is the <em>confession act</em> — submit → your pin is publicly visible within minutes. An admin queue is where confessions go to die.</li>
+</ul>
+<h3>Blind spots caught in review</h3>
+<ul>
+<li><strong>Moderation under viral load — missed by ALL five advisors, flagged by all five reviewers.</strong> Open write path + zero moderation = trust dies from garbage data instead of vanished data. Cheap tripwires: ip-hash rate limiting, price sanity bounds, one-tap flagging into a daily-eyeballed sheet.</li>
+<li><strong>Founder bandwidth</strong> is the actual constraint — nobody budgeted one person's hours across backend/walk/moderation/launch.</li>
+<li>16/125 district coverage illusion; Supabase free-tier limits under the exact spike being optimized for; RU legal exposure of public price claims — 30 minutes of thought each before launch week.</li>
+</ul>
+<h3>The recommendation</h3>
+<p><strong>1.</strong> Ship tier 4 as a separated dull-copper coin with escalated humor labeling — one config constant.</p>
+<p><strong>2.</strong> Population order: backend → founder walk → OSM import → TG bounties → chains.</p>
+<p><strong>3.</strong> Build the thinnest live backend with instant public pins + three cheap guards. Everything else is furniture.</p>
+</div>
+
+<div class="first">
+<strong>The one thing to do first:</strong> today — Supabase project, one <code>submissions</code> table, wire the existing form to POST, render rows as pins. By tonight a stranger's submission should become a pin another stranger can see. Until that round trip works, don't touch tiers, OSM, or publicity.
+</div>
+
+<h2>Full advisor responses & peer reviews</h2>
+<details><summary>See the full transcript</summary><div class="body">
+<p>The complete advisor responses (Outsider, Executor, Contrarian, Expansionist, First Principles Thinker) and all five anonymized peer reviews are in <code>council-transcript-2026-08-10-0023.md</code> alongside this report.</p>
+</div></details>
+
+<footer>LLM Council session #2 · 2026-08-10 00:23 · Full transcript: <code>council-transcript-2026-08-10-0023.md</code> · Prior session: <code>council-report-2026-08-07-2323.html</code></footer>
+</div>
+</body>
+</html>

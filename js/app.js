@@ -1,0 +1,370 @@
+/* НищеMap v1 — карта еды до 300 ₽ */
+(function () {
+  "use strict";
+
+  var CFG = window.NISHEMAP_CONFIG || {};
+  var SEED = window.NISHEMAP_SEED || { venues: [] };
+  var STALE_DAYS = 14;
+
+  var LS_CONFIRM = "nishemap.confirms"; // {itemId: "YYYY-MM-DD"}
+  var LS_INBOX = "nishemap.inbox";      // [{item,price,category,venue,address,at}]
+
+  var state = {
+    bands: { 100: true, 200: true, 300: true },
+    query: "",
+    category: "",
+    district: "",
+    map: null,
+    markers: [],
+    activeVenue: null,
+  };
+
+  /* ---------- helpers ---------- */
+  function bandOf(price) { return price <= 100 ? 100 : price <= 200 ? 200 : 300; }
+
+  function confirms() {
+    try { return JSON.parse(localStorage.getItem(LS_CONFIRM)) || {}; } catch (e) { return {}; }
+  }
+  function confirmedAt(it) { return confirms()[it.id] || it.confirmedAt; }
+
+  function daysAgo(iso) {
+    var ms = Date.now() - new Date(iso + "T12:00:00").getTime();
+    return Math.max(0, Math.round(ms / 86400000));
+  }
+  function ruDays(n) {
+    var m10 = n % 10, m100 = n % 100;
+    if (m10 === 1 && m100 !== 11) return n + " день";
+    if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return n + " дня";
+    return n + " дней";
+  }
+  function freshBadge(it) {
+    var ca = confirmedAt(it);
+    if (!ca) return { text: "цена из подборки · не проверена", cls: "is-stale" };
+    var d = daysAgo(ca);
+    var stale = d > STALE_DAYS;
+    var text = d === 0 ? "цена жива · проверено сегодня"
+      : (stale ? "цена могла протухнуть · " : "цена жива · ") + ruDays(d) + " назад";
+    return { text: text, cls: stale ? "is-stale" : "is-fresh" };
+  }
+
+  function venueItems(v) {
+    var q = state.query.trim().toLowerCase();
+    return v.items.filter(function (it) {
+      if (!state.bands[bandOf(it.price)]) return false;
+      if (state.category && it.category !== state.category) return false;
+      if (q && it.item.toLowerCase().indexOf(q) === -1 &&
+          v.name.toLowerCase().indexOf(q) === -1) return false;
+      return true;
+    });
+  }
+  function visibleVenues() {
+    return SEED.venues.filter(function (v) {
+      if (state.district && v.district !== state.district) return false;
+      return venueItems(v).length > 0;
+    });
+  }
+
+  function el(tag, cls, html) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (html !== undefined) n.innerHTML = html;
+    return n;
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  /* ---------- band chips ---------- */
+  document.querySelectorAll(".chip[data-band]").forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      var b = chip.dataset.band;
+      state.bands[b] = !state.bands[b];
+      chip.classList.toggle("is-on", state.bands[b]);
+      chip.setAttribute("aria-pressed", String(state.bands[b]));
+      render();
+    });
+  });
+
+  /* ---------- search / category / district filters ---------- */
+  var qInput = document.getElementById("q");
+  var catSel = document.getElementById("f-category");
+  var distSel = document.getElementById("f-district");
+
+  qInput.addEventListener("input", function () {
+    state.query = qInput.value;
+    render();
+  });
+  catSel.addEventListener("change", function () {
+    state.category = catSel.value;
+    catSel.classList.toggle("is-active", !!catSel.value);
+    render();
+  });
+  distSel.addEventListener("change", function () {
+    state.district = distSel.value;
+    distSel.classList.toggle("is-active", !!distSel.value);
+    render();
+  });
+
+  (function populateDistricts() {
+    var seen = {};
+    SEED.venues.forEach(function (v) {
+      if (v.district && !seen[v.district]) {
+        seen[v.district] = true;
+        var o = document.createElement("option");
+        o.value = v.district;
+        o.textContent = v.district;
+        distSel.appendChild(o);
+      }
+    });
+  })();
+
+  /* ---------- list mode (no API key fallback) ---------- */
+  var listEl = document.getElementById("list");
+  var emptyEl = document.getElementById("empty");
+  var fallbackEl = document.getElementById("map-fallback");
+
+  function renderList() {
+    listEl.innerHTML = "";
+    var rows = [];
+    visibleVenues().forEach(function (v) {
+      venueItems(v).forEach(function (it) { rows.push({ v: v, it: it }); });
+    });
+    rows.sort(function (a, b) { return a.it.price - b.it.price; }); // дешёвое сверху
+    rows.forEach(function (row) {
+      var v = row.v, it = row.it;
+      (function () {
+        var b = bandOf(it.price);
+        var fb = freshBadge(it);
+        var li = el("li", "card");
+        li.tabIndex = 0;
+        li.setAttribute("role", "button");
+        li.innerHTML =
+          '<div class="card-top"><span class="card-item">' + esc(it.item) + "</span>" +
+          '<span class="price price--' + b + '">' + it.price + ' ₽</span></div>' +
+          '<div class="card-venue">' + esc(v.name) + " · " + esc(v.type) +
+          (v.district ? " · " + esc(v.district) : "") + " · " + esc(v.address) + "</div>" +
+          '<div class="fresh"><span class="badge ' + fb.cls + '">' + fb.text + "</span>" +
+          '<button class="reconfirm" data-item="' + it.id + '">Ещё по этой цене?</button></div>';
+        li.addEventListener("click", function (e) {
+          if (e.target.closest(".reconfirm")) return;
+          openSheet(v);
+        });
+        li.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openSheet(v); }
+        });
+        listEl.appendChild(li);
+      })();
+    });
+  }
+
+  /* one-tap reconfirm (event delegation: list + sheet) */
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest(".reconfirm");
+    if (!btn || btn.disabled) return;
+    var id = btn.dataset.item;
+    var c = confirms();
+    c[id] = new Date().toISOString().slice(0, 10);
+    localStorage.setItem(LS_CONFIRM, JSON.stringify(c));
+    btn.disabled = true;
+    btn.textContent = "Спасибо, зафиксировали";
+    var badge = btn.parentElement.querySelector(".badge");
+    if (badge) { badge.textContent = "цена жива · проверено сегодня"; badge.className = "badge is-fresh"; }
+  });
+
+  /* ---------- bottom sheet ---------- */
+  var sheet = document.getElementById("sheet");
+  var backdrop = document.getElementById("backdrop");
+
+  function openSheet(v) {
+    state.activeVenue = v;
+    document.getElementById("sheet-venue").textContent = v.name;
+    document.getElementById("sheet-type").textContent = v.type + (v.district ? " · " + v.district : "");
+    document.getElementById("sheet-address").textContent = v.address;
+    var link = document.getElementById("sheet-yandex");
+    link.href = v.yandexUrl || "https://yandex.ru/maps/?text=" + encodeURIComponent(v.name + " " + v.address);
+
+    var ul = document.getElementById("sheet-items");
+    ul.innerHTML = "";
+    v.items.forEach(function (it) {
+      var b = bandOf(it.price);
+      var fb = freshBadge(it);
+      var li = el("li", "sheet-item");
+      li.innerHTML =
+        '<div class="sheet-item-top"><span class="card-item">' + esc(it.item) + "</span>" +
+        '<span class="price price--' + b + '">' + it.price + " ₽</span></div>" +
+        '<div class="fresh"><span class="badge ' + fb.cls + '">' + fb.text + "</span>" +
+        '<button class="reconfirm" data-item="' + it.id + '">Ещё по этой цене?</button></div>';
+      ul.appendChild(li);
+    });
+
+    sheet.hidden = false;
+    backdrop.hidden = false;
+    sheet.querySelector(".sheet-close").focus();
+  }
+  function closeSheet() {
+    sheet.hidden = true;
+    if (formModal.hidden) backdrop.hidden = true;
+    state.activeVenue = null;
+  }
+  sheet.querySelector("[data-close-sheet]").addEventListener("click", closeSheet);
+
+  /* ---------- submission form ---------- */
+  var formModal = document.getElementById("form-modal");
+  var form = document.getElementById("submit-form");
+  var formDone = document.getElementById("form-done");
+  var formError = document.getElementById("form-error");
+
+  document.querySelectorAll("[data-open-form]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      form.hidden = false;
+      formDone.hidden = true;
+      formError.hidden = true;
+      form.reset();
+      formModal.hidden = false;
+      backdrop.hidden = false;
+      form.elements.dish.focus();
+    });
+  });
+  function closeForm() {
+    formModal.hidden = true;
+    if (sheet.hidden) backdrop.hidden = true;
+  }
+  formModal.querySelectorAll("[data-close-form]").forEach(function (b) {
+    b.addEventListener("click", closeForm);
+  });
+
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var f = form.elements;
+    var price = parseInt(f.price.value, 10);
+    var ok = f.dish.value.trim() && f.venue.value.trim() && f.address.value.trim() &&
+      price >= 1 && price <= 300;
+    if (!ok) { formError.hidden = false; return; }
+    var inbox;
+    try { inbox = JSON.parse(localStorage.getItem(LS_INBOX)) || []; } catch (err) { inbox = []; }
+    inbox.push({
+      item: f.dish.value.trim(),
+      price: price,
+      category: f.category.value,
+      venue: f.venue.value.trim(),
+      address: f.address.value.trim(),
+      at: new Date().toISOString(),
+    });
+    localStorage.setItem(LS_INBOX, JSON.stringify(inbox));
+    form.hidden = true;
+    formDone.hidden = false;
+  });
+
+  backdrop.addEventListener("click", function () { closeSheet(); closeForm(); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { closeSheet(); closeForm(); }
+  });
+
+  /* ---------- map <-> list toggle ---------- */
+  var viewToggle = document.getElementById("view-toggle");
+  var mapEl = document.getElementById("map");
+
+  viewToggle.addEventListener("click", function () {
+    var toList = mapEl.hidden === false;
+    mapEl.hidden = toList;
+    fallbackEl.hidden = !toList;
+    viewToggle.textContent = toList ? "Карта" : "Список";
+    render();
+    if (!toList && state.map) state.map.container.fitToViewport();
+  });
+
+  /* ---------- Yandex map (JS API 2.1) ---------- */
+  function initMap() {
+    var key = (CFG.YANDEX_API_KEY || "").trim();
+    if (!key) { enterListMode(); return; }
+    document.querySelector(".nokey-note").hidden = true; // ключ есть — баннер не нужен
+
+    var s = document.createElement("script");
+    s.src = "https://api-maps.yandex.ru/2.1/?apikey=" + encodeURIComponent(key) + "&lang=ru_RU";
+    s.onerror = enterListMode;
+    s.onload = function () {
+      if (typeof ymaps === "undefined") { enterListMode(); return; }
+      ymaps.ready(function () {
+        try {
+          state.map = new ymaps.Map("map", {
+            center: CFG.CITY_CENTER, // [lat, lon]
+            zoom: CFG.CITY_ZOOM,
+            controls: ["zoomControl", "geolocationControl"],
+          }, { suppressMapOpenBlock: true });
+          renderMarkers();
+          viewToggle.hidden = false; // карта живая — можно переключаться
+          document.getElementById("map-loading").hidden = true;
+        } catch (err) { enterListMode(); }
+      });
+    };
+    document.head.appendChild(s);
+  }
+
+  function enterListMode() {
+    document.getElementById("map-loading").hidden = true;
+    document.getElementById("map").hidden = true;
+    fallbackEl.hidden = false;
+    render();
+  }
+
+  /* координаты: из данных, из кеша, или геокодим адрес через JS API (один раз) */
+  var GEO_LS = "nishemap.geo";
+  var geoCache;
+  try { geoCache = JSON.parse(localStorage.getItem(GEO_LS)) || {}; } catch (e) { geoCache = {}; }
+
+  function ensureCoords(v, done) {
+    if (v.lat && v.lon) return done([v.lat, v.lon]);
+    if (geoCache[v.id]) return done(geoCache[v.id]);
+    ymaps.geocode("Москва, " + v.address, { results: 1 }).then(function (res) {
+      var o = res.geoObjects.get(0);
+      if (!o) return;
+      var c = o.geometry.getCoordinates();
+      geoCache[v.id] = c;
+      localStorage.setItem(GEO_LS, JSON.stringify(geoCache));
+      done(c);
+    });
+  }
+
+  function renderMarkers() {
+    if (!state.map) return;
+    var gen = (state.renderGen = (state.renderGen || 0) + 1);
+    state.markers.forEach(function (m) { state.map.geoObjects.remove(m); });
+    state.markers = [];
+    visibleVenues().forEach(function (v) {
+      var items = venueItems(v);
+      var min = Math.min.apply(null, items.map(function (i) { return i.price; }));
+      var band = bandOf(min);
+      ensureCoords(v, function (coords) {
+        if (gen !== state.renderGen) return; // фильтры сменились, пока геокодили
+        var Layout = ymaps.templateLayoutFactory.createClass(
+          '<div class="coinpin coinpin--' + band + '">' +
+          '<span class="coinpin-coin">₽</span>' +
+          '<span class="coinpin-price">от ' + min + "</span></div>"
+        );
+        var pm = new ymaps.Placemark(coords, {
+          hintContent: esc(v.name),
+        }, {
+          iconLayout: Layout,
+          // кликабельная зона — круг вокруг монеты (центр выше точки привязки)
+          iconShape: { type: "Circle", coordinates: [0, -26], radius: 22 },
+        });
+        pm.events.add("click", function () { openSheet(v); });
+        state.map.geoObjects.add(pm);
+        state.markers.push(pm);
+      });
+    });
+  }
+
+  /* ---------- render ---------- */
+  function render() {
+    var any = visibleVenues().length > 0;
+    emptyEl.hidden = any;
+    if (!fallbackEl.hidden) renderList();
+    if (state.map) renderMarkers();
+  }
+
+  initMap();
+  render();
+})();
