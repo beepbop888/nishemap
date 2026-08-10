@@ -246,6 +246,30 @@ window.NISHEMAP_SEED = {
           "category": "main",
           "confirmedAt": null,
           "source": "listicle"
+        },
+        {
+          "id": "i122",
+          "item": "Борщ украинский",
+          "price": 95,
+          "category": "soup",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i123",
+          "item": "Картофельное пюре",
+          "price": 75,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i124",
+          "item": "Селёдка под шубой",
+          "price": 120,
+          "category": "salad",
+          "confirmedAt": null,
+          "source": "listicle"
         }
       ]
     },
@@ -261,7 +285,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%D0%A1%D1%82%D0%BE%D0%BB%D0%BE%D0%B2%D0%B0%D1%8F%20%E2%84%961%20%D1%83%D0%BB.%20%D0%A0%D0%BE%D0%B6%D0%B4%D0%B5%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%BA%D0%B0%2C%206/9/20%2C%20%D1%81%D1%82%D1%80.%201",
       "items": [
         {
-          "id": "i122",
+          "id": "i125",
           "item": "Борщ",
           "price": 198,
           "category": "soup",
@@ -269,7 +293,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i123",
+          "id": "i126",
           "item": "Сырники со сметаной",
           "price": 217,
           "category": "main",
@@ -290,7 +314,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%D0%A1%D1%82%D0%BE%D0%BB%D0%BE%D0%B2%D0%B0%D1%8F%20%D0%94%D0%BE%D0%BC%D0%B0%20%D1%83%D1%87%D1%91%D0%BD%D1%8B%D1%85%20%D1%83%D0%BB.%20%D0%9F%D1%80%D0%B5%D1%87%D0%B8%D1%81%D1%82%D0%B5%D0%BD%D0%BA%D0%B0%2C%2016",
       "items": [
         {
-          "id": "i124",
+          "id": "i127",
           "item": "Салат (от)",
           "price": 100,
           "category": "salad",
@@ -298,7 +322,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i125",
+          "id": "i128",
           "item": "Горячее блюдо",
           "price": 300,
           "category": "main",
@@ -315,11 +339,35 @@ window.NISHEMAP_SEED = {
       "address": "ул. Ленинская Слобода, 19, стр. 1",
       "lat": 55.7109043,
       "lon": 37.6562872,
-      "source": "Т—Ж",
+      "source": "Т—Ж + РИАМО",
       "yandexUrl": "https://yandex.ru/maps/?text=%D0%A2%D1%80%D0%B0%D0%BF%D0%B5%D0%B7%D0%B0%D1%80%D0%B8%D1%8F%20%C2%AB%D0%9C%D0%B0%D1%80%D0%BA%D0%BE%D0%B2%20%D0%B4%D0%B2%D0%BE%D1%80%C2%BB%20%D1%83%D0%BB.%20%D0%9B%D0%B5%D0%BD%D0%B8%D0%BD%D1%81%D0%BA%D0%B0%D1%8F%20%D0%A1%D0%BB%D0%BE%D0%B1%D0%BE%D0%B4%D0%B0%2C%2019%2C%20%D1%81%D1%82%D1%80.%201",
       "items": [
         {
-          "id": "i126",
+          "id": "i129",
+          "item": "Котлета печёночная",
+          "price": 42,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i130",
+          "item": "Манты",
+          "price": 78,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i131",
+          "item": "Котлеты домашние",
+          "price": 98,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i132",
           "item": "Запечённые овощи",
           "price": 150,
           "category": "main",
@@ -327,9 +375,17 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i127",
+          "id": "i133",
           "item": "Котлета «Нежность»",
           "price": 180,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i134",
+          "item": "Плов с говядиной",
+          "price": 300,
           "category": "main",
           "confirmedAt": null,
           "source": "listicle"
@@ -348,7 +404,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%D0%A7%D0%B5%D0%B1%D1%83%D1%80%D0%B5%D1%87%D0%BD%D0%B0%D1%8F%20%D0%A1%D0%A1%D0%A1%D0%A0%20%D1%83%D0%BB.%20%D0%91%D0%BE%D0%BB%D1%8C%D1%88%D0%B0%D1%8F%20%D0%91%D1%80%D0%BE%D0%BD%D0%BD%D0%B0%D1%8F%2C%2027/4",
       "items": [
         {
-          "id": "i128",
+          "id": "i135",
           "item": "Чебуречник с фруктами",
           "price": 95,
           "category": "dessert",
@@ -356,7 +412,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i129",
+          "id": "i136",
           "item": "Оливье",
           "price": 210,
           "category": "salad",
@@ -364,7 +420,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i130",
+          "id": "i137",
           "item": "Чебурек с мясом",
           "price": 260,
           "category": "street",
@@ -372,7 +428,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i131",
+          "id": "i138",
           "item": "Пельмени",
           "price": 280,
           "category": "main",
@@ -380,7 +436,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i132",
+          "id": "i139",
           "item": "Котлета киевская",
           "price": 285,
           "category": "main",
@@ -401,7 +457,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%95%D0%B4%D0%B0%20%D0%BF%D0%BE-%D0%B4%D0%BE%D0%BC%D0%B0%D1%88%D0%BD%D0%B5%D0%BC%D1%83%C2%BB%20%D0%9B%D1%8F%D0%BB%D0%B8%D0%BD%20%D0%BF%D0%B5%D1%80.%2C%203%2C%20%D1%81%D1%82%D1%80.%202",
       "items": [
         {
-          "id": "i133",
+          "id": "i140",
           "item": "Компот",
           "price": 50,
           "category": "drink",
@@ -409,7 +465,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i134",
+          "id": "i141",
           "item": "Салат «Столичный»",
           "price": 110,
           "category": "salad",
@@ -417,7 +473,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i135",
+          "id": "i142",
           "item": "Харчо с говядиной",
           "price": 140,
           "category": "soup",
@@ -425,7 +481,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i136",
+          "id": "i143",
           "item": "Ёжики мясные в томатном соусе",
           "price": 230,
           "category": "main",
@@ -433,7 +489,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i137",
+          "id": "i144",
           "item": "Бизнес-ланч",
           "price": 400,
           "category": "main",
@@ -454,7 +510,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%9B%D0%B5%D0%BF%D0%B8%D0%BC%20%D0%B8%20%D0%92%D0%B0%D1%80%D0%B8%D0%BC%C2%BB%20%D0%A1%D1%82%D0%BE%D0%BB%D0%B5%D1%88%D0%BD%D0%B8%D0%BA%D0%BE%D0%B2%20%D0%BF%D0%B5%D1%80.%2C%209%2C%20%D1%81%D1%82%D1%80.%201",
       "items": [
         {
-          "id": "i138",
+          "id": "i145",
           "item": "Пельмени «Бульба Бегинс» (мал.)",
           "price": 219,
           "category": "main",
@@ -462,7 +518,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i139",
+          "id": "i146",
           "item": "Пельмени «Бульба Бегинс» (бол.)",
           "price": 279,
           "category": "main",
@@ -470,7 +526,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i140",
+          "id": "i147",
           "item": "Пельмени «Мамин сибиряк» (10 шт.)",
           "price": 319,
           "category": "main",
@@ -491,7 +547,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%D0%97%D0%B0%D0%BA%D1%83%D1%81%D0%BE%D1%87%D0%BD%D0%B0%D1%8F%20%C2%AB%D0%92%D0%B0%D0%B9%20%D0%9C%D1%8D%21%C2%BB%20%D0%9B%D0%B5%D0%BD%D0%B8%D0%BD%D0%B3%D1%80%D0%B0%D0%B4%D1%81%D0%BA%D0%BE%D0%B5%20%D1%88.%2C%2016%D0%90",
       "items": [
         {
-          "id": "i141",
+          "id": "i148",
           "item": "Хинкали (5 шт.)",
           "price": 279,
           "category": "main",
@@ -499,7 +555,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i142",
+          "id": "i149",
           "item": "Хачапури по-аджарски",
           "price": 432,
           "category": "bakery",
@@ -520,7 +576,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%A5%D0%B0%D1%87%D0%B0%D0%BF%D1%83%D1%80%D0%B8%20%D0%B8%20%D0%B2%D0%B8%D0%BD%D0%BE%C2%BB%20%D1%83%D0%BB.%20%D0%A1%D0%BE%D0%BB%D1%8F%D0%BD%D0%BA%D0%B0%2C%201/2",
       "items": [
         {
-          "id": "i143",
+          "id": "i150",
           "item": "Хинкали (за шт.)",
           "price": 85,
           "category": "main",
@@ -528,7 +584,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i144",
+          "id": "i151",
           "item": "Хачапури по-аджарски",
           "price": 377,
           "category": "bakery",
@@ -536,7 +592,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i145",
+          "id": "i152",
           "item": "Люля из индейки",
           "price": 475,
           "category": "main",
@@ -557,7 +613,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=Amore%20Pasteria%20%D1%83%D0%BB.%20%D0%9D%D0%BE%D0%B2%D0%BE%D1%81%D0%BB%D0%BE%D0%B1%D0%BE%D0%B4%D1%81%D0%BA%D0%B0%D1%8F%2C%2026%2C%20%D1%81%D1%82%D1%80.%201",
       "items": [
         {
-          "id": "i146",
+          "id": "i153",
           "item": "Канноли",
           "price": 280,
           "category": "dessert",
@@ -578,7 +634,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%D0%A0%D1%8E%D0%BC%D0%BE%D1%87%D0%BD%D0%B0%D1%8F%20%C2%AB%D0%9D%D0%B0%D1%81%D1%82%D0%BE%D0%B8%D1%88%D0%BD%D0%B0%D1%8F%C2%BB%20%D0%9B%D1%83%D0%B1%D1%8F%D0%BD%D1%81%D0%BA%D0%B8%D0%B9%20%D0%BF%D1%80.%2C%2019%2C%20%D1%81%D1%82%D1%80.%201",
       "items": [
         {
-          "id": "i147",
+          "id": "i154",
           "item": "Бутерброд со шпротами",
           "price": 57,
           "category": "street",
@@ -586,7 +642,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i148",
+          "id": "i155",
           "item": "Бутерброд с салом",
           "price": 58,
           "category": "street",
@@ -594,7 +650,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i149",
+          "id": "i156",
           "item": "Бутерброд с паштетом",
           "price": 59,
           "category": "street",
@@ -602,7 +658,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i150",
+          "id": "i157",
           "item": "Селёдка с картошкой",
           "price": 149,
           "category": "main",
@@ -610,7 +666,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i151",
+          "id": "i158",
           "item": "Пельмени из лося",
           "price": 290,
           "category": "main",
@@ -631,7 +687,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%9F%D0%B5%D1%81%D1%82%D0%B8%D0%BA%D0%B8-%D1%82%D1%8B%D1%87%D0%B8%D0%BD%D0%BA%D0%B8%C2%BB%20%D0%91.%20%D0%A1%D0%BF%D0%B0%D1%81%D0%BE%D0%B3%D0%BB%D0%B8%D0%BD%D0%B8%D1%89%D0%B5%D0%B2%D1%81%D0%BA%D0%B8%D0%B9%20%D0%BF%D0%B5%D1%80.%2C%203%2C%20%D1%81%D1%82%D1%80.%205",
       "items": [
         {
-          "id": "i152",
+          "id": "i159",
           "item": "Бутерброд на ремесленном хлебе",
           "price": 100,
           "category": "street",
@@ -639,7 +695,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i153",
+          "id": "i160",
           "item": "Хумус",
           "price": 100,
           "category": "main",
@@ -647,7 +703,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i154",
+          "id": "i161",
           "item": "Мусс из тунца",
           "price": 120,
           "category": "main",
@@ -668,7 +724,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%97%D0%B8%D0%BD%D0%B7%D0%B8%D0%B2%D0%B5%D1%80%C2%BB%20%D1%83%D0%BB.%20%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D0%BA%D0%B0%2C%2014/2%2C%20%D1%81%D1%82%D1%80.%201",
       "items": [
         {
-          "id": "i155",
+          "id": "i162",
           "item": "Сосиска с горошком",
           "price": 150,
           "category": "main",
@@ -676,7 +732,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i156",
+          "id": "i163",
           "item": "Харчо",
           "price": 250,
           "category": "soup",
@@ -697,7 +753,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%9D%D0%B0%D1%83%D0%BA%D0%B0%20%D0%B8%20%D0%B6%D0%B8%D0%B7%D0%BD%D1%8C%C2%BB%20%D1%83%D0%BB.%20%D0%A0%D0%BE%D0%B6%D0%B4%D0%B5%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%BA%D0%B0%2C%205/7%2C%20%D1%81%D1%82%D1%80.%202",
       "items": [
         {
-          "id": "i157",
+          "id": "i164",
           "item": "Бутерброд (от)",
           "price": 150,
           "category": "street",
@@ -718,7 +774,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%D0%90%D0%BB%D0%BA%D0%BE-%D0%B1%D1%83%D1%84%D0%B5%D1%82%20%C2%AB%D0%A0%D1%8E%D0%BC%D0%BA%D0%B0%C2%BB%20%D1%83%D0%BB.%20%D0%9C%D1%8F%D1%81%D0%BD%D0%B8%D1%86%D0%BA%D0%B0%D1%8F%2C%2032%2C%20%D1%81%D1%82%D1%80.%202",
       "items": [
         {
-          "id": "i158",
+          "id": "i165",
           "item": "Бутерброд (селёдка/шпроты/сыр)",
           "price": 150,
           "category": "street",
@@ -726,7 +782,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i159",
+          "id": "i166",
           "item": "Бастурма",
           "price": 200,
           "category": "main",
@@ -734,7 +790,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i160",
+          "id": "i167",
           "item": "Вареники",
           "price": 250,
           "category": "main",
@@ -755,7 +811,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%91%D0%B0%D1%80%D0%BA%D0%B0%C2%BB%20%D1%83%D0%BB.%20%D0%98%D0%BB%D1%8C%D0%B8%D0%BD%D0%BA%D0%B0%2C%204%20%28%D0%B2%D1%85%D0%BE%D0%B4%20%D1%81%20%D0%A0%D1%8B%D0%B1%D0%BD%D0%BE%D0%B3%D0%BE%20%D0%BF%D0%B5%D1%80.%29",
       "items": [
         {
-          "id": "i161",
+          "id": "i168",
           "item": "Халва в шоколаде",
           "price": 50,
           "category": "dessert",
@@ -763,7 +819,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i162",
+          "id": "i169",
           "item": "Бутерброд (икра щуки и др.)",
           "price": 100,
           "category": "street",
@@ -771,7 +827,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i163",
+          "id": "i170",
           "item": "Гороховый суп",
           "price": 150,
           "category": "soup",
@@ -779,7 +835,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i164",
+          "id": "i171",
           "item": "Макароны по-флотски",
           "price": 200,
           "category": "main",
@@ -787,7 +843,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i165",
+          "id": "i172",
           "item": "Запеканка картофельная с мясом",
           "price": 200,
           "category": "main",
@@ -808,7 +864,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%92%D0%B8%D1%88%D0%BD%D1%91%D0%B2%D1%8B%D0%B9%20%D1%81%D0%B0%D0%B4%C2%BB%20%D1%83%D0%BB.%20%D0%9C%D0%B0%D0%BB%D0%B0%D1%8F%20%D0%91%D1%80%D0%BE%D0%BD%D0%BD%D0%B0%D1%8F%2C%2024%2C%20%D1%81%D1%82%D1%80.%201",
       "items": [
         {
-          "id": "i166",
+          "id": "i173",
           "item": "Бутерброд",
           "price": 100,
           "category": "street",
@@ -816,7 +872,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i167",
+          "id": "i174",
           "item": "Сосиска с картошкой",
           "price": 250,
           "category": "main",
@@ -824,7 +880,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i168",
+          "id": "i175",
           "item": "Грибной суп",
           "price": 250,
           "category": "soup",
@@ -845,7 +901,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%D0%90%D0%BB%D0%BA%D0%BE-%D0%B1%D1%83%D1%84%D0%B5%D1%82%20%C2%AB%D0%A8%D0%B0%D1%88%D0%BB%D1%8B%D1%87%D0%BD%D0%B0%D1%8F%C2%BB%20%D1%83%D0%BB.%20%D0%A1%D1%80%D0%B5%D1%82%D0%B5%D0%BD%D0%BA%D0%B0%2C%2036",
       "items": [
         {
-          "id": "i169",
+          "id": "i176",
           "item": "Бутерброд с салом",
           "price": 160,
           "category": "street",
@@ -866,7 +922,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%D0%9F%D0%BE%D0%BD%D1%87%D0%B8%D0%BA%D0%BE%D0%B2%D0%B0%D1%8F%20%C2%AB%D0%A0%D1%83%D1%81%D0%9F%D1%8B%D1%88%C2%BB%201-%D1%8F%20%D0%9E%D1%81%D1%82%D0%B0%D0%BD%D0%BA%D0%B8%D0%BD%D1%81%D0%BA%D0%B0%D1%8F%20%D1%83%D0%BB.%2C%207%D0%90%2C%20%D1%81%D1%82%D1%80.%2018",
       "items": [
         {
-          "id": "i170",
+          "id": "i177",
           "item": "6 пончиков с сахарной пудрой",
           "price": 196,
           "category": "bakery",
@@ -874,7 +930,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i171",
+          "id": "i178",
           "item": "6 пончиков с орехово-шоколадной пастой",
           "price": 270,
           "category": "bakery",
@@ -895,7 +951,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%D0%9F%D0%BE%D0%BD%D1%87%D0%B8%D0%BA%D0%B8%20Tsomi%20%D1%83%D0%BB.%20%D0%9B%D0%B5%D1%81%D0%BD%D0%B0%D1%8F%2C%2020%2C%20%D1%81%D1%82%D1%80.%203",
       "items": [
         {
-          "id": "i172",
+          "id": "i179",
           "item": "Пончик (от)",
           "price": 170,
           "category": "bakery",
@@ -916,7 +972,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%D0%A1%D1%82%D0%BE%D0%BB%D0%BE%D0%B2%D0%B0%D1%8F%20%C2%AB%D0%9A%D0%BB%D1%8E%D0%BA%D0%B2%D0%B0%C2%BB%20%D1%83%D0%BB.%20%D0%AD%D0%BB%D0%B5%D0%BA%D1%82%D1%80%D0%BE%D0%B4%D0%BD%D0%B0%D1%8F%2C%202%2C%20%D1%81%D1%82%D1%80.%201",
       "items": [
         {
-          "id": "i173",
+          "id": "i180",
           "item": "Суп дня",
           "price": 100,
           "category": "soup",
@@ -924,7 +980,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i174",
+          "id": "i181",
           "item": "Салат",
           "price": 125,
           "category": "salad",
@@ -932,7 +988,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i175",
+          "id": "i182",
           "item": "Горячее блюдо",
           "price": 200,
           "category": "main",
@@ -953,7 +1009,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%95%D0%B4%D0%B0%20%D0%BF%D0%BE-%D0%B4%D0%BE%D0%BC%D0%B0%D1%88%D0%BD%D0%B5%D0%BC%D1%83%C2%BB%20%D1%83%D0%BB.%20%D0%A1%D0%BA%D0%BE%D1%82%D0%BE%D0%BF%D1%80%D0%BE%D0%B3%D0%BE%D0%BD%D0%BD%D0%B0%D1%8F%2C%2029/1",
       "items": [
         {
-          "id": "i176",
+          "id": "i183",
           "item": "Компот",
           "price": 50,
           "category": "drink",
@@ -961,7 +1017,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i177",
+          "id": "i184",
           "item": "Салат «Столичный»",
           "price": 110,
           "category": "salad",
@@ -969,7 +1025,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i178",
+          "id": "i185",
           "item": "Харчо с говядиной",
           "price": 140,
           "category": "soup",
@@ -977,7 +1033,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i179",
+          "id": "i186",
           "item": "Ёжики мясные в томатном соусе",
           "price": 230,
           "category": "main",
@@ -985,7 +1041,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i180",
+          "id": "i187",
           "item": "Бизнес-ланч",
           "price": 400,
           "category": "main",
@@ -1006,7 +1062,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%9B%D0%B5%D0%BF%D0%B8%D0%BC%20%D0%B8%20%D0%92%D0%B0%D1%80%D0%B8%D0%BC%C2%BB%20%D1%83%D0%BB.%20%D0%9C%D1%8B%D1%82%D0%BD%D0%B0%D1%8F%2C%2074",
       "items": [
         {
-          "id": "i181",
+          "id": "i188",
           "item": "Пельмени «Бульба Бегинс» (мал.)",
           "price": 219,
           "category": "main",
@@ -1014,7 +1070,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i182",
+          "id": "i189",
           "item": "Пельмени «Бульба Бегинс» (бол.)",
           "price": 279,
           "category": "main",
@@ -1022,7 +1078,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i183",
+          "id": "i190",
           "item": "Пельмени «Мамин сибиряк» (10 шт.)",
           "price": 319,
           "category": "main",
@@ -1043,7 +1099,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%9B%D0%B5%D0%BF%D0%B8%D0%BC%20%D0%B8%20%D0%92%D0%B0%D1%80%D0%B8%D0%BC%C2%BB%20%D0%BF%D1%80%D0%BE%D1%81%D0%BF%D0%B5%D0%BA%D1%82%20%D0%9C%D0%B8%D1%80%D0%B0%2C%2026%2C%20%D1%81%D1%82%D1%80.%201",
       "items": [
         {
-          "id": "i184",
+          "id": "i191",
           "item": "Пельмени «Бульба Бегинс» (мал.)",
           "price": 219,
           "category": "main",
@@ -1051,7 +1107,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i185",
+          "id": "i192",
           "item": "Пельмени «Бульба Бегинс» (бол.)",
           "price": 279,
           "category": "main",
@@ -1059,7 +1115,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i186",
+          "id": "i193",
           "item": "Пельмени «Мамин сибиряк» (10 шт.)",
           "price": 319,
           "category": "main",
@@ -1080,7 +1136,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%A5%D0%B0%D1%87%D0%B0%D0%BF%D1%83%D1%80%D0%B8%20%D0%B8%20%D0%B2%D0%B8%D0%BD%D0%BE%C2%BB%20%D1%83%D0%BB.%20%D0%9F%D1%8F%D1%82%D0%BD%D0%B8%D1%86%D0%BA%D0%B0%D1%8F%2C%203/4%2C%20%D1%81%D1%82%D1%80.%201",
       "items": [
         {
-          "id": "i187",
+          "id": "i194",
           "item": "Хинкали (за шт.)",
           "price": 85,
           "category": "main",
@@ -1088,7 +1144,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i188",
+          "id": "i195",
           "item": "Хачапури по-аджарски",
           "price": 377,
           "category": "bakery",
@@ -1096,7 +1152,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i189",
+          "id": "i196",
           "item": "Люля из индейки",
           "price": 475,
           "category": "main",
@@ -1117,7 +1173,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%A5%D0%B0%D1%87%D0%B0%D0%BF%D1%83%D1%80%D0%B8%20%D0%B8%20%D0%B2%D0%B8%D0%BD%D0%BE%C2%BB%20%D1%83%D0%BB.%20%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D0%BA%D0%B0%2C%2021",
       "items": [
         {
-          "id": "i190",
+          "id": "i197",
           "item": "Хинкали (за шт.)",
           "price": 85,
           "category": "main",
@@ -1125,7 +1181,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i191",
+          "id": "i198",
           "item": "Хачапури по-аджарски",
           "price": 377,
           "category": "bakery",
@@ -1133,7 +1189,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i192",
+          "id": "i199",
           "item": "Люля из индейки",
           "price": 475,
           "category": "main",
@@ -1154,7 +1210,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%A5%D0%B0%D1%87%D0%B0%D0%BF%D1%83%D1%80%D0%B8%20%D0%B8%20%D0%B2%D0%B8%D0%BD%D0%BE%C2%BB%20%D1%83%D0%BB.%20%D0%A2%D1%80%D1%83%D0%B1%D0%BD%D0%B0%D1%8F%2C%2020",
       "items": [
         {
-          "id": "i193",
+          "id": "i200",
           "item": "Хинкали (за шт.)",
           "price": 85,
           "category": "main",
@@ -1162,7 +1218,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i194",
+          "id": "i201",
           "item": "Хачапури по-аджарски",
           "price": 377,
           "category": "bakery",
@@ -1170,7 +1226,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i195",
+          "id": "i202",
           "item": "Люля из индейки",
           "price": 475,
           "category": "main",
@@ -1191,7 +1247,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%D0%9F%D0%BE%D0%BD%D1%87%D0%B8%D0%BA%D0%B8%20Tsomi%20%D0%9B%D0%B5%D0%BD%D0%B8%D0%BD%D1%81%D0%BA%D0%B8%D0%B9%20%D0%BF%D1%80%D0%BE%D1%81%D0%BF%D0%B5%D0%BA%D1%82%2C%20108",
       "items": [
         {
-          "id": "i196",
+          "id": "i203",
           "item": "Пончик (от)",
           "price": 170,
           "category": "bakery",
@@ -1212,7 +1268,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%D0%9F%D0%BE%D0%BD%D1%87%D0%B8%D0%BA%D0%B8%20Tsomi%20%D0%BF%D1%80%D0%BE%D1%81%D0%BF%D0%B5%D0%BA%D1%82%20%D0%90%D0%BD%D0%B4%D1%80%D0%BE%D0%BF%D0%BE%D0%B2%D0%B0%2C%201",
       "items": [
         {
-          "id": "i197",
+          "id": "i204",
           "item": "Пончик (от)",
           "price": 170,
           "category": "bakery",
@@ -1233,7 +1289,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%D0%9F%D0%BE%D0%BD%D1%87%D0%B8%D0%BA%D0%BE%D0%B2%D0%B0%D1%8F%20%C2%AB%D0%A0%D1%83%D1%81%D0%9F%D1%8B%D1%88%C2%BB%20%D1%83%D0%BB.%20%D0%9B%D0%B0%D0%B7%D0%BE%2C%207%2C%20%D1%81%D1%82%D1%80.%204",
       "items": [
         {
-          "id": "i198",
+          "id": "i205",
           "item": "6 пончиков с сахарной пудрой",
           "price": 196,
           "category": "bakery",
@@ -1241,7 +1297,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i199",
+          "id": "i206",
           "item": "6 пончиков с орехово-шоколадной пастой",
           "price": 270,
           "category": "bakery",
@@ -1262,7 +1318,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%D0%9F%D0%BE%D0%BD%D1%87%D0%B8%D0%BA%D0%BE%D0%B2%D0%B0%D1%8F%20%C2%AB%D0%A0%D1%83%D1%81%D0%9F%D1%8B%D1%88%C2%BB%20%D0%90%D0%BB%D0%BB%D0%B5%D1%8F%20%D0%9A%D0%BE%D1%81%D0%BC%D0%BE%D0%BD%D0%B0%D0%B2%D1%82%D0%BE%D0%B2",
       "items": [
         {
-          "id": "i200",
+          "id": "i207",
           "item": "6 пончиков с сахарной пудрой",
           "price": 196,
           "category": "bakery",
@@ -1270,7 +1326,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i201",
+          "id": "i208",
           "item": "6 пончиков с орехово-шоколадной пастой",
           "price": 270,
           "category": "bakery",
@@ -1291,7 +1347,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%9F%D0%B8%D1%86%D1%86%D0%B0%2022%20%D1%81%D0%B0%D0%BD%D1%82%D0%B8%D0%BC%D0%B5%D1%82%D1%80%D0%B0%C2%BB%20%D1%83%D0%BB.%20%D0%A1%D0%BE%D0%BB%D1%8F%D0%BD%D0%BA%D0%B0%2C%201/2",
       "items": [
         {
-          "id": "i202",
+          "id": "i209",
           "item": "Ланч: пицца + чай/американо (будни 12–16)",
           "price": 420,
           "category": "main",
@@ -1312,7 +1368,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%A7%D0%B8%D1%84%D0%B0%D0%BD%D1%8C%D0%BA%D0%B0%C2%BB%20%D0%91.%20%D0%A2%D1%80%D1%91%D1%85%D1%81%D0%B2%D1%8F%D1%82%D0%B8%D1%82%D0%B5%D0%BB%D1%8C%D1%81%D0%BA%D0%B8%D0%B9%20%D0%BF%D0%B5%D1%80.%2C%202/1%2C%20%D1%81%D1%82%D1%80.%208",
       "items": [
         {
-          "id": "i203",
+          "id": "i210",
           "item": "Лапша/рис/пельмени (до)",
           "price": 400,
           "category": "main",
@@ -1333,7 +1389,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%D0%9A%D0%B0%D1%84%D0%B5%20%C2%AB%D0%91%D1%83%D0%B1%D0%BB%D0%B8%D0%BA%C2%BB%20%D1%83%D0%BB.%20%D0%9A%D1%83%D0%B7%D0%BD%D0%B5%D1%86%D0%BA%D0%B8%D0%B9%20%D0%9C%D0%BE%D1%81%D1%82%2C%2018/7",
       "items": [
         {
-          "id": "i204",
+          "id": "i211",
           "item": "Салат с фалафелем",
           "price": 330,
           "category": "salad",
@@ -1341,7 +1397,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i205",
+          "id": "i212",
           "item": "Борщ",
           "price": 345,
           "category": "soup",
@@ -1362,7 +1418,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%91%D1%83%D1%84%D0%B5%D1%82%20%26%20%D0%9E%D0%B1%D0%B5%D0%B4%C2%BB%20%D0%91.%20%D0%93%D0%BD%D0%B5%D0%B7%D0%B4%D0%BD%D0%B8%D0%BA%D0%BE%D0%B2%D1%81%D0%BA%D0%B8%D0%B9%20%D0%BF%D0%B5%D1%80.%2C%201%2C%20%D1%81%D1%82%D1%80.%202",
       "items": [
         {
-          "id": "i206",
+          "id": "i213",
           "item": "Бизнес-ланч",
           "price": 400,
           "category": "main",
@@ -1383,7 +1439,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%91%D1%83%D1%84%D0%B5%D1%82%20%26%20%D0%9E%D0%B1%D0%B5%D0%B4%C2%BB%20%D0%93%D0%B0%D0%BC%D1%81%D0%BE%D0%BD%D0%BE%D0%B2%D1%81%D0%BA%D0%B8%D0%B9%20%D0%BF%D0%B5%D1%80.%2C%205%2C%20%D1%81%D1%82%D1%80.%202",
       "items": [
         {
-          "id": "i207",
+          "id": "i214",
           "item": "Бизнес-ланч",
           "price": 400,
           "category": "main",
@@ -1404,7 +1460,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%D0%A1%D1%82%D0%BE%D0%BB%D0%BE%D0%B2%D0%B0%D1%8F%20%C2%AB%D0%9A%D0%B0%D1%82%D1%8E%D1%88%D0%B0%C2%BB%20%D1%83%D0%BB.%20%D0%9A%D0%B8%D0%B1%D0%B0%D0%BB%D1%8C%D1%87%D0%B8%D1%87%D0%B0%2C%209",
       "items": [
         {
-          "id": "i208",
+          "id": "i215",
           "item": "Бизнес-ланч",
           "price": 500,
           "category": "main",
@@ -1425,7 +1481,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=Stolovaya%20%D1%83%D0%BB.%20%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D0%BA%D0%B0%2C%2038%2C%20%D1%81%D1%82%D1%80.%205",
       "items": [
         {
-          "id": "i209",
+          "id": "i216",
           "item": "Салат",
           "price": 150,
           "category": "salad",
@@ -1433,7 +1489,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i210",
+          "id": "i217",
           "item": "Суп",
           "price": 250,
           "category": "soup",
@@ -1441,7 +1497,7 @@ window.NISHEMAP_SEED = {
           "source": "listicle"
         },
         {
-          "id": "i211",
+          "id": "i218",
           "item": "Сосиски с пюре",
           "price": 290,
           "category": "main",
@@ -1462,7 +1518,7 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%9B%D0%B0%D0%BD%D1%87%D0%9F%D0%BE%D0%B8%D0%BD%D1%82%C2%BB%20%D0%94%D0%B0%D0%B5%D0%B2%20%D0%BF%D0%B5%D1%80.%2C%2020",
       "items": [
         {
-          "id": "i212",
+          "id": "i219",
           "item": "Бизнес-ланч",
           "price": 480,
           "category": "main",
@@ -1483,9 +1539,1144 @@ window.NISHEMAP_SEED = {
       "yandexUrl": "https://yandex.ru/maps/?text=%D0%A1%D1%82%D0%BE%D0%BB%D0%BE%D0%B2%D0%B0%D1%8F%20%C2%AB%D0%9F%D0%B5%D1%82%D1%80%D0%BE%D0%B2%D0%B8%D1%87%C2%BB%20%D1%83%D0%BB.%20%D0%9C%D1%8F%D1%81%D0%BD%D0%B8%D1%86%D0%BA%D0%B0%D1%8F%2C%2024%2C%20%D1%81%D1%82%D1%80.%203",
       "items": [
         {
-          "id": "i213",
+          "id": "i220",
           "item": "Комплексный обед (суп+салат+горячее+компот)",
           "price": 340,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v148",
+      "name": "«Альпака и кофе»",
+      "type": "кофейня",
+      "district": "Арбат",
+      "address": "пер. Сивцев Вражек, 15/25",
+      "lat": 55.7472526,
+      "lon": 37.5941247,
+      "source": "KudaGo",
+      "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%90%D0%BB%D1%8C%D0%BF%D0%B0%D0%BA%D0%B0%20%D0%B8%20%D0%BA%D0%BE%D1%84%D0%B5%C2%BB%20%D0%BF%D0%B5%D1%80.%20%D0%A1%D0%B8%D0%B2%D1%86%D0%B5%D0%B2%20%D0%92%D1%80%D0%B0%D0%B6%D0%B5%D0%BA%2C%2015/25",
+      "items": [
+        {
+          "id": "i221",
+          "item": "Американо",
+          "price": 200,
+          "category": "drink",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v149",
+      "name": "Бар «Тото»",
+      "type": "кофейня",
+      "district": "Тверской",
+      "address": "Столешников пер., 7, стр. 3",
+      "lat": 55.7633238,
+      "lon": 37.6140536,
+      "source": "KudaGo",
+      "yandexUrl": "https://yandex.ru/maps/?text=%D0%91%D0%B0%D1%80%20%C2%AB%D0%A2%D0%BE%D1%82%D0%BE%C2%BB%20%D0%A1%D1%82%D0%BE%D0%BB%D0%B5%D1%88%D0%BD%D0%B8%D0%BA%D0%BE%D0%B2%20%D0%BF%D0%B5%D1%80.%2C%207%2C%20%D1%81%D1%82%D1%80.%203",
+      "items": [
+        {
+          "id": "i222",
+          "item": "Фильтр-кофе",
+          "price": 250,
+          "category": "drink",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v150",
+      "name": "Your Coffee Place",
+      "type": "кофейня",
+      "district": "Басманный",
+      "address": "ул. Мясницкая, 13, стр. 24",
+      "lat": 55.7632325,
+      "lon": 37.6330559,
+      "source": "KudaGo",
+      "yandexUrl": "https://yandex.ru/maps/?text=Your%20Coffee%20Place%20%D1%83%D0%BB.%20%D0%9C%D1%8F%D1%81%D0%BD%D0%B8%D1%86%D0%BA%D0%B0%D1%8F%2C%2013%2C%20%D1%81%D1%82%D1%80.%2024",
+      "items": [
+        {
+          "id": "i223",
+          "item": "Эспрессо",
+          "price": 280,
+          "category": "drink",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v151",
+      "name": "Кафе «Скрепка»",
+      "type": "кофейня",
+      "district": "Басманный",
+      "address": "Девяткин пер., 7",
+      "lat": 55.7591982,
+      "lon": 37.6391821,
+      "source": "KudaGo",
+      "yandexUrl": "https://yandex.ru/maps/?text=%D0%9A%D0%B0%D1%84%D0%B5%20%C2%AB%D0%A1%D0%BA%D1%80%D0%B5%D0%BF%D0%BA%D0%B0%C2%BB%20%D0%94%D0%B5%D0%B2%D1%8F%D1%82%D0%BA%D0%B8%D0%BD%20%D0%BF%D0%B5%D1%80.%2C%207",
+      "items": [
+        {
+          "id": "i224",
+          "item": "Американо",
+          "price": 280,
+          "category": "drink",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v152",
+      "name": "Layerz Café",
+      "type": "кофейня",
+      "district": "Пресненский",
+      "address": "Б. Кисловский пер., 6",
+      "lat": 55.7545391,
+      "lon": 37.6066509,
+      "source": "KudaGo",
+      "yandexUrl": "https://yandex.ru/maps/?text=Layerz%20Caf%C3%A9%20%D0%91.%20%D0%9A%D0%B8%D1%81%D0%BB%D0%BE%D0%B2%D1%81%D0%BA%D0%B8%D0%B9%20%D0%BF%D0%B5%D1%80.%2C%206",
+      "items": [
+        {
+          "id": "i225",
+          "item": "Эспрессо",
+          "price": 270,
+          "category": "drink",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v153",
+      "name": "Кафе музея «Гараж»",
+      "type": "кофейня",
+      "district": "Якиманка",
+      "address": "ул. Крымский Вал, 9, стр. 32",
+      "lat": 55.7306308,
+      "lon": 37.6074183,
+      "source": "KudaGo",
+      "yandexUrl": "https://yandex.ru/maps/?text=%D0%9A%D0%B0%D1%84%D0%B5%20%D0%BC%D1%83%D0%B7%D0%B5%D1%8F%20%C2%AB%D0%93%D0%B0%D1%80%D0%B0%D0%B6%C2%BB%20%D1%83%D0%BB.%20%D0%9A%D1%80%D1%8B%D0%BC%D1%81%D0%BA%D0%B8%D0%B9%20%D0%92%D0%B0%D0%BB%2C%209%2C%20%D1%81%D1%82%D1%80.%2032",
+      "items": [
+        {
+          "id": "i226",
+          "item": "Американо",
+          "price": 250,
+          "category": "drink",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v154",
+      "name": "From Berlin",
+      "type": "кофейня",
+      "district": "Тверской",
+      "address": "ул. Садовая-Самотёчная, 20, стр. 1",
+      "lat": 55.7732553,
+      "lon": 37.619443,
+      "source": "KudaGo",
+      "yandexUrl": "https://yandex.ru/maps/?text=From%20Berlin%20%D1%83%D0%BB.%20%D0%A1%D0%B0%D0%B4%D0%BE%D0%B2%D0%B0%D1%8F-%D0%A1%D0%B0%D0%BC%D0%BE%D1%82%D1%91%D1%87%D0%BD%D0%B0%D1%8F%2C%2020%2C%20%D1%81%D1%82%D1%80.%201",
+      "items": [
+        {
+          "id": "i227",
+          "item": "Фильтр-кофе",
+          "price": 300,
+          "category": "drink",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v155",
+      "name": "Кулинария братьев Караваевых",
+      "type": "кулинария",
+      "district": "Арбат",
+      "address": "ул. Воздвиженка, 10",
+      "lat": 55.7534431,
+      "lon": 37.6063967,
+      "source": "Т—Ж",
+      "yandexUrl": "https://yandex.ru/maps/?text=%D0%9A%D1%83%D0%BB%D0%B8%D0%BD%D0%B0%D1%80%D0%B8%D1%8F%20%D0%B1%D1%80%D0%B0%D1%82%D1%8C%D0%B5%D0%B2%20%D0%9A%D0%B0%D1%80%D0%B0%D0%B2%D0%B0%D0%B5%D0%B2%D1%8B%D1%85%20%D1%83%D0%BB.%20%D0%92%D0%BE%D0%B7%D0%B4%D0%B2%D0%B8%D0%B6%D0%B5%D0%BD%D0%BA%D0%B0%2C%2010",
+      "items": [
+        {
+          "id": "i228",
+          "item": "Утиный плов",
+          "price": 330,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i229",
+          "item": "Сэндвич с индейкой",
+          "price": 355,
+          "category": "street",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v156",
+      "name": "«Останкинские пончики»",
+      "type": "пекарня",
+      "district": "Останкинский",
+      "address": "1-я Останкинская ул., 1, стр. 1",
+      "lat": 55.8249114,
+      "lon": 37.6146696,
+      "source": "aaanya.ru + Афиша",
+      "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%9E%D1%81%D1%82%D0%B0%D0%BD%D0%BA%D0%B8%D0%BD%D1%81%D0%BA%D0%B8%D0%B5%20%D0%BF%D0%BE%D0%BD%D1%87%D0%B8%D0%BA%D0%B8%C2%BB%201-%D1%8F%20%D0%9E%D1%81%D1%82%D0%B0%D0%BD%D0%BA%D0%B8%D0%BD%D1%81%D0%BA%D0%B0%D1%8F%20%D1%83%D0%BB.%2C%201%2C%20%D1%81%D1%82%D1%80.%201",
+      "items": [
+        {
+          "id": "i230",
+          "item": "Пончики (100 г, ~2 шт.)",
+          "price": 60,
+          "category": "bakery",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i231",
+          "item": "Сгущёнка (60 г)",
+          "price": 30,
+          "category": "dessert",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v157",
+      "name": "Мосдонер (Ладожская)",
+      "type": "стритфуд",
+      "district": "Басманный",
+      "address": "ул. Ладожская, 4/6, стр. 6",
+      "lat": 55.7711424,
+      "lon": 37.6817372,
+      "source": "o-eda-dostavka",
+      "yandexUrl": "https://yandex.ru/maps/?text=%D0%9C%D0%BE%D1%81%D0%B4%D0%BE%D0%BD%D0%B5%D1%80%20%D1%83%D0%BB.%20%D0%9B%D0%B0%D0%B4%D0%BE%D0%B6%D1%81%D0%BA%D0%B0%D1%8F%2C%204/6%2C%20%D1%81%D1%82%D1%80.%206",
+      "items": [
+        {
+          "id": "i232",
+          "item": "Донер овощной",
+          "price": 220,
+          "category": "street",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i233",
+          "item": "Донер с курицей в лаваше",
+          "price": 320,
+          "category": "street",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i234",
+          "item": "Донер «Чемпион» с курицей",
+          "price": 390,
+          "category": "street",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v158",
+      "name": "Мосдонер (Покровка)",
+      "type": "стритфуд",
+      "district": "Басманный",
+      "address": "ул. Покровка, 1/13, стр. 1",
+      "lat": 55.7585833,
+      "lon": 37.6387129,
+      "source": "o-eda-dostavka",
+      "yandexUrl": "https://yandex.ru/maps/?text=%D0%9C%D0%BE%D1%81%D0%B4%D0%BE%D0%BD%D0%B5%D1%80%20%D1%83%D0%BB.%20%D0%9F%D0%BE%D0%BA%D1%80%D0%BE%D0%B2%D0%BA%D0%B0%2C%201/13%2C%20%D1%81%D1%82%D1%80.%201",
+      "items": [
+        {
+          "id": "i235",
+          "item": "Донер овощной",
+          "price": 220,
+          "category": "street",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i236",
+          "item": "Донер с курицей в лаваше",
+          "price": 320,
+          "category": "street",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v159",
+      "name": "Babo (армянский кебаб)",
+      "type": "стритфуд",
+      "district": "Арбат",
+      "address": "Староваганьковский пер., 19, стр. 7",
+      "lat": 55.7512954,
+      "lon": 37.6072287,
+      "source": "The Pike",
+      "yandexUrl": "https://yandex.ru/maps/?text=Babo%20%D0%A1%D1%82%D0%B0%D1%80%D0%BE%D0%B2%D0%B0%D0%B3%D0%B0%D0%BD%D1%8C%D0%BA%D0%BE%D0%B2%D1%81%D0%BA%D0%B8%D0%B9%20%D0%BF%D0%B5%D1%80.%2C%2019%2C%20%D1%81%D1%82%D1%80.%207",
+      "items": [
+        {
+          "id": "i237",
+          "item": "Кебаб из говядины",
+          "price": 390,
+          "category": "street",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v160",
+      "name": "Laffa Laffa",
+      "type": "стритфуд",
+      "district": "Пресненский",
+      "address": "ул. Малая Бронная, 4",
+      "lat": 55.7595718,
+      "lon": 37.597458,
+      "source": "The Pike",
+      "yandexUrl": "https://yandex.ru/maps/?text=Laffa%20Laffa%20%D1%83%D0%BB.%20%D0%9C%D0%B0%D0%BB%D0%B0%D1%8F%20%D0%91%D1%80%D0%BE%D0%BD%D0%BD%D0%B0%D1%8F%2C%204",
+      "items": [
+        {
+          "id": "i238",
+          "item": "Шаварма с курицей",
+          "price": 480,
+          "category": "street",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v161",
+      "name": "Пекарня «Три Финика»",
+      "type": "пекарня",
+      "district": "Тверской",
+      "address": "ул. Сущёвская, 27",
+      "lat": 55.7833146,
+      "lon": 37.6004514,
+      "source": "vc.ru",
+      "yandexUrl": "https://yandex.ru/maps/?text=%D0%9F%D0%B5%D0%BA%D0%B0%D1%80%D0%BD%D1%8F%20%C2%AB%D0%A2%D1%80%D0%B8%20%D0%A4%D0%B8%D0%BD%D0%B8%D0%BA%D0%B0%C2%BB%20%D1%83%D0%BB.%20%D0%A1%D1%83%D1%89%D1%91%D0%B2%D1%81%D0%BA%D0%B0%D1%8F%2C%2027",
+      "items": [
+        {
+          "id": "i239",
+          "item": "Самса с говядиной",
+          "price": 100,
+          "category": "bakery",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i240",
+          "item": "Самса слоёная",
+          "price": 119,
+          "category": "bakery",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i241",
+          "item": "Самса тандырная",
+          "price": 135,
+          "category": "bakery",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v162",
+      "name": "Пекарня «Буханка»",
+      "type": "пекарня",
+      "district": "Мещанский",
+      "address": "ул. Щепкина, 25/20",
+      "lat": 55.7777744,
+      "lon": 37.628247,
+      "source": "vc.ru",
+      "yandexUrl": "https://yandex.ru/maps/?text=%D0%9F%D0%B5%D0%BA%D0%B0%D1%80%D0%BD%D1%8F%20%C2%AB%D0%91%D1%83%D1%85%D0%B0%D0%BD%D0%BA%D0%B0%C2%BB%20%D1%83%D0%BB.%20%D0%A9%D0%B5%D0%BF%D0%BA%D0%B8%D0%BD%D0%B0%2C%2025/20",
+      "items": [
+        {
+          "id": "i242",
+          "item": "Самса с телятиной",
+          "price": 140,
+          "category": "bakery",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v163",
+      "name": "«И тут узбеки» (Щёлковское)",
+      "type": "кафе",
+      "district": "Гольяново",
+      "address": "Щёлковское ш., вл. 75",
+      "lat": 55.8095,
+      "lon": 37.7998,
+      "source": "o-eda-dostavka",
+      "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%98%20%D1%82%D1%83%D1%82%20%D1%83%D0%B7%D0%B1%D0%B5%D0%BA%D0%B8%C2%BB%20%D0%A9%D1%91%D0%BB%D0%BA%D0%BE%D0%B2%D1%81%D0%BA%D0%BE%D0%B5%20%D1%88.%2C%20%D0%B2%D0%BB.%2075",
+      "items": [
+        {
+          "id": "i243",
+          "item": "Самса тандырная",
+          "price": 150,
+          "category": "bakery",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i244",
+          "item": "Лагман по-уйгурски",
+          "price": 360,
+          "category": "soup",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i245",
+          "item": "Манты из баранины",
+          "price": 450,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i246",
+          "item": "Плов чайханский",
+          "price": 460,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v164",
+      "name": "Uzbek Gourmet (Усачёвский рынок)",
+      "type": "рынок",
+      "district": "Хамовники",
+      "address": "ул. Усачёва, 26, Усачёвский рынок",
+      "lat": 55.7275174,
+      "lon": 37.5677558,
+      "source": "2ГИС",
+      "yandexUrl": "https://yandex.ru/maps/?text=Uzbek%20Gourmet%20%D1%83%D0%BB.%20%D0%A3%D1%81%D0%B0%D1%87%D1%91%D0%B2%D0%B0%2C%2026%2C%20%D0%A3%D1%81%D0%B0%D1%87%D1%91%D0%B2%D1%81%D0%BA%D0%B8%D0%B9%20%D1%80%D1%8B%D0%BD%D0%BE%D0%BA",
+      "items": [
+        {
+          "id": "i247",
+          "item": "Пельмени с бараниной (шт.)",
+          "price": 150,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i248",
+          "item": "Самса с сыром и зеленью",
+          "price": 250,
+          "category": "bakery",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v165",
+      "name": "Lao Lee (Миусская)",
+      "type": "кафе",
+      "district": "Тверской",
+      "address": "Миусская пл., 9/11",
+      "lat": 55.7789185,
+      "lon": 37.5960642,
+      "source": "Т—Ж",
+      "yandexUrl": "https://yandex.ru/maps/?text=Lao%20Lee%20%D0%9C%D0%B8%D1%83%D1%81%D1%81%D0%BA%D0%B0%D1%8F%20%D0%BF%D0%BB.%2C%209/11",
+      "items": [
+        {
+          "id": "i249",
+          "item": "Нэм с креветкой",
+          "price": 355,
+          "category": "street",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i250",
+          "item": "Фо-бо",
+          "price": 435,
+          "category": "soup",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v166",
+      "name": "Saigon",
+      "type": "кафе",
+      "district": "Марьина Роща",
+      "address": "Сущёвский Вал, 5, стр. 22",
+      "lat": 55.793334,
+      "lon": 37.5912097,
+      "source": "Т—Ж",
+      "yandexUrl": "https://yandex.ru/maps/?text=Saigon%20%D0%A1%D1%83%D1%89%D1%91%D0%B2%D1%81%D0%BA%D0%B8%D0%B9%20%D0%92%D0%B0%D0%BB%2C%205%2C%20%D1%81%D1%82%D1%80.%2022",
+      "items": [
+        {
+          "id": "i251",
+          "item": "Нэм с мясом",
+          "price": 140,
+          "category": "street",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i252",
+          "item": "Крабовые котлеты",
+          "price": 250,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v167",
+      "name": "«Ароматная река»",
+      "type": "кафе",
+      "district": "Басманный",
+      "address": "наб. Академика Туполева, 15, к. 2",
+      "lat": 55.7605678,
+      "lon": 37.6807465,
+      "source": "Т—Ж",
+      "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%90%D1%80%D0%BE%D0%BC%D0%B0%D1%82%D0%BD%D0%B0%D1%8F%20%D1%80%D0%B5%D0%BA%D0%B0%C2%BB%20%D0%BD%D0%B0%D0%B1.%20%D0%90%D0%BA%D0%B0%D0%B4%D0%B5%D0%BC%D0%B8%D0%BA%D0%B0%20%D0%A2%D1%83%D0%BF%D0%BE%D0%BB%D0%B5%D0%B2%D0%B0%2C%2015%2C%20%D0%BA.%202",
+      "items": [
+        {
+          "id": "i253",
+          "item": "Нэм с мясом",
+          "price": 299,
+          "category": "street",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i254",
+          "item": "Том ям",
+          "price": 350,
+          "category": "soup",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v168",
+      "name": "Ngon",
+      "type": "кафе",
+      "district": "Бутырский",
+      "address": "ул. Складочная, 1, стр. 1",
+      "lat": 55.7965955,
+      "lon": 37.5919089,
+      "source": "Т—Ж",
+      "yandexUrl": "https://yandex.ru/maps/?text=Ngon%20%D1%83%D0%BB.%20%D0%A1%D0%BA%D0%BB%D0%B0%D0%B4%D0%BE%D1%87%D0%BD%D0%B0%D1%8F%2C%201%2C%20%D1%81%D1%82%D1%80.%201",
+      "items": [
+        {
+          "id": "i255",
+          "item": "Лапша с курицей",
+          "price": 499,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v169",
+      "name": "Pho Fighters",
+      "type": "кафе",
+      "district": "Тверской",
+      "address": "Столешников пер., 7, стр. 2",
+      "lat": 55.7633238,
+      "lon": 37.6140536,
+      "source": "Т—Ж",
+      "yandexUrl": "https://yandex.ru/maps/?text=Pho%20Fighters%20%D0%A1%D1%82%D0%BE%D0%BB%D0%B5%D1%88%D0%BD%D0%B8%D0%BA%D0%BE%D0%B2%20%D0%BF%D0%B5%D1%80.%2C%207%2C%20%D1%81%D1%82%D1%80.%202",
+      "items": [
+        {
+          "id": "i256",
+          "item": "Фо-бо",
+          "price": 480,
+          "category": "soup",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v170",
+      "name": "Vietcafe",
+      "type": "кафе",
+      "district": "Черёмушки",
+      "address": "ул. Намёткина, 13А",
+      "lat": 55.6629434,
+      "lon": 37.5554724,
+      "source": "Т—Ж",
+      "yandexUrl": "https://yandex.ru/maps/?text=Vietcafe%20%D1%83%D0%BB.%20%D0%9D%D0%B0%D0%BC%D1%91%D1%82%D0%BA%D0%B8%D0%BD%D0%B0%2C%2013%D0%90",
+      "items": [
+        {
+          "id": "i257",
+          "item": "Нэм га",
+          "price": 470,
+          "category": "street",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i258",
+          "item": "Фо-бо",
+          "price": 490,
+          "category": "soup",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v171",
+      "name": "PhoBo (Ходынка)",
+      "type": "кафе",
+      "district": "Хорошёвский",
+      "address": "Ходынский б-р, 4",
+      "lat": 55.791094,
+      "lon": 37.5284881,
+      "source": "Т—Ж",
+      "yandexUrl": "https://yandex.ru/maps/?text=PhoBo%20%D0%A5%D0%BE%D0%B4%D1%8B%D0%BD%D1%81%D0%BA%D0%B8%D0%B9%20%D0%B1-%D1%80%2C%204",
+      "items": [
+        {
+          "id": "i259",
+          "item": "Чипсы из креветок",
+          "price": 150,
+          "category": "street",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i260",
+          "item": "Бао с курицей",
+          "price": 210,
+          "category": "street",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v172",
+      "name": "Монастырская трапеза (Иоанно-Предтеченский)",
+      "type": "трапезная",
+      "district": "Басманный",
+      "address": "Малый Ивановский пер., 2",
+      "lat": 55.7542517,
+      "lon": 37.639741,
+      "source": "msk1.ru (июль 2026)",
+      "yandexUrl": "https://yandex.ru/maps/?text=%D0%9C%D0%BE%D0%BD%D0%B0%D1%81%D1%82%D1%8B%D1%80%D1%81%D0%BA%D0%B0%D1%8F%20%D1%82%D1%80%D0%B0%D0%BF%D0%B5%D0%B7%D0%B0%20%D0%9C%D0%B0%D0%BB%D1%8B%D0%B9%20%D0%98%D0%B2%D0%B0%D0%BD%D0%BE%D0%B2%D1%81%D0%BA%D0%B8%D0%B9%20%D0%BF%D0%B5%D1%80.%2C%202",
+      "items": [
+        {
+          "id": "i261",
+          "item": "Сок тыквенный с апельсином",
+          "price": 120,
+          "category": "drink",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i262",
+          "item": "Капуста в кляре",
+          "price": 130,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i263",
+          "item": "Оливье",
+          "price": 160,
+          "category": "salad",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i264",
+          "item": "Борщ постный",
+          "price": 180,
+          "category": "soup",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i265",
+          "item": "Рассольник",
+          "price": 180,
+          "category": "soup",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i266",
+          "item": "Сэндвич с красной рыбой",
+          "price": 220,
+          "category": "street",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i267",
+          "item": "Котлета рыбная",
+          "price": 220,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i268",
+          "item": "Пельмени рыбные",
+          "price": 250,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i269",
+          "item": "Горбуша в кляре",
+          "price": 280,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v173",
+      "name": "«Просто Столовая» (Климовск)",
+      "type": "столовая",
+      "district": "Подольск (МО)",
+      "address": "г. Подольск, мкрн Климовск, ул. Ленина, 1",
+      "lat": 55.3658445,
+      "lon": 37.5270785,
+      "source": "podolsk.ru",
+      "yandexUrl": "https://yandex.ru/maps/?text=%C2%AB%D0%9F%D1%80%D0%BE%D1%81%D1%82%D0%BE%20%D0%A1%D1%82%D0%BE%D0%BB%D0%BE%D0%B2%D0%B0%D1%8F%C2%BB%20%D0%B3.%20%D0%9F%D0%BE%D0%B4%D0%BE%D0%BB%D1%8C%D1%81%D0%BA%2C%20%D0%BC%D0%BA%D1%80%D0%BD%20%D0%9A%D0%BB%D0%B8%D0%BC%D0%BE%D0%B2%D1%81%D0%BA%2C%20%D1%83%D0%BB.%20%D0%9B%D0%B5%D0%BD%D0%B8%D0%BD%D0%B0%2C%201",
+      "items": [
+        {
+          "id": "i270",
+          "item": "Суп",
+          "price": 50,
+          "category": "soup",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i271",
+          "item": "Салат",
+          "price": 60,
+          "category": "salad",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i272",
+          "item": "Горячее с гарниром",
+          "price": 110,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i273",
+          "item": "Комплексный обед",
+          "price": 220,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v174",
+      "name": "Столовая №1 (Химки)",
+      "type": "столовая",
+      "district": "Химки (МО)",
+      "address": "Химки, Международное ш., ст. 1д",
+      "lat": 55.9515,
+      "lon": 37.397,
+      "source": "Яндекс Карты (отзывы)",
+      "yandexUrl": "https://yandex.ru/maps/?text=%D0%A1%D1%82%D0%BE%D0%BB%D0%BE%D0%B2%D0%B0%D1%8F%20%E2%84%961%20%D0%A5%D0%B8%D0%BC%D0%BA%D0%B8%2C%20%D0%9C%D0%B5%D0%B6%D0%B4%D1%83%D0%BD%D0%B0%D1%80%D0%BE%D0%B4%D0%BD%D0%BE%D0%B5%20%D1%88.%2C%20%D1%81%D1%82.%201%D0%B4",
+      "items": [
+        {
+          "id": "i274",
+          "item": "Чай",
+          "price": 60,
+          "category": "drink",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i275",
+          "item": "Яйца с горошком",
+          "price": 114,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i276",
+          "item": "Солянка",
+          "price": 219,
+          "category": "soup",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i277",
+          "item": "Котлета печёночная",
+          "price": 300,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v175",
+      "name": "Столовая «Купянчанка»",
+      "type": "столовая",
+      "district": "Басманный",
+      "address": "ул. Мясницкая, 10, стр. 1",
+      "lat": 55.7611602,
+      "lon": 37.6298614,
+      "source": "РИАМО",
+      "yandexUrl": "https://yandex.ru/maps/?text=%D0%A1%D1%82%D0%BE%D0%BB%D0%BE%D0%B2%D0%B0%D1%8F%20%C2%AB%D0%9A%D1%83%D0%BF%D1%8F%D0%BD%D1%87%D0%B0%D0%BD%D0%BA%D0%B0%C2%BB%20%D1%83%D0%BB.%20%D0%9C%D1%8F%D1%81%D0%BD%D0%B8%D1%86%D0%BA%D0%B0%D1%8F%2C%2010%2C%20%D1%81%D1%82%D1%80.%201",
+      "items": [
+        {
+          "id": "i278",
+          "item": "Котлета домашняя",
+          "price": 70,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i279",
+          "item": "Оладьи из кабачков",
+          "price": 130,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i280",
+          "item": "Жаркое с мясом",
+          "price": 150,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i281",
+          "item": "Плов с говядиной",
+          "price": 160,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v176",
+      "name": "Кафе-столовая «#КУХНЯ»",
+      "type": "столовая",
+      "district": "Басманный",
+      "address": "ул. Большая Почтовая, 18",
+      "lat": 55.7755529,
+      "lon": 37.6967169,
+      "source": "РИАМО",
+      "yandexUrl": "https://yandex.ru/maps/?text=%D0%9A%D0%B0%D1%84%D0%B5-%D1%81%D1%82%D0%BE%D0%BB%D0%BE%D0%B2%D0%B0%D1%8F%20%C2%AB%23%D0%9A%D0%A3%D0%A5%D0%9D%D0%AF%C2%BB%20%D1%83%D0%BB.%20%D0%91%D0%BE%D0%BB%D1%8C%D1%88%D0%B0%D1%8F%20%D0%9F%D0%BE%D1%87%D1%82%D0%BE%D0%B2%D0%B0%D1%8F%2C%2018",
+      "items": [
+        {
+          "id": "i282",
+          "item": "Картофельное пюре",
+          "price": 40,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i283",
+          "item": "Борщ",
+          "price": 80,
+          "category": "soup",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i284",
+          "item": "Котлета",
+          "price": 90,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v177",
+      "name": "City Cafe (БЦ Новослободский)",
+      "type": "столовая",
+      "district": "Тверской",
+      "address": "ул. Краснопролетарская, 16, стр. 2",
+      "lat": 55.7777461,
+      "lon": 37.607169,
+      "source": "РИАМО",
+      "yandexUrl": "https://yandex.ru/maps/?text=City%20Cafe%20%D1%83%D0%BB.%20%D0%9A%D1%80%D0%B0%D1%81%D0%BD%D0%BE%D0%BF%D1%80%D0%BE%D0%BB%D0%B5%D1%82%D0%B0%D1%80%D1%81%D0%BA%D0%B0%D1%8F%2C%2016%2C%20%D1%81%D1%82%D1%80.%202",
+      "items": [
+        {
+          "id": "i285",
+          "item": "Салат «Оливье»",
+          "price": 65,
+          "category": "salad",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i286",
+          "item": "Омлет",
+          "price": 80,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i287",
+          "item": "Щи",
+          "price": 88,
+          "category": "soup",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i288",
+          "item": "Сырники",
+          "price": 145,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i289",
+          "item": "Плов с курицей",
+          "price": 160,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v178",
+      "name": "СтоLOVaya (Старая Басманная)",
+      "type": "столовая",
+      "district": "Басманный",
+      "address": "ул. Старая Басманная, 20, стр. 1",
+      "lat": 55.7668972,
+      "lon": 37.6652273,
+      "source": "РИАМО",
+      "yandexUrl": "https://yandex.ru/maps/?text=%D0%A1%D1%82%D0%BELOVaya%20%D1%83%D0%BB.%20%D0%A1%D1%82%D0%B0%D1%80%D0%B0%D1%8F%20%D0%91%D0%B0%D1%81%D0%BC%D0%B0%D0%BD%D0%BD%D0%B0%D1%8F%2C%2020%2C%20%D1%81%D1%82%D1%80.%201",
+      "items": [
+        {
+          "id": "i290",
+          "item": "Компот",
+          "price": 25,
+          "category": "drink",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i291",
+          "item": "Борщ",
+          "price": 60,
+          "category": "soup",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i292",
+          "item": "Голубцы",
+          "price": 75,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v179",
+      "name": "Трапезария «Марков двор» (Чистопрудный)",
+      "type": "столовая",
+      "district": "Басманный",
+      "address": "Чистопрудный б-р, 10, стр. 1",
+      "lat": 55.7622539,
+      "lon": 37.6420796,
+      "source": "РИАМО",
+      "yandexUrl": "https://yandex.ru/maps/?text=%D0%A2%D1%80%D0%B0%D0%BF%D0%B5%D0%B7%D0%B0%D1%80%D0%B8%D1%8F%20%C2%AB%D0%9C%D0%B0%D1%80%D0%BA%D0%BE%D0%B2%20%D0%B4%D0%B2%D0%BE%D1%80%C2%BB%20%D0%A7%D0%B8%D1%81%D1%82%D0%BE%D0%BF%D1%80%D1%83%D0%B4%D0%BD%D1%8B%D0%B9%20%D0%B1-%D1%80%2C%2010%2C%20%D1%81%D1%82%D1%80.%201",
+      "items": [
+        {
+          "id": "i293",
+          "item": "Котлета печёночная",
+          "price": 42,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i294",
+          "item": "Манты",
+          "price": 78,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i295",
+          "item": "Котлеты домашние",
+          "price": 98,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i296",
+          "item": "Котлета «Нежность»",
+          "price": 180,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v180",
+      "name": "Трапезария «Марков двор» (Коньково)",
+      "type": "столовая",
+      "district": "Коньково",
+      "address": "ул. Академика Волгина, 2А",
+      "lat": 55.6550917,
+      "lon": 37.5216894,
+      "source": "РИАМО",
+      "yandexUrl": "https://yandex.ru/maps/?text=%D0%A2%D1%80%D0%B0%D0%BF%D0%B5%D0%B7%D0%B0%D1%80%D0%B8%D1%8F%20%C2%AB%D0%9C%D0%B0%D1%80%D0%BA%D0%BE%D0%B2%20%D0%B4%D0%B2%D0%BE%D1%80%C2%BB%20%D1%83%D0%BB.%20%D0%90%D0%BA%D0%B0%D0%B4%D0%B5%D0%BC%D0%B8%D0%BA%D0%B0%20%D0%92%D0%BE%D0%BB%D0%B3%D0%B8%D0%BD%D0%B0%2C%202%D0%90",
+      "items": [
+        {
+          "id": "i297",
+          "item": "Котлета печёночная",
+          "price": 42,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i298",
+          "item": "Манты",
+          "price": 78,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i299",
+          "item": "Котлеты домашние",
+          "price": 98,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i300",
+          "item": "Котлета «Нежность»",
+          "price": 180,
+          "category": "main",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v181",
+      "name": "Кафе-столовая «Шпинат»",
+      "type": "столовая",
+      "district": "Бутырский",
+      "address": "Новодмитровская ул., 5А, стр. 2",
+      "lat": 55.8077844,
+      "lon": 37.5888499,
+      "source": "The City m24",
+      "yandexUrl": "https://yandex.ru/maps/?text=%D0%9A%D0%B0%D1%84%D0%B5-%D1%81%D1%82%D0%BE%D0%BB%D0%BE%D0%B2%D0%B0%D1%8F%20%C2%AB%D0%A8%D0%BF%D0%B8%D0%BD%D0%B0%D1%82%C2%BB%20%D0%9D%D0%BE%D0%B2%D0%BE%D0%B4%D0%BC%D0%B8%D1%82%D1%80%D0%BE%D0%B2%D1%81%D0%BA%D0%B0%D1%8F%20%D1%83%D0%BB.%2C%205%D0%90%2C%20%D1%81%D1%82%D1%80.%202",
+      "items": [
+        {
+          "id": "i301",
+          "item": "Салат «Мимоза»",
+          "price": 180,
+          "category": "salad",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i302",
+          "item": "Селёдка под шубой",
+          "price": 180,
+          "category": "salad",
+          "confirmedAt": null,
+          "source": "listicle"
+        }
+      ]
+    },
+    {
+      "id": "v182",
+      "name": "Пельменная «Сметана»",
+      "type": "кафе",
+      "district": "Ярославский",
+      "address": "ул. Егора Абакумова, 9",
+      "lat": 55.8789937,
+      "lon": 37.7145932,
+      "source": "The City m24",
+      "yandexUrl": "https://yandex.ru/maps/?text=%D0%9F%D0%B5%D0%BB%D1%8C%D0%BC%D0%B5%D0%BD%D0%BD%D0%B0%D1%8F%20%C2%AB%D0%A1%D0%BC%D0%B5%D1%82%D0%B0%D0%BD%D0%B0%C2%BB%20%D1%83%D0%BB.%20%D0%95%D0%B3%D0%BE%D1%80%D0%B0%20%D0%90%D0%B1%D0%B0%D0%BA%D1%83%D0%BC%D0%BE%D0%B2%D0%B0%2C%209",
+      "items": [
+        {
+          "id": "i303",
+          "item": "Борщ",
+          "price": 200,
+          "category": "soup",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i304",
+          "item": "Куриный бульон",
+          "price": 200,
+          "category": "soup",
+          "confirmedAt": null,
+          "source": "listicle"
+        },
+        {
+          "id": "i305",
+          "item": "Пельмени",
+          "price": 200,
           "category": "main",
           "confirmedAt": null,
           "source": "listicle"
