@@ -4,6 +4,8 @@
 
   var CFG = window.NISHEMAP_CONFIG || {};
   var SEED = window.NISHEMAP_SEED || { venues: [] };
+  var OSM = (window.NISHEMAP_OSM && window.NISHEMAP_OSM.venues) || [];
+  var GRAY_MIN_ZOOM = 14; // серые точки — только при приближении, чтобы обзор был монетным
   var STALE_DAYS = 14;
 
   var LS_CONFIRM = "nishemap.confirms"; // {itemId: "YYYY-MM-DD"}
@@ -14,6 +16,8 @@
     query: "",
     category: "",
     districts: {}, // {район: true} — мультивыбор; пусто = все
+    showGray: true,
+    grayMarkers: [],
     map: null,
     markers: [],
     activeVenue: null,
@@ -86,6 +90,14 @@
       chip.setAttribute("aria-pressed", String(state.bands[b]));
       render();
     });
+  });
+
+  var grayChip = document.querySelector("[data-gray]");
+  if (grayChip) grayChip.addEventListener("click", function () {
+    state.showGray = !state.showGray;
+    grayChip.classList.toggle("is-on", state.showGray);
+    grayChip.setAttribute("aria-pressed", String(state.showGray));
+    render();
   });
 
   /* ---------- search / category / district filters ---------- */
@@ -241,13 +253,42 @@
   function openSheet(v) {
     state.activeVenue = v;
     document.getElementById("sheet-venue").textContent = v.name;
-    document.getElementById("sheet-type").textContent = v.type + (v.district ? " · " + v.district : "");
+    document.getElementById("sheet-type").textContent = v.type + (v.district ? " · " + v.district : (v.noPrice ? " · цены нет" : ""));
+    if (v.noPrice && !v.district && v.lat) {
+      fetch("https://nominatim.openstreetmap.org/reverse?format=json&zoom=14&lat=" + v.lat + "&lon=" + v.lon)
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          var a = d && d.address || {};
+          var dist = a.city_district || a.suburb || a.borough || "";
+          if (dist && state.activeVenue === v) {
+            v.district = dist.replace(/^район /i, "");
+            document.getElementById("sheet-type").textContent = v.type + " · " + v.district;
+          }
+        }).catch(function () {});
+    }
     document.getElementById("sheet-address").textContent = v.address;
     var link = document.getElementById("sheet-yandex");
     link.href = v.yandexUrl || "https://yandex.ru/maps/?text=" + encodeURIComponent(v.name + " " + v.address);
 
     var ul = document.getElementById("sheet-items");
     ul.innerHTML = "";
+    var cta = document.getElementById("sheet-cta");
+    if (cta) cta.remove();
+    if (!v.items.length) {
+      var box = el("div", "sheet-cta",
+        "<p>Цены тут ещё никто не сдал. Знаешь, почём здесь еда?</p>" +
+        '<button class="btn btn-primary" data-first>Стать первым</button>');
+      box.id = "sheet-cta";
+      ul.parentNode.insertBefore(box, ul);
+      box.querySelector("[data-first]").addEventListener("click", function () {
+        closeSheet();
+        document.querySelector(".fab").click();
+        var f = document.getElementById("submit-form").elements;
+        f.venue.value = v.name;
+        f.address.value = v.address && v.address !== v.district ? v.address : "";
+        f.dish.focus();
+      });
+    }
     v.items.forEach(function (it) {
       var b = bandOf(it.price);
       var fb = freshBadge(it);
@@ -387,6 +428,10 @@
             controls: ["zoomControl", "geolocationControl"],
           }, { suppressMapOpenBlock: true });
           renderMarkers();
+          renderGray();
+          state.map.events.add("boundschange", function (e) {
+            if (e.get("newZoom") !== e.get("oldZoom")) renderGray();
+          });
           viewToggle.hidden = false; // карта живая — можно переключаться
           document.getElementById("map-loading").hidden = true;
         } catch (err) { enterListMode(); }
@@ -450,12 +495,43 @@
     });
   }
 
+  /* ---------- серые точки (OSM, без цен) ---------- */
+  function visibleGray() {
+    if (!state.showGray) return [];
+    var sel = Object.keys(state.districts).filter(function (k) { return state.districts[k]; });
+    return OSM.filter(function (v) { return !sel.length || !v.district || state.districts[v.district]; });
+  }
+
+  function renderGray() {
+    if (!state.map || typeof ymaps === "undefined") return;
+    state.grayMarkers.forEach(function (m) { state.map.geoObjects.remove(m); });
+    state.grayMarkers = [];
+    var hint = document.getElementById("gray-hint");
+    var zoom = state.map.getZoom();
+    if (!state.showGray || !OSM.length) { if (hint) hint.hidden = true; return; }
+    if (zoom < GRAY_MIN_ZOOM) {
+      if (hint) hint.hidden = false;
+      return;
+    }
+    if (hint) hint.hidden = true;
+    var Layout = ymaps.templateLayoutFactory.createClass('<div class="graypin"></div>');
+    visibleGray().forEach(function (v) {
+      var pm = new ymaps.Placemark([v.lat, v.lon], { hintContent: esc(v.name) + " · цены нет" }, {
+        iconLayout: Layout,
+        iconShape: { type: "Circle", coordinates: [0, 0], radius: 11 },
+      });
+      pm.events.add("click", function () { openSheet(v); });
+      state.map.geoObjects.add(pm);
+      state.grayMarkers.push(pm);
+    });
+  }
+
   /* ---------- render ---------- */
   function render() {
     var any = visibleVenues().length > 0;
     emptyEl.hidden = any;
     if (!fallbackEl.hidden) renderList();
-    if (state.map) renderMarkers();
+    if (state.map) { renderMarkers(); renderGray(); }
   }
 
   /* ---------- народные точки из общей копилки ---------- */
