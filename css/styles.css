@@ -111,6 +111,10 @@ body{
 .chip--bronze.is-on{background:var(--bronze-bg); border-color:var(--bronze)}
 .chip--bill.is-on{background:var(--bill-bg); border-color:var(--bill)}
 .chip:not(.is-on){opacity:.75}
+.chip--near.is-on{background:var(--stamp-tint); border-color:var(--stamp); color:var(--stamp-deep)}
+.near-dot{width:12px;height:12px;border-radius:var(--r-pill);flex:none;
+  background:var(--stamp); box-shadow:0 0 0 3px color-mix(in srgb, var(--stamp) 25%, transparent)}
+.dist{font:700 11px/1 var(--font-mono); color:var(--stamp-deep); margin-left:6px}
 
 .pill-select{
   flex:none; height:36px; font:600 var(--fs-xs)/1 var(--font-display); text-transform:uppercase;
@@ -350,6 +354,17 @@ input[type="file"]{height:auto; padding:10px 12px; font-size:var(--fs-sm)}
   text-transform:uppercase; letter-spacing:.05em; text-decoration:none; padding:8px 0;
 }
 .sheet-link:hover{text-decoration:underline}
+.sheet-actions{display:flex; align-items:center; gap:16px; flex-wrap:wrap}
+.sheet-link--btn{background:none; border:none; cursor:pointer; padding:8px 0; font-family:var(--font-display)}
+.flag{margin-left:auto; background:none; border:none; cursor:pointer; color:var(--ink-soft);
+  font:600 10px/1 var(--font-display); text-transform:uppercase; letter-spacing:.06em; padding:5px 2px}
+.flag:hover{color:var(--stamp)}
+.toast{
+  position:fixed; left:50%; transform:translateX(-50%); bottom:calc(24px + env(safe-area-inset-bottom));
+  z-index:60; background:var(--ink); color:var(--paper-raised); border-radius:var(--r-md);
+  padding:10px 16px; font:600 var(--fs-sm)/1 var(--font-display); text-transform:uppercase;
+  letter-spacing:.05em; box-shadow:var(--shadow-hard);
+}
 
 /* ============ форма ============ */
 .modal{position:fixed; inset:0; z-index:var(--z-modal); display:flex; align-items:flex-end; justify-content:center}

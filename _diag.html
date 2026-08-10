@@ -1,0 +1,33 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>НищеMap — диагностика</title>
+<link rel="stylesheet" href="css/styles.css?diag=1">
+<style>
+#report{position:fixed;left:8px;bottom:8px;z-index:99999;background:#111;color:#0f0;
+  font:12px/1.5 Menlo,monospace;padding:10px 12px;border-radius:6px;max-width:92vw;white-space:pre}
+</style></head><body>
+<header class="topbar" role="banner">
+  <div class="brand"><span class="brand-coin" aria-hidden="true">₽</span>
+    <h1 class="brand-name"><span class="brand-nishe">Нище</span>Map</h1>
+    <span class="build">ДИАГНОСТИКА</span></div>
+  <p class="tagline">Еда до 500 ₽. Для тех, кто считает медяки.</p>
+  <div class="filters"><input id="q" class="search" placeholder="Шаурма, суп, кофе…">
+    <nav class="filter-row"><button class="chip chip--gold is-on"><span class="coin coin--gold"></span>до 100 ₽</button>
+    <button class="chip chip--bill is-on"><span class="bill-icon"></span>301–500 ₽</button></nav></div>
+</header>
+<main class="stage"><div id="map" class="map" style="background:#cfd8dc"></div></main>
+<pre id="report">измеряю…</pre>
+<script>
+window.addEventListener('load', function(){
+  var t=document.querySelector('.topbar'), b=document.body, r=t.getBoundingClientRect();
+  var cs=getComputedStyle(t), bs=getComputedStyle(b);
+  document.getElementById('report').textContent =
+    'Safari-диагностика НищеMap\n'+
+    'topbar top='+Math.round(r.top)+' height='+Math.round(r.height)+' visible='+(r.top>=0&&r.height>10)+'\n'+
+    'topbar bg='+cs.backgroundColor+' z='+cs.zIndex+' pos='+cs.position+'\n'+
+    'body display='+bs.display+' rows='+bs.gridTemplateRows+'\n'+
+    'body h='+Math.round(b.getBoundingClientRect().height)+' innerH='+window.innerHeight+'\n'+
+    'scrollY='+window.scrollY+' docScrollH='+document.documentElement.scrollHeight+'\n'+
+    'dvh supported='+CSS.supports('height','100dvh')+' grid='+CSS.supports('display','grid');
+});
+</script></body></html>

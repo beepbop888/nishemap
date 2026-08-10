@@ -17,6 +17,8 @@
     category: "",
     districts: {}, // {район: true} — мультивыбор; пусто = все
     showGray: true,
+    near: false,
+    pos: null,
     grayMarkers: [],
     map: null,
     markers: [],
@@ -75,6 +77,16 @@
     if (html !== undefined) n.innerHTML = html;
     return n;
   }
+  function distM(a, b, c, d) { // грубое расстояние в метрах
+    var x = (c - a) * 111320, y = (d - b) * 63000;
+    return Math.sqrt(x * x + y * y);
+  }
+  function fmtDist(m) { return m < 950 ? Math.round(m / 10) * 10 + " м" : (m / 1000).toFixed(1) + " км"; }
+  function toast(text) {
+    var t = el("div", "toast", esc(text));
+    document.body.appendChild(t);
+    setTimeout(function () { t.remove(); }, 2200);
+  }
   function esc(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
@@ -90,6 +102,28 @@
       chip.setAttribute("aria-pressed", String(state.bands[b]));
       render();
     });
+  });
+
+  var nearChip = document.querySelector("[data-near]");
+  if (nearChip) nearChip.addEventListener("click", function () {
+    if (state.near) { // выключаем
+      state.near = false; nearChip.classList.remove("is-on");
+      nearChip.setAttribute("aria-pressed", "false"); render(); return;
+    }
+    if (!navigator.geolocation) { toast("Геолокация недоступна"); return; }
+    nearChip.textContent = "ищу…";
+    navigator.geolocation.getCurrentPosition(function (p) {
+      state.pos = [p.coords.latitude, p.coords.longitude];
+      state.near = true;
+      nearChip.innerHTML = '<span class="near-dot"></span>рядом';
+      nearChip.classList.add("is-on");
+      nearChip.setAttribute("aria-pressed", "true");
+      if (state.map) state.map.setCenter(state.pos, Math.max(state.map.getZoom(), 15));
+      render();
+    }, function () {
+      nearChip.innerHTML = '<span class="near-dot"></span>рядом';
+      toast("Не даёшь геолокацию — не покажу, что рядом");
+    }, { timeout: 8000, maximumAge: 60000 });
   });
 
   var grayChip = document.querySelector("[data-gray]");
@@ -180,7 +214,14 @@
     visibleVenues().forEach(function (v) {
       venueItems(v).forEach(function (it) { rows.push({ v: v, it: it }); });
     });
-    rows.sort(function (a, b) { return a.it.price - b.it.price; }); // дешёвое сверху
+    if (state.near && state.pos) {
+      rows.forEach(function (r) {
+        r.d = r.v.lat ? distM(state.pos[0], state.pos[1], r.v.lat, r.v.lon) : 1e9;
+      });
+      rows.sort(function (a, b) { return a.d - b.d; }); // сначала ближайшее
+    } else {
+      rows.sort(function (a, b) { return a.it.price - b.it.price; }); // дешёвое сверху
+    }
     rows.forEach(function (row) {
       var v = row.v, it = row.it;
       (function () {
@@ -192,7 +233,8 @@
         li.innerHTML =
           '<div class="card-top"><span class="card-item">' + esc(it.item) + "</span>" +
           '<span class="price price--' + b + '">' + it.price + ' ₽</span></div>' +
-          '<div class="card-venue">' + esc(v.name) + " · " + esc(v.type) +
+          '<div class="card-venue">' + (row.d !== undefined && row.d < 1e9 ? '<span class="dist">' + fmtDist(row.d) + "</span> · " : "") +
+          esc(v.name) + " · " + esc(v.type) +
           (v.district ? " · " + esc(v.district) : "") + " · " + esc(v.address) + "</div>" +
           '<div class="fresh"><span class="badge ' + fb.cls + '">' + fb.text + "</span>" +
           '<button class="reconfirm" data-item="' + it.id + '">Ещё по этой цене?</button></div>';
@@ -237,13 +279,33 @@
   });
   photoInput.addEventListener("change", function () {
     if (!photoInput.files.length || !photoTarget) return;
-    var metas;
-    try { metas = JSON.parse(localStorage.getItem("nishemap.photos")) || []; } catch (e) { metas = []; }
-    metas.push({ item: photoTarget.dataset.item, name: photoInput.files[0].name, at: new Date().toISOString() });
-    localStorage.setItem("nishemap.photos", JSON.stringify(metas));
-    photoTarget.disabled = true;
-    photoTarget.textContent = "Фото принято";
+    var file = photoInput.files[0], btn = photoTarget, itemId = btn.dataset.item;
     photoInput.value = "";
+    if (file.size > 8 * 1024 * 1024) { toast("Фото тяжелее 8 МБ — сожми"); return; }
+    if (!CFG.SUPABASE_URL) { toast("Загрузка фото ещё не включена"); return; }
+    btn.disabled = true; btn.textContent = "гружу…";
+    var path = "items/" + itemId + "-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8) +
+               (file.name.match(/\.[a-z0-9]+$/i) || [".jpg"])[0];
+    fetch(CFG.SUPABASE_URL + "/storage/v1/object/menus/" + path, {
+      method: "POST",
+      headers: { "apikey": CFG.SUPABASE_ANON_KEY, "Authorization": "Bearer " + CFG.SUPABASE_ANON_KEY,
+                 "Content-Type": file.type || "image/jpeg", "x-upsert": "true" },
+      body: file,
+    }).then(function (r) {
+      if (!r.ok) throw new Error("upload " + r.status);
+      var url = CFG.SUPABASE_URL + "/storage/v1/object/public/menus/" + path;
+      return fetch(CFG.SUPABASE_URL + "/rest/v1/item_photos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "apikey": CFG.SUPABASE_ANON_KEY,
+                   "Authorization": "Bearer " + CFG.SUPABASE_ANON_KEY, "Prefer": "return=minimal" },
+        body: JSON.stringify({ item_id: itemId, photo_url: url }),
+      });
+    }).then(function () {
+      btn.textContent = "фото принято"; toast("Спасибо! Фото ушло на карту");
+    }).catch(function () {
+      btn.disabled = false; btn.textContent = "📷 фото";
+      toast("Фото не загрузилось — включи политику Storage");
+    });
   });
 
   /* ---------- bottom sheet ---------- */
@@ -298,7 +360,8 @@
         '<span class="price price--' + b + '">' + it.price + " ₽</span></div>" +
         '<div class="fresh"><span class="badge ' + fb.cls + '">' + fb.text + "</span>" +
         '<button class="reconfirm" data-item="' + it.id + '">Ещё по этой цене?</button>' +
-        '<button class="photo-add" data-item="' + it.id + '" title="Меню/вывеска с ценами — или сама еда">📷 фото</button></div>';
+        '<button class="photo-add" data-item="' + it.id + '" title="Меню/вывеска с ценами — или сама еда">📷 фото</button>' +
+        '<button class="flag" data-item="' + it.id + '" title="Цена неверна или это не еда">неверно</button></div>';
       ul.appendChild(li);
     });
 
@@ -312,6 +375,36 @@
     state.activeVenue = null;
   }
   sheet.querySelector("[data-close-sheet]").addEventListener("click", closeSheet);
+
+  document.getElementById("sheet-share").addEventListener("click", function () {
+    var v = state.activeVenue; if (!v) return;
+    var url = location.origin + location.pathname + "?v=" + encodeURIComponent(v.id);
+    var text = v.name + " — НищеMap";
+    if (navigator.share) { navigator.share({ title: text, url: url }).catch(function () {}); return; }
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(function () { toast("Ссылка скопирована"); });
+    } else { prompt("Ссылка:", url); }
+  });
+
+  /* жалоба на позицию: пишем в reports, если таблица есть; локально прячем в любом случае */
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest(".flag"); if (!btn) return;
+    var id = btn.dataset.item;
+    if (CFG.SUPABASE_URL) {
+      fetch(CFG.SUPABASE_URL + "/rest/v1/reports", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "apikey": CFG.SUPABASE_ANON_KEY,
+                   "Authorization": "Bearer " + CFG.SUPABASE_ANON_KEY, "Prefer": "return=minimal" },
+        body: JSON.stringify({ item_id: id, reason: "user_flag" }),
+      }).catch(function () {});
+    }
+    var hid; try { hid = JSON.parse(localStorage.getItem("nishemap.hidden")) || []; } catch (er) { hid = []; }
+    if (hid.indexOf(id) === -1) hid.push(id);
+    localStorage.setItem("nishemap.hidden", JSON.stringify(hid));
+    btn.textContent = "спасибо";
+    btn.disabled = true;
+    toast("Отметили. Проверим.");
+  });
 
   /* ---------- submission form ---------- */
   var formModal = document.getElementById("form-modal");
@@ -605,7 +698,17 @@
       .catch(function () { /* сеть упала — карта живёт на сиде */ });
   }
 
+  function openDeepLink() {
+    var m = location.search.match(/[?&]v=([^&]+)/); if (!m) return;
+    var id = decodeURIComponent(m[1]);
+    var v = SEED.venues.concat(OSM).filter(function (x) { return x.id === id; })[0];
+    if (!v) return;
+    openSheet(v);
+    if (state.map && v.lat) state.map.setCenter([v.lat, v.lon], 16);
+  }
+
   initMap();
   render();
   loadSubmissions();
+  setTimeout(openDeepLink, 1200);
 })();
