@@ -259,6 +259,8 @@ input[type="file"]{height:auto; padding:10px 12px; font-size:var(--fs-sm)}
 .district-opt:last-child{border-bottom:none}
 .district-opt input{width:16px; height:16px; margin:0; accent-color:var(--stamp); flex:none}
 .district-opt:hover{background:var(--paper)}
+.district-opt.is-empty{opacity:.5}
+.district-count{margin-left:auto; font:700 11px/1 var(--font-mono); color:var(--ink-soft)}
 
 /* ============ пустое состояние ============ */
 .empty{
