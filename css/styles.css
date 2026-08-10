@@ -55,7 +55,7 @@ body{
   margin:0; width:100%;
   height:100vh; height:100dvh;            /* dvh — для мобильного Safari */
   font:var(--fs-md)/1.5 var(--font-body); color:var(--ink); background:var(--paper);
-  display:grid; grid-template-rows:auto minmax(0,1fr);  /* шапка + карта, шапка не сжимается */
+  display:grid; grid-template-rows:auto minmax(0,1fr); grid-template-columns:minmax(0,100%); max-width:100vw; overflow-x:hidden;  /* шапка + карта, шапка не сжимается */
   -webkit-tap-highlight-color:transparent;
 }
 
@@ -64,6 +64,7 @@ body{
 
 /* ============ шапка: чёрная вывеска столовой ============ */
 .topbar{
+  min-width:0; max-width:100%;
   background:var(--ink); color:var(--paper-raised);
   border-bottom:3px solid var(--stamp);
   padding:calc(8px + env(safe-area-inset-top)) 16px 10px;
@@ -99,13 +100,13 @@ body{
 .tagline{margin:4px 0 10px; color:var(--paper-dim); font-size:var(--fs-xs); letter-spacing:.01em; white-space:nowrap}
 
 /* ============ фильтры ============ */
-.filters{display:flex; flex-direction:column; gap:8px}
+.filters{display:flex; flex-direction:column; gap:8px; min-width:0; max-width:100%}
 .search{
   width:100%; font:var(--fs-md)/1.3 var(--font-body); color:var(--ink); background:var(--paper-raised);
   border:1px solid var(--paper-raised); border-radius:var(--r-sm); padding:8px 12px;
 }
 .search::placeholder{color:var(--ink-soft)}
-.filter-row{display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; align-items:stretch}
+.filter-row{display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; align-items:stretch; min-width:0; max-width:100%}
 .filter-row::-webkit-scrollbar{display:none}
 
 /* чипы-ценники: прямоугольные бирки */
