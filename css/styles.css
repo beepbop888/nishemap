@@ -84,6 +84,18 @@ body{
 }
 .brand-nishe{color:var(--stamp-hi)}
 .build{font:400 10px/1 var(--font-mono); color:var(--paper-dim); align-self:flex-start; margin-left:4px}
+.rank{
+  font:600 10px/1 var(--font-display); text-transform:uppercase; letter-spacing:.06em;
+  color:var(--gold-hi); background:transparent; border:1px solid var(--gold-lo);
+  border-radius:var(--r-sm); padding:4px 8px; cursor:pointer; margin-left:6px;
+}
+.rank:hover{background:rgba(217,165,20,.14)}
+.photos{display:flex; gap:6px; margin-top:8px; flex-wrap:wrap}
+.photos img{
+  width:64px; height:48px; object-fit:cover; border:1px solid var(--line);
+  border-radius:var(--r-sm); cursor:zoom-in; background:var(--paper);
+}
+.photos img:hover{border-color:var(--ink)}
 .tagline{margin:4px 0 10px; color:var(--paper-dim); font-size:var(--fs-xs); letter-spacing:.01em; white-space:nowrap}
 
 /* ============ фильтры ============ */

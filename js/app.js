@@ -25,6 +25,23 @@
     activeVenue: null,
   };
 
+  /* ---------- Telegram Mini App ---------- */
+  var TG = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData !== undefined)
+    ? window.Telegram.WebApp : null;
+  if (TG) {
+    try {
+      TG.ready(); TG.expand();
+      if (TG.setHeaderColor) TG.setHeaderColor("#232323");
+      if (TG.setBackgroundColor) TG.setBackgroundColor("#f6f5f1");
+      document.documentElement.classList.add("in-telegram");
+    } catch (e) {}
+  }
+  function haptic(kind) {
+    if (TG && TG.HapticFeedback) {
+      try { TG.HapticFeedback.notificationOccurred(kind || "success"); } catch (e) {}
+    }
+  }
+
   /* ---------- helpers ---------- */
   function bandOf(price) { return price <= 100 ? 100 : price <= 200 ? 200 : price <= 300 ? 300 : 500; }
 
@@ -77,6 +94,32 @@
     if (html !== undefined) n.innerHTML = html;
     return n;
   }
+  var RANKS = [
+    { n: 0,  t: "прохожий" },
+    { n: 1,  t: "стажёр" },
+    { n: 3,  t: "медяк района" },
+    { n: 10, t: "серебро района" },
+    { n: 25, t: "золотой нищеброд" },
+  ];
+  function myCount() { return parseInt(localStorage.getItem("nishemap.mine") || "0", 10); }
+  function rankFor(n) {
+    var r = RANKS[0];
+    RANKS.forEach(function (x) { if (n >= x.n) r = x; });
+    return r;
+  }
+  function nextRank(n) {
+    for (var i = 0; i < RANKS.length; i++) if (RANKS[i].n > n) return RANKS[i];
+    return null;
+  }
+  function paintRank() {
+    var el0 = document.getElementById("rank");
+    if (!el0) return;
+    var n = myCount();
+    if (!n) { el0.hidden = true; return; }
+    el0.hidden = false;
+    el0.textContent = rankFor(n).t + " · " + n;
+  }
+
   function distM(a, b, c, d) { // грубое расстояние в метрах
     var x = (c - a) * 111320, y = (d - b) * 63000;
     return Math.sqrt(x * x + y * y);
@@ -361,18 +404,25 @@
         '<div class="fresh"><span class="badge ' + fb.cls + '">' + fb.text + "</span>" +
         '<button class="reconfirm" data-item="' + it.id + '">Ещё по этой цене?</button>' +
         '<button class="photo-add" data-item="' + it.id + '" title="Меню/вывеска с ценами — или сама еда">📷 фото</button>' +
-        '<button class="flag" data-item="' + it.id + '" title="Цена неверна или это не еда">неверно</button></div>';
+        '<button class="flag" data-item="' + it.id + '" title="Цена неверна или это не еда">неверно</button></div>' +
+        photosHtml(it.id);
       ul.appendChild(li);
     });
 
     sheet.hidden = false;
     backdrop.hidden = false;
+    tgBack(true);
     sheet.querySelector(".sheet-close").focus();
+  }
+  function tgBack(show) {
+    if (!TG || !TG.BackButton) return;
+    try { show ? TG.BackButton.show() : TG.BackButton.hide(); } catch (e) {}
   }
   function closeSheet() {
     sheet.hidden = true;
     if (formModal.hidden) backdrop.hidden = true;
     state.activeVenue = null;
+    tgBack(false);
   }
   sheet.querySelector("[data-close-sheet]").addEventListener("click", closeSheet);
 
@@ -480,6 +530,14 @@
       at: new Date().toISOString(),
     });
     localStorage.setItem(LS_INBOX, JSON.stringify(inbox));
+    localStorage.setItem("nishemap.mine", String(myCount() + 1));
+    paintRank();
+    haptic("success");
+    var n = myCount(), nx = nextRank(n), sub = document.getElementById("done-sub");
+    if (sub) {
+      sub.textContent = "Сдано тобой: " + n + ". Звание — «" + rankFor(n).t + "»." +
+        (nx ? " До «" + nx.t + "» осталось " + (nx.n - n) + "." : " Выше только звёзды.");
+    }
     form.hidden = true;
     formDone.hidden = false;
   });
@@ -627,6 +685,33 @@
     if (state.map) { renderMarkers(); renderGray(); }
   }
 
+  /* ---------- фото позиций ---------- */
+  var PHOTOS = {};
+  function loadPhotos() {
+    if (!CFG.SUPABASE_URL) return;
+    fetch(CFG.SUPABASE_URL + "/rest/v1/item_photos?select=item_id,photo_url,status&limit=1000", { headers: sbHeaders() })
+      .then(function (r) { return r.json(); })
+      .then(function (rows) {
+        if (!Array.isArray(rows)) return;
+        rows.forEach(function (p) {
+          if (p.status && p.status !== "live") return;
+          (PHOTOS[p.item_id] = PHOTOS[p.item_id] || []).push(p.photo_url);
+        });
+        if (state.activeVenue) openSheet(state.activeVenue); // перерисовать открытую шторку
+      }).catch(function () {});
+  }
+  function photosHtml(itemId) {
+    var list = PHOTOS[itemId];
+    if (!list || !list.length) return "";
+    return '<div class="photos">' + list.slice(0, 4).map(function (u) {
+      return '<img src="' + esc(u) + '" alt="Фото меню или блюда" loading="lazy" data-full="' + esc(u) + '">';
+    }).join("") + "</div>";
+  }
+  document.addEventListener("click", function (e) {
+    var img = e.target.closest(".photos img");
+    if (img) window.open(img.dataset.full, "_blank", "noopener");
+  });
+
   /* ---------- народные точки из общей копилки ---------- */
   function sbHeaders() {
     return {
@@ -684,6 +769,18 @@
     })();
   }
 
+  function loadTotals() {
+    if (!CFG.SUPABASE_URL) return;
+    fetch(CFG.SUPABASE_URL + "/rest/v1/submissions?select=id", {
+      headers: Object.assign({ "Prefer": "count=exact", "Range": "0-0" }, sbHeaders()),
+    }).then(function (r) {
+      var cr = r.headers.get("content-range") || "";
+      var total = parseInt((cr.split("/")[1] || "0"), 10);
+      var note = document.getElementById("form-note");
+      if (total && note) note.textContent = "Народ уже сдал " + total + " цен. Не наглей — район всё видит.";
+    }).catch(function () {});
+  }
+
   function loadSubmissions() {
     if (!CFG.SUPABASE_URL || !CFG.SUPABASE_ANON_KEY) return;
     fetch(CFG.SUPABASE_URL + "/rest/v1/submissions?select=*&order=submitted_at.desc&limit=500", { headers: sbHeaders() })
@@ -707,8 +804,15 @@
     if (state.map && v.lat) state.map.setCenter([v.lat, v.lon], 16);
   }
 
+  if (TG && TG.BackButton) {
+    try { TG.BackButton.onClick(function () { closeSheet(); closeForm(); }); } catch (e) {}
+  }
+
   initMap();
   render();
   loadSubmissions();
+  loadPhotos();
+  loadTotals();
+  paintRank();
   setTimeout(openDeepLink, 1200);
 })();
