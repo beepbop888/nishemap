@@ -220,7 +220,7 @@
         '<span class="price price--' + b + '">' + it.price + " ₽</span></div>" +
         '<div class="fresh"><span class="badge ' + fb.cls + '">' + fb.text + "</span>" +
         '<button class="reconfirm" data-item="' + it.id + '">Ещё по этой цене?</button>' +
-        '<button class="photo-add" data-item="' + it.id + '" title="Только меню, ценник или еда">📷 фото</button></div>';
+        '<button class="photo-add" data-item="' + it.id + '" title="Меню/вывеска с ценами — или сама еда">📷 фото</button></div>';
       ul.appendChild(li);
     });
 
