@@ -130,11 +130,6 @@
   (function populateDistricts() {
     var counts = {};
     SEED.venues.forEach(function (v) {
-      if (v.district) counts[v.district] = (counts[v.district] || 0) + venueItems ? (counts[v.district] || 0) + v.items.length : 0;
-    });
-    // пересчёт честно: просто позиции на район
-    counts = {};
-    SEED.venues.forEach(function (v) {
       if (v.district) counts[v.district] = (counts[v.district] || 0) + v.items.length;
     });
     var names = MOSCOW_DISTRICTS.slice();
