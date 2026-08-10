@@ -382,15 +382,18 @@ input[name="price"]{font-family:var(--font-mono); font-weight:700}
 .backdrop{position:fixed; inset:0; z-index:var(--z-backdrop); background:rgba(35,35,35,.45)}
 
 /* ============ desktop ============ */
+/* однострочная шапка — только когда реально хватает места */
 @media(min-width:1180px){
-  .tagline{max-width:none}
+  .topbar{display:flex; align-items:center; gap:24px; padding:12px 24px}
+  .tagline{margin:0; white-space:nowrap}
+  .filters{margin-left:auto; flex-direction:row; align-items:center; gap:8px}
+  .search{width:220px}
+}
+/* на средних экранах слоган не нужен — место важнее */
+@media(min-width:720px) and (max-width:1179px){
+  .tagline{display:none}
 }
 @media(min-width:720px){
-  .topbar{display:flex; align-items:center; gap:24px; padding:12px 24px}
-  .tagline{margin:0}
-  .filters{margin-left:auto; flex-direction:row; align-items:center; gap:8px}
-  .tagline{overflow:hidden; text-overflow:ellipsis; max-width:26ch}
-  .search{width:220px}
   .modal{align-items:center}
   .modal-card{border-radius:var(--r-md); border:1px solid var(--ink); border-top-width:2px}
   .sheet{left:auto; right:24px; bottom:24px; width:400px; border-radius:var(--r-md); border:1px solid var(--ink); border-top-width:2px}
