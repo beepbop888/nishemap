@@ -13,7 +13,7 @@
     bands: { 100: true, 200: true, 300: true, 500: true },
     query: "",
     category: "",
-    district: "",
+    districts: {}, // {район: true} — мультивыбор; пусто = все
     map: null,
     markers: [],
     activeVenue: null,
@@ -58,8 +58,9 @@
     });
   }
   function visibleVenues() {
+    var sel = Object.keys(state.districts).filter(function (k) { return state.districts[k]; });
     return SEED.venues.filter(function (v) {
-      if (state.district && v.district !== state.district) return false;
+      if (sel.length && !state.districts[v.district]) return false;
       return venueItems(v).length > 0;
     });
   }
@@ -90,7 +91,8 @@
   /* ---------- search / category / district filters ---------- */
   var qInput = document.getElementById("q");
   var catSel = document.getElementById("f-category");
-  var distSel = document.getElementById("f-district");
+  var distPanel = document.getElementById("district-panel");
+  var distToggle = document.getElementById("district-toggle");
 
   qInput.addEventListener("input", function () {
     state.query = qInput.value;
@@ -101,22 +103,35 @@
     catSel.classList.toggle("is-active", !!catSel.value);
     render();
   });
-  distSel.addEventListener("change", function () {
-    state.district = distSel.value;
-    distSel.classList.toggle("is-active", !!distSel.value);
-    render();
+  distToggle.addEventListener("click", function () {
+    var open = distToggle.parentElement.classList.toggle("is-open");
+    distToggle.setAttribute("aria-expanded", String(open));
   });
 
+  function updateDistToggle() {
+    var n = Object.keys(state.districts).filter(function (k) { return state.districts[k]; }).length;
+    distToggle.textContent = n ? "Районы · " + n : "Районы";
+  }
+
   (function populateDistricts() {
-    var seen = {};
+    var names = [];
     SEED.venues.forEach(function (v) {
-      if (v.district && !seen[v.district]) {
-        seen[v.district] = true;
-        var o = document.createElement("option");
-        o.value = v.district;
-        o.textContent = v.district;
-        distSel.appendChild(o);
-      }
+      if (v.district && names.indexOf(v.district) === -1) names.push(v.district);
+    });
+    names.sort(function (a, b) { return a.localeCompare(b, "ru"); });
+    names.forEach(function (name) {
+      var lab = el("label", "district-opt");
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.value = name;
+      cb.addEventListener("change", function () {
+        state.districts[name] = cb.checked;
+        updateDistToggle();
+        render();
+      });
+      lab.appendChild(cb);
+      lab.appendChild(document.createTextNode(name));
+      distPanel.appendChild(lab);
     });
   })();
 

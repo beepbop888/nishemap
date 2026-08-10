@@ -8,9 +8,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=PT+Mono:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=12">
+<link rel="stylesheet" href="css/styles.css?v=13">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23d9a514' stroke='%23f2cf5c' stroke-width='5'/><text x='50' y='68' font-size='52' font-weight='bold' text-anchor='middle' fill='%236e5104' font-family='Menlo,monospace'>₽</text></svg>">
-<script src="config.js?v=12"></script>
+<script src="config.js?v=13"></script>
 </head>
 <body>
 
@@ -18,7 +18,7 @@
   <div class="brand">
     <span class="brand-coin" aria-hidden="true">₽</span>
     <h1 class="brand-name"><span class="brand-nishe">Нище</span>Map</h1>
-    <span class="build" aria-hidden="true">сб.12</span>
+    <span class="build" aria-hidden="true">сб.13</span>
   </div>
   <p class="tagline">Еда до 300 ₽. Для тех, кто считает медяки.</p>
   <div class="filters">
@@ -47,9 +47,6 @@
         <option value="drink">Напитки</option>
         <option value="dessert">Десерты</option>
       </select>
-      <select id="f-district" class="pill-select" aria-label="Район">
-        <option value="">Все районы</option>
-      </select>
     </nav>
   </div>
 </header>
@@ -57,6 +54,11 @@
 <main class="stage">
   <!-- Map hero: fills the stage. Fallback list renders here when no API key. -->
   <div id="map" class="map" role="application" aria-label="Карта дешёвой еды"></div>
+
+  <div id="district-box" class="district-box">
+    <button id="district-toggle" class="district-toggle" aria-expanded="false" aria-controls="district-panel">Районы</button>
+    <div id="district-panel" class="district-panel" role="group" aria-label="Выбор районов"></div>
+  </div>
 
   <div id="map-loading" class="map-loading" aria-live="polite">
     <span class="coin coin--gold coin--big" aria-hidden="true"></span>
@@ -138,9 +140,9 @@
         <input name="address" required maxlength="160" placeholder="ул. Бауманская, 13 или ссылка">
       </label>
       <label class="field">
-        <span class="field-label">Фото меню или ценника — по желанию</span>
+        <span class="field-label">Фото меню, цен или самой еды — по желанию</span>
         <input type="file" name="photo" accept="image/*">
-        <span class="field-hint">Меню, вывеска или ценник с ценами — или сама еда. Селфи district не оценит.</span>
+        <span class="field-hint">Селфи district не оценит.</span>
       </label>
       <p class="form-error" id="form-error" role="alert" hidden>Цена до 500 ₽ и все поля — иначе никак.</p>
       <button type="submit" class="btn btn-primary btn-wide">Отправить в народ</button>
@@ -157,7 +159,7 @@
 
 <div id="backdrop" class="backdrop" hidden></div>
 
-<script src="data/seed.js?v=12"></script>
-<script src="js/app.js?v=12"></script>
+<script src="data/seed.js?v=13"></script>
+<script src="js/app.js?v=13"></script>
 </body>
 </html>
