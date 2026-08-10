@@ -270,7 +270,7 @@ input[type="file"]{height:auto; padding:10px 12px; font-size:var(--fs-sm)}
 }
 .empty-wallet{width:96px; color:var(--stamp); margin-bottom:16px}
 .empty-title{margin:0 0 8px; font:600 var(--fs-lg)/1.3 var(--font-display); text-transform:uppercase; letter-spacing:.03em}
-.empty-sub{margin:0 0 16px; color:var(--ink-soft); max-width:340px; font-size:var(--fs-sm)}
+.empty-sub{margin:0 auto 16px; color:var(--ink-soft); max-width:340px; font-size:var(--fs-sm)}
 
 /* ============ кнопки ============ */
 .btn{
