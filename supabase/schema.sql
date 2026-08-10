@@ -19,3 +19,17 @@ create policy "anon insert" on public.submissions for insert to anon with check 
 create policy "anon read live" on public.submissions for select to anon using (status = 'live');
 
 -- Storage: создать публичный bucket 'menus' в UI (Storage → New bucket → public).
+
+-- фото к существующим позициям (кнопка «📷 фото» в шторке). ТОЛЬКО меню/ценник/еда — модерация постфактум.
+create table public.item_photos (
+  id uuid primary key default gen_random_uuid(),
+  item_id text not null,               -- id позиции из seed или submissions
+  photo_url text not null,             -- Storage bucket 'menus'
+  ip_hash text,
+  flagged int not null default 0,
+  status text not null default 'live',
+  submitted_at timestamptz not null default now()
+);
+alter table public.item_photos enable row level security;
+create policy "anon insert photos" on public.item_photos for insert to anon with check (true);
+create policy "anon read live photos" on public.item_photos for select to anon using (status = 'live');

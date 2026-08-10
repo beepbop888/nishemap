@@ -173,6 +173,30 @@
     if (badge) { badge.textContent = "цена жива · проверено сегодня"; badge.className = "badge is-fresh"; }
   });
 
+  /* фото позиции: скрытый инпут, метаданные копим до подключения базы */
+  var photoInput = document.createElement("input");
+  photoInput.type = "file";
+  photoInput.accept = "image/*";
+  photoInput.hidden = true;
+  document.body.appendChild(photoInput);
+  var photoTarget = null;
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest(".photo-add");
+    if (!btn || btn.disabled) return;
+    photoTarget = btn;
+    photoInput.click();
+  });
+  photoInput.addEventListener("change", function () {
+    if (!photoInput.files.length || !photoTarget) return;
+    var metas;
+    try { metas = JSON.parse(localStorage.getItem("nishemap.photos")) || []; } catch (e) { metas = []; }
+    metas.push({ item: photoTarget.dataset.item, name: photoInput.files[0].name, at: new Date().toISOString() });
+    localStorage.setItem("nishemap.photos", JSON.stringify(metas));
+    photoTarget.disabled = true;
+    photoTarget.textContent = "Фото принято";
+    photoInput.value = "";
+  });
+
   /* ---------- bottom sheet ---------- */
   var sheet = document.getElementById("sheet");
   var backdrop = document.getElementById("backdrop");
@@ -195,7 +219,8 @@
         '<div class="sheet-item-top"><span class="card-item">' + esc(it.item) + "</span>" +
         '<span class="price price--' + b + '">' + it.price + " ₽</span></div>" +
         '<div class="fresh"><span class="badge ' + fb.cls + '">' + fb.text + "</span>" +
-        '<button class="reconfirm" data-item="' + it.id + '">Ещё по этой цене?</button></div>';
+        '<button class="reconfirm" data-item="' + it.id + '">Ещё по этой цене?</button>' +
+        '<button class="photo-add" data-item="' + it.id + '" title="Только меню, ценник или еда">📷 фото</button></div>';
       ul.appendChild(li);
     });
 
