@@ -700,16 +700,21 @@
         if (state.activeVenue) openSheet(state.activeVenue); // перерисовать открытую шторку
       }).catch(function () {});
   }
+  function safePhoto(u) {
+    if (typeof u !== "string") return null;
+    var ok = CFG.SUPABASE_URL && u.indexOf(CFG.SUPABASE_URL + "/storage/v1/object/public/menus/") === 0;
+    return ok ? u : null;
+  }
   function photosHtml(itemId) {
-    var list = PHOTOS[itemId];
-    if (!list || !list.length) return "";
+    var list = (PHOTOS[itemId] || []).map(safePhoto).filter(Boolean);
+    if (!list.length) return "";
     return '<div class="photos">' + list.slice(0, 4).map(function (u) {
       return '<img src="' + esc(u) + '" alt="Фото меню или блюда" loading="lazy" data-full="' + esc(u) + '">';
     }).join("") + "</div>";
   }
   document.addEventListener("click", function (e) {
     var img = e.target.closest(".photos img");
-    if (img) window.open(img.dataset.full, "_blank", "noopener");
+    if (img) { var u = safePhoto(img.dataset.full); if (u) window.open(u, "_blank", "noopener"); }
   });
 
   /* ---------- народные точки из общей копилки ---------- */
