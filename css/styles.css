@@ -221,6 +221,14 @@ body{
 .photo-add:hover{border-color:var(--ink); color:var(--ink)}
 .photo-add:active{transform:scale(.96)}
 .photo-add[disabled]{opacity:.6; cursor:default; color:var(--ok); border-color:var(--ok)}
+.here-btn{
+  margin-top:8px; width:100%; height:40px; background:var(--paper);
+  border:1px dashed var(--line-dash); border-radius:var(--r-sm); cursor:pointer;
+  font:600 var(--fs-xs)/1 var(--font-display); text-transform:uppercase; letter-spacing:.05em;
+  color:var(--ink-soft);
+}
+.here-btn:hover{border-color:var(--ink); color:var(--ink)}
+.here-btn.is-on{border-style:solid; border-color:var(--ok); color:var(--ok)}
 .field-hint{display:block; font-size:11px; color:var(--ink-soft); margin-top:4px}
 input[type="file"]{height:auto; padding:10px 12px; font-size:var(--fs-sm)}
 

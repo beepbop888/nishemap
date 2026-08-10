@@ -468,6 +468,8 @@
       formDone.hidden = true;
       formError.hidden = true;
       form.reset();
+      state.formPos = null;
+      if (hereBtn) { hereBtn.textContent = "📍 я сейчас здесь"; hereBtn.classList.remove("is-on"); }
       formModal.hidden = false;
       backdrop.hidden = false;
       form.elements.dish.focus();
@@ -479,6 +481,18 @@
   }
   formModal.querySelectorAll("[data-close-form]").forEach(function (b) {
     b.addEventListener("click", closeForm);
+  });
+
+  var hereBtn = document.getElementById("here-btn");
+  if (hereBtn) hereBtn.addEventListener("click", function () {
+    if (!navigator.geolocation) { toast("Геолокация недоступна"); return; }
+    hereBtn.textContent = "ловлю…";
+    navigator.geolocation.getCurrentPosition(function (p) {
+      state.formPos = [p.coords.latitude, p.coords.longitude];
+      hereBtn.textContent = "✓ точка на карте есть";
+      hereBtn.classList.add("is-on");
+    }, function () { hereBtn.textContent = "📍 я сейчас здесь"; toast("Не дали геолокацию"); },
+    { enableHighAccuracy: true, timeout: 8000 });
   });
 
   form.addEventListener("submit", function (e) {
@@ -497,15 +511,24 @@
     };
     // бэкенд подключён — шлём в общую копилку (вердикт совета: мгновенно, без очереди)
     if (CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY) {
-      fetch(CFG.SUPABASE_URL + "/rest/v1/submissions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "apikey": CFG.SUPABASE_ANON_KEY,
-          "Authorization": "Bearer " + CFG.SUPABASE_ANON_KEY,
-          "Prefer": "return=minimal",
-        },
-        body: JSON.stringify(record),
+      var withGeo = state.formPos
+        ? Object.assign({}, record, { lat: state.formPos[0], lon: state.formPos[1] })
+        : record;
+      function post(body) {
+        return fetch(CFG.SUPABASE_URL + "/rest/v1/submissions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "apikey": CFG.SUPABASE_ANON_KEY,
+            "Authorization": "Bearer " + CFG.SUPABASE_ANON_KEY,
+            "Prefer": "return=minimal",
+          },
+          body: JSON.stringify(body),
+        });
+      }
+      post(withGeo).then(function (r) {
+        // колонок lat/lon может ещё не быть в базе — тогда шлём без них
+        return (!r.ok && withGeo !== record) ? post(record) : r;
       }).then(function (resp) {
         if (resp && resp.ok) {
           var mine = submissionToVenues([{
@@ -732,7 +755,7 @@
       if (!byVenue[key]) {
         byVenue[key] = {
           id: "u-" + s.id, name: s.venue, type: "от народа", district: "",
-          address: s.address, lat: null, lon: null, source: "user",
+          address: s.address, lat: s.lat || null, lon: s.lon || null, source: "user",
           yandexUrl: "https://yandex.ru/maps/?text=" + encodeURIComponent(s.venue + " " + s.address),
           items: [],
         };
@@ -759,18 +782,27 @@
     (function next() {
       if (!queue.length) { onDone(); return; }
       var v = queue.shift();
+      function save(lat, lon) {
+        v.lat = lat; v.lon = lon;
+        userGeoCache[v.address] = [lat, lon];
+        localStorage.setItem("nishemap.geo.user", JSON.stringify(userGeoCache));
+      }
+      function fallbackYandex() {
+        if (typeof ymaps === "undefined" || !ymaps.geocode) { setTimeout(next, 300); return; }
+        ymaps.geocode("Москва, " + v.address, { results: 1 }).then(function (res) {
+          var o = res.geoObjects.get(0);
+          if (o) save.apply(null, o.geometry.getCoordinates());
+          setTimeout(next, 300);
+        }, function () { setTimeout(next, 300); });
+      }
       fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" +
         encodeURIComponent("Москва, " + v.address))
         .then(function (r) { return r.json(); })
         .then(function (d) {
-          if (d && d[0]) {
-            v.lat = +d[0].lat; v.lon = +d[0].lon;
-            userGeoCache[v.address] = [v.lat, v.lon];
-            localStorage.setItem("nishemap.geo.user", JSON.stringify(userGeoCache));
-          }
-          setTimeout(next, 1200); // вежливо к бесплатному геокодеру
+          if (d && d[0]) { save(+d[0].lat, +d[0].lon); setTimeout(next, 1200); }
+          else { fallbackYandex(); }   // транслит/кривой адрес — пусть попробует Яндекс
         })
-        .catch(function () { setTimeout(next, 1200); });
+        .catch(function () { fallbackYandex(); });
     })();
   }
 

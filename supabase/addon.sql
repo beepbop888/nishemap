@@ -19,3 +19,7 @@ create policy "anon upload menus" on storage.objects
 drop policy if exists "public read menus" on storage.objects;
 create policy "public read menus" on storage.objects
   for select to anon using (bucket_id = 'menus');
+
+-- 3) координаты из телефона при отправке («я сейчас здесь») — пин встаёт точно
+alter table public.submissions add column if not exists lat double precision;
+alter table public.submissions add column if not exists lon double precision;
