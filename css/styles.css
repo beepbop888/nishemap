@@ -50,11 +50,12 @@
 
 *{box-sizing:border-box}
 [hidden]{display:none !important}
-html,body{height:100%; overflow:hidden}
+html,body{height:100%; overflow:hidden; overscroll-behavior:none}
 body{
-  margin:0; position:fixed; inset:0; width:100%;
+  margin:0; position:fixed; top:0; left:0; right:0; bottom:0; width:100%;
+  height:100vh; height:100dvh;            /* dvh — для мобильного Safari */
   font:var(--fs-md)/1.5 var(--font-body); color:var(--ink); background:var(--paper);
-  display:flex; flex-direction:column;
+  display:grid; grid-template-rows:auto minmax(0,1fr);  /* шапка + карта, шапка не сжимается */
   -webkit-tap-highlight-color:transparent;
 }
 
@@ -65,7 +66,8 @@ body{
 .topbar{
   background:var(--ink); color:var(--paper-raised);
   border-bottom:3px solid var(--stamp);
-  padding:calc(8px + env(safe-area-inset-top)) 16px 10px; z-index:var(--z-chrome);
+  padding:calc(8px + env(safe-area-inset-top)) 16px 10px;
+  z-index:var(--z-chrome); flex:none; min-height:0; align-self:start; width:100%;
 }
 .brand{display:flex; align-items:center; gap:10px}
 .brand-coin{
@@ -81,7 +83,7 @@ body{
 }
 .brand-nishe{color:var(--stamp-hi)}
 .build{font:400 10px/1 var(--font-mono); color:var(--paper-dim); align-self:flex-start; margin-left:4px}
-.tagline{margin:4px 0 10px; color:var(--paper-dim); font-size:var(--fs-xs); letter-spacing:.01em}
+.tagline{margin:4px 0 10px; color:var(--paper-dim); font-size:var(--fs-xs); letter-spacing:.01em; white-space:nowrap}
 
 /* ============ фильтры ============ */
 .filters{display:flex; flex-direction:column; gap:8px}
@@ -130,7 +132,7 @@ body{
 .coin--big{width:44px;height:44px;display:block;margin:0 auto 12px}
 
 /* ============ сцена / карта ============ */
-.stage{position:relative; flex:1; min-height:0}
+.stage{position:relative; min-height:0; overflow:hidden}
 .map{position:absolute; inset:0; background:var(--paper)}
 /* газетная карта: обесцвечиваем только тайлы, монеты остаются цветными */
 .map [class*="ground-pane"]{filter:grayscale(.85) contrast(1.03)}
@@ -361,10 +363,14 @@ input[name="price"]{font-family:var(--font-mono); font-weight:700}
 .backdrop{position:fixed; inset:0; z-index:var(--z-backdrop); background:rgba(35,35,35,.45)}
 
 /* ============ desktop ============ */
+@media(min-width:1180px){
+  .tagline{max-width:none}
+}
 @media(min-width:720px){
   .topbar{display:flex; align-items:center; gap:24px; padding:12px 24px}
   .tagline{margin:0}
   .filters{margin-left:auto; flex-direction:row; align-items:center; gap:8px}
+  .tagline{overflow:hidden; text-overflow:ellipsis; max-width:26ch}
   .search{width:220px}
   .modal{align-items:center}
   .modal-card{border-radius:var(--r-md); border:1px solid var(--ink); border-top-width:2px}
