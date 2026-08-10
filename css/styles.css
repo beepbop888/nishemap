@@ -67,7 +67,7 @@ body{
   background:var(--ink); color:var(--paper-raised);
   border-bottom:3px solid var(--stamp);
   padding:calc(8px + env(safe-area-inset-top)) 16px 10px;
-  z-index:var(--z-chrome); flex:none; min-height:0; align-self:start; width:100%;
+  position:relative; z-index:var(--z-chrome); flex:none; min-height:0; align-self:start; width:100%;
 }
 .brand{display:flex; align-items:center; gap:10px}
 .brand-coin{
@@ -132,7 +132,7 @@ body{
 .coin--big{width:44px;height:44px;display:block;margin:0 auto 12px}
 
 /* ============ сцена / карта ============ */
-.stage{position:relative; min-height:0; overflow:hidden}
+.stage{position:relative; z-index:0; isolation:isolate; min-height:0; overflow:hidden}
 .map{position:absolute; inset:0; background:var(--paper)}
 /* газетная карта: обесцвечиваем только тайлы, монеты остаются цветными */
 .map [class*="ground-pane"]{filter:grayscale(.85) contrast(1.03)}
