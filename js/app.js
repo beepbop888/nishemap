@@ -322,6 +322,17 @@
           "Prefer": "return=minimal",
         },
         body: JSON.stringify(record),
+      }).then(function (resp) {
+        if (resp && resp.ok) {
+          var mine = submissionToVenues([{
+            id: "local-" + Date.now(), dish: record.dish, price: record.price,
+            category: record.category, venue: record.venue, address: record.address,
+            submitted_at: new Date().toISOString(),
+          }]);
+          SEED.venues = SEED.venues.concat(mine);
+          render();
+          geocodeQueue(mine, render);
+        }
       }).catch(function () { /* оффлайн — хотя бы локально сохранится ниже */ });
     }
     var inbox;
@@ -447,6 +458,78 @@
     if (state.map) renderMarkers();
   }
 
+  /* ---------- народные точки из общей копилки ---------- */
+  function sbHeaders() {
+    return {
+      "apikey": CFG.SUPABASE_ANON_KEY,
+      "Authorization": "Bearer " + CFG.SUPABASE_ANON_KEY,
+    };
+  }
+
+  function submissionToVenues(rows) {
+    var byVenue = {};
+    rows.forEach(function (s) {
+      var key = (s.venue + "|" + s.address).toLowerCase();
+      if (!byVenue[key]) {
+        byVenue[key] = {
+          id: "u-" + s.id, name: s.venue, type: "от народа", district: "",
+          address: s.address, lat: null, lon: null, source: "user",
+          yandexUrl: "https://yandex.ru/maps/?text=" + encodeURIComponent(s.venue + " " + s.address),
+          items: [],
+        };
+      }
+      byVenue[key].items.push({
+        id: "ui-" + s.id, item: s.dish, price: s.price, category: s.category,
+        confirmedAt: (s.submitted_at || "").slice(0, 10), source: "user",
+      });
+    });
+    return Object.keys(byVenue).map(function (k) { return byVenue[k]; });
+  }
+
+  var userGeoCache;
+  try { userGeoCache = JSON.parse(localStorage.getItem("nishemap.geo.user")) || {}; } catch (e) { userGeoCache = {}; }
+
+  function geocodeQueue(venues, onDone) {
+    var queue = venues.filter(function (v) {
+      if (userGeoCache[v.address]) {
+        v.lat = userGeoCache[v.address][0]; v.lon = userGeoCache[v.address][1];
+        return false;
+      }
+      return !v.lat;
+    });
+    (function next() {
+      if (!queue.length) { onDone(); return; }
+      var v = queue.shift();
+      fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" +
+        encodeURIComponent("Москва, " + v.address))
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d && d[0]) {
+            v.lat = +d[0].lat; v.lon = +d[0].lon;
+            userGeoCache[v.address] = [v.lat, v.lon];
+            localStorage.setItem("nishemap.geo.user", JSON.stringify(userGeoCache));
+          }
+          setTimeout(next, 1200); // вежливо к бесплатному геокодеру
+        })
+        .catch(function () { setTimeout(next, 1200); });
+    })();
+  }
+
+  function loadSubmissions() {
+    if (!CFG.SUPABASE_URL || !CFG.SUPABASE_ANON_KEY) return;
+    fetch(CFG.SUPABASE_URL + "/rest/v1/submissions?select=*&order=submitted_at.desc&limit=500", { headers: sbHeaders() })
+      .then(function (r) { return r.json(); })
+      .then(function (rows) {
+        if (!Array.isArray(rows) || !rows.length) return;
+        var vs = submissionToVenues(rows);
+        SEED.venues = SEED.venues.concat(vs);
+        render(); // список сразу, пины — по мере геокода
+        geocodeQueue(vs, render);
+      })
+      .catch(function () { /* сеть упала — карта живёт на сиде */ });
+  }
+
   initMap();
   render();
+  loadSubmissions();
 })();

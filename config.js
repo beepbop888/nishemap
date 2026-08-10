@@ -6,6 +6,6 @@ window.NISHEMAP_CONFIG = {
   CITY_CENTER: [55.751244, 37.618423], // Москва [lat, lon] — порядок API 2.1
   CITY_ZOOM: 12,
   // Supabase (см. supabase/BACKEND.md): заполнить после создания проекта
-  SUPABASE_URL: "",
-  SUPABASE_ANON_KEY: "",
+  SUPABASE_URL: "https://svfnjfpawljkdcehzkgv.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_tUkrLQj0a8Lgod0f5UP5ng_QKD4vQlu",
 };
