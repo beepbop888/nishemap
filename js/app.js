@@ -800,8 +800,17 @@
         });
       }
       post(withGeo).then(function (r) {
-        // колонок lat/lon может ещё не быть в базе — тогда шлём без них
-        return (!r.ok && withGeo !== record) ? post(record) : r;
+        if (r.ok) return r;
+        return r.clone().json().catch(function () { return {}; }).then(function (err) {
+          var msg = (err && (err.message || err.hint)) || "";
+          // сервер отбил по лимиту/правилу — это не повод пересылать, это повод сказать человеку
+          if (/Слишком|перегружена|подтверждать нельзя|устройства/i.test(msg)) {
+            formDone.hidden = true; form.hidden = false;
+            formError.hidden = false; formError.textContent = msg;
+            throw new Error("rejected");
+          }
+          return post(record);   // скорее всего колонки ещё нет — шлём без необязательных полей
+        });
       }).then(function (resp) {
         if (resp && resp.ok) {
           markSent(entry.at);
