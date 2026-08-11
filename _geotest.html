@@ -1,0 +1,24 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>geotest</title>
+<script src="config.js"></script></head><body><pre id="R">loading…</pre>
+<script>
+var K=window.NISHEMAP_CONFIG.YANDEX_API_KEY, out=[];
+var s=document.createElement("script");
+s.src="https://api-maps.yandex.ru/2.1/?apikey="+K+"&lang=ru_RU";
+s.onload=function(){
+  out.push("loader=ok");
+  ymaps.ready(function(){
+    out.push("ready=ok geocodeFn="+(typeof ymaps.geocode));
+    ymaps.geocode("Москва, Gilyarovscogo 60",{results:1}).then(function(r){
+      var o=r.geoObjects.get(0);
+      out.push("translit="+(o?o.geometry.getCoordinates().join(","):"NONE"));
+      return ymaps.geocode("Москва, Гиляровского 60",{results:1});
+    }).then(function(r){
+      var o=r.geoObjects.get(0);
+      out.push("cyrillic="+(o?o.geometry.getCoordinates().join(","):"NONE"));
+      document.getElementById("R").textContent="GEO|"+out.join("|");
+    }).catch(function(e){document.getElementById("R").textContent="GEO|ERR "+e.message+"|"+out.join("|");});
+  });
+};
+s.onerror=function(){document.getElementById("R").textContent="GEO|loader FAILED";};
+document.head.appendChild(s);
+</script></body></html>
