@@ -120,6 +120,18 @@
     el0.textContent = rankFor(n).t + " · " + n;
   }
 
+  function coordsFromLink(s) {
+    if (!s) return null;
+    var m = s.match(/[?&]ll=(-?\d+\.\d+)(?:%2C|,)(-?\d+\.\d+)/); // Яндекс: ll=lon,lat
+    if (m) return [parseFloat(m[2]), parseFloat(m[1])];
+    m = s.match(/(-?\d{2}\.\d{4,})[,\s]+(-?\d{2}\.\d{4,})/);      // просто «55.78, 37.63»
+    if (m) {
+      var a = parseFloat(m[1]), b = parseFloat(m[2]);
+      return a > 50 ? [a, b] : [b, a];
+    }
+    return null;
+  }
+
   function distM(a, b, c, d) { // грубое расстояние в метрах
     var x = (c - a) * 111320, y = (d - b) * 63000;
     return Math.sqrt(x * x + y * y);
@@ -501,7 +513,14 @@
     var price = parseInt(f.price.value, 10);
     var ok = f.dish.value.trim() && f.venue.value.trim() && f.address.value.trim() &&
       price >= 1 && price <= 500;
-    if (!ok) { formError.hidden = false; return; }
+    if (!ok) { formError.hidden = false; formError.textContent = "Цена до 500 ₽ и все поля — иначе никак."; return; }
+    var linkPos = coordsFromLink(f.address.value);
+    if (linkPos) state.formPos = linkPos;
+    if (!state.formPos && !GEO_FIX[f.address.value.trim().toLowerCase()] && !/[а-яё]/i.test(f.address.value)) {
+      formError.hidden = false;
+      formError.textContent = "Адрес латиницей карта не найдёт. Напиши по-русски, нажми «я сейчас здесь» или вставь ссылку из Яндекс Карт.";
+      return;
+    }
     var record = {
       dish: f.dish.value.trim(),
       price: price,
@@ -768,11 +787,17 @@
     return Object.keys(byVenue).map(function (k) { return byVenue[k]; });
   }
 
+  // адреса, которые бесплатный геокодер не берёт (латиница, опечатки) — ставим руками
+  var GEO_FIX = {
+    "gilyarovscogo 60": [55.7875, 37.6334],
+  };
   var userGeoCache;
   try { userGeoCache = JSON.parse(localStorage.getItem("nishemap.geo.user")) || {}; } catch (e) { userGeoCache = {}; }
 
   function geocodeQueue(venues, onDone) {
     var queue = venues.filter(function (v) {
+      var fix = GEO_FIX[(v.address || "").trim().toLowerCase()];
+      if (fix && !v.lat) { v.lat = fix[0]; v.lon = fix[1]; return false; }
       if (userGeoCache[v.address]) {
         v.lat = userGeoCache[v.address][0]; v.lon = userGeoCache[v.address][1];
         return false;
@@ -787,14 +812,7 @@
         userGeoCache[v.address] = [lat, lon];
         localStorage.setItem("nishemap.geo.user", JSON.stringify(userGeoCache));
       }
-      function fallbackYandex() {
-        if (typeof ymaps === "undefined" || !ymaps.geocode) { setTimeout(next, 300); return; }
-        ymaps.geocode("Москва, " + v.address, { results: 1 }).then(function (res) {
-          var o = res.geoObjects.get(0);
-          if (o) save.apply(null, o.geometry.getCoordinates());
-          setTimeout(next, 300);
-        }, function () { setTimeout(next, 300); });
-      }
+      function fallbackYandex() { setTimeout(next, 300); } // ключ Яндекса геокодер не даёт
       fetch("https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" +
         encodeURIComponent("Москва, " + v.address))
         .then(function (r) { return r.json(); })
