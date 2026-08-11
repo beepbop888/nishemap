@@ -316,7 +316,7 @@ input[type="file"]{height:auto; padding:10px 12px; font-size:var(--fs-sm)}
   .brand-name{font-size:21px}
   .tagline{margin:2px 0 6px; font-size:11px}
   .filters{gap:6px}
-  .search{padding:6px 10px; font-size:14px; border-radius:var(--r-sm)}
+  .search{height:34px; padding:0 10px; font-size:14px; border-radius:var(--r-sm)}
   .filter-row{gap:6px}
   .chip{height:30px; padding:0 9px; font-size:10px; gap:6px}
   .chip .coin, .chip .near-dot, .chip .ok-dot{width:11px; height:11px}
