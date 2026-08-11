@@ -10,10 +10,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=PT+Mono:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=31">
+<link rel="stylesheet" href="css/styles.css?v=32">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23d9a514' stroke='%23f2cf5c' stroke-width='5'/><text x='50' y='68' font-size='52' font-weight='bold' text-anchor='middle' fill='%236e5104' font-family='Menlo,monospace'>₽</text></svg>">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="config.js?v=31"></script>
+<script src="config.js?v=32"></script>
 </head>
 <body>
 
@@ -21,7 +21,7 @@
   <div class="brand">
     <span class="brand-coin" aria-hidden="true">₽</span>
     <h1 class="brand-name"><span class="brand-nishe">Нище</span>Map</h1>
-    <span class="build" aria-hidden="true">сб.31</span>
+    <span class="build" aria-hidden="true">сб.32</span>
     <button id="rank" class="rank" hidden type="button" title="Твой вклад в народную копилку"></button>
   </div>
   <p class="tagline">Еда до 500 ₽. Для тех, кто считает медяки.</p>
@@ -43,6 +43,9 @@
       </button>
       <button class="chip chip--near" data-near aria-pressed="false" title="Сначала то, что рядом">
         <span class="near-dot" aria-hidden="true"></span>рядом
+      </button>
+      <button class="chip chip--ok" data-verified aria-pressed="false" title="Показывать только подтверждённые цены">
+        <span class="ok-dot" aria-hidden="true"></span>проверенные
       </button>
       <button class="chip chip--gray is-on" data-gray aria-pressed="true" title="Заведения без цен — их ещё никто не сдал">
         <span class="coin" aria-hidden="true" style="background:#fff;border:2px dashed var(--ink-soft);box-shadow:none"></span>без цены
@@ -108,6 +111,7 @@
   <header class="sheet-head">
     <h2 id="sheet-venue" class="sheet-venue"></h2>
     <p class="sheet-meta"><span id="sheet-type"></span> · <span id="sheet-address"></span></p>
+    <p class="sheet-cheapest" id="sheet-cheapest" hidden></p>
   </header>
   <ul id="sheet-items" class="sheet-items"></ul>
   <div class="sheet-actions">
@@ -176,8 +180,8 @@
 
 <div id="backdrop" class="backdrop" hidden></div>
 
-<script src="data/seed.js?v=31"></script>
-<script src="data/osm.js?v=31" onerror="window.NISHEMAP_OSM=null"></script>
-<script src="js/app.js?v=31"></script>
+<script src="data/seed.js?v=32"></script>
+<script src="data/osm.js?v=32" onerror="window.NISHEMAP_OSM=null"></script>
+<script src="js/app.js?v=32"></script>
 </body>
 </html>

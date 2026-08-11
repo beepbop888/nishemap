@@ -17,6 +17,7 @@
     category: "",
     districts: {}, // {район: true} — мультивыбор; пусто = все
     showGray: true,
+    onlyVerified: false,
     near: false,
     pos: null,
     grayMarkers: [],
@@ -62,15 +63,28 @@
   var CONFIRMS = {};   // itemId -> Set-подобный объект устройств
   function confirmCount(id) { return CONFIRMS[id] ? Object.keys(CONFIRMS[id]).length : 0; }
   function hasPhoto(id) { return !!(PHOTOS[id] && PHOTOS[id].length); }
-  /* позиция проверена: есть фото ИЛИ два разных устройства подтвердили */
-  function isVerified(id) {
-    if (hasPhoto(id)) return true;
-    var n = confirmCount(id);
-    if (CONFIRMS[id] && CONFIRMS[id][deviceId()] && myCoinsCache >= 3) n += 1; // вес доверенного
-    if (myCoinsCache >= 10 && myItems().indexOf(id) !== -1) return true;       // доверенный автор
-    return n >= 2;
+  var VERIFY_TTL = 30; // дней: дальше проверка считается устаревшей
+  function daysSinceISO(iso) {
+    if (!iso) return 1e6;
+    return Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 86400000));
   }
-  var myCoinsCache = 0;
+  /* когда позицию проверили в последний раз (фото или подтверждение) */
+  function verifiedAt(id) {
+    var best = null;
+    if (PHOTO_AT[id]) best = PHOTO_AT[id];
+    var c = CONFIRMS[id] || {};
+    Object.keys(c).forEach(function (d) { if (c[d] && (!best || c[d] > best)) best = c[d]; });
+    return best;
+  }
+  function verifyAgeDays(id) { return daysSinceISO(verifiedAt(id)); }
+  /* позиция проверена: есть фото ИЛИ два разных устройства подтвердили */
+  /* Проверка считается ОДИНАКОВО у всех: только по данным сервера.
+     Никаких локальных привилегий — иначе автор видит «проверено», а район нет. */
+  function isVerified(id) {
+    if (verifyAgeDays(id) > VERIFY_TTL) return false;   // проверка протухла
+    if (hasPhoto(id)) return true;
+    return confirmCount(id) >= 2;
+  }
 
   /* ---------- helpers ---------- */
   function bandOf(price) { return price <= 100 ? 100 : price <= 200 ? 200 : price <= 300 ? 300 : 500; }
@@ -92,8 +106,12 @@
   }
   function freshBadge(it) {
     if (isVerified(it.id)) {
-      var n = confirmCount(it.id);
-      return { text: hasPhoto(it.id) ? "проверено фото" : "проверено народом · " + n, cls: "is-fresh" };
+      var n = confirmCount(it.id), age = verifyAgeDays(it.id);
+      var when = age === 0 ? "сегодня" : age + " дн. назад";
+      return { text: (hasPhoto(it.id) ? "проверено фото · " : "проверено народом · " + n + " · ") + when, cls: "is-fresh" };
+    }
+    if (verifiedAt(it.id) && verifyAgeDays(it.id) > VERIFY_TTL) {
+      return { text: "проверяли " + verifyAgeDays(it.id) + " дн. назад — уже неточно", cls: "is-stale" };
     }
     var ca = confirmedAt(it);
     if (!ca) return { text: "цена из подборки · не проверена", cls: "is-stale" };
@@ -109,6 +127,7 @@
     return v.items.filter(function (it) {
       if (!state.bands[bandOf(it.price)]) return false;
       if (state.category && it.category !== state.category) return false;
+      if (state.onlyVerified && !isVerified(it.id)) return false;
       if (q && it.item.toLowerCase().indexOf(q) === -1 &&
           v.name.toLowerCase().indexOf(q) === -1) return false;
       return true;
@@ -194,8 +213,7 @@
       "<p style='margin:0 0 8px'>Монета = твоя цена, которую подтвердил район. У тебя <b>" + coins + "</b>.</p>" +
       "<ul>" +
       "<li>Цену проверяют: фото меню <b>или</b> двое других людей жмут «Ещё по этой цене?»</li>" +
-      "<li>С <b>3</b> монет твоё подтверждение весит вдвое</li>" +
-      "<li>С <b>10</b> монет твои цены выходят сразу проверенными</li>" +
+      "<li>Монеты — личный счёт: район видит их в звании, но проверку цены решают только фото и чужие подтверждения</li>" +
       "<li>Звание: <b>" + rankFor(coins).t + "</b>" + (nx ? " → до «" + nx.t + "» ещё " + (nx.n - coins) : " — потолок") + "</li>" +
       "</ul>");
     document.querySelector(".brand").appendChild(box);
@@ -205,9 +223,6 @@
       });
     }, 10);
   });
-
-  /* привилегия: с 3 монет голос весит вдвое, с 10 — свои цены сразу проверены */
-  function myWeight() { return myCoins() >= 3 ? 2 : 1; }
 
   /* ---------- band chips ---------- */
   document.querySelectorAll(".chip[data-band]").forEach(function (chip) {
@@ -240,6 +255,14 @@
       nearChip.innerHTML = '<span class="near-dot"></span>рядом';
       toast("Не даёшь геолокацию — не покажу, что рядом");
     }, { timeout: 8000, maximumAge: 60000 });
+  });
+
+  var okChip = document.querySelector("[data-verified]");
+  if (okChip) okChip.addEventListener("click", function () {
+    state.onlyVerified = !state.onlyVerified;
+    okChip.classList.toggle("is-on", state.onlyVerified);
+    okChip.setAttribute("aria-pressed", String(state.onlyVerified));
+    render();
   });
 
   var grayChip = document.querySelector("[data-gray]");
@@ -457,6 +480,14 @@
         }).catch(function () {});
     }
     document.getElementById("sheet-address").textContent = v.address;
+    var prices = (v.items || []).map(function (i) { return i.price; });
+    var cheap = document.getElementById("sheet-cheapest");
+    if (cheap) {
+      cheap.textContent = prices.length
+        ? "Самое дешёвое здесь: " + Math.min.apply(null, prices) + " ₽ · позиций: " + prices.length
+        : "";
+      cheap.hidden = !prices.length;
+    }
     var link = document.getElementById("sheet-yandex");
     link.href = v.yandexUrl || "https://yandex.ru/maps/?text=" + encodeURIComponent(v.name + " " + v.address);
 
@@ -476,6 +507,10 @@
         var f = document.getElementById("submit-form").elements;
         f.venue.value = v.name;
         f.address.value = v.address && v.address !== v.district ? v.address : "";
+        if (v.lat && v.lon) {                       // координаты уже известны из OSM
+          state.formPos = [v.lat, v.lon];
+          if (hereBtn) { hereBtn.textContent = "✓ точка на карте есть"; hereBtn.classList.add("is-on"); }
+        }
         f.dish.focus();
       });
     }
@@ -855,16 +890,17 @@
   window.addEventListener("online", flushInbox);
 
   /* ---------- фото позиций ---------- */
-  var PHOTOS = {};
+  var PHOTOS = {}, PHOTO_AT = {};
   function loadPhotos() {
     if (!CFG.SUPABASE_URL) return;
-    fetch(CFG.SUPABASE_URL + "/rest/v1/item_photos?select=item_id,photo_url,status&limit=1000", { headers: sbHeaders() })
+    fetch(CFG.SUPABASE_URL + "/rest/v1/item_photos?select=item_id,photo_url,status,submitted_at&limit=1000", { headers: sbHeaders() })
       .then(function (r) { return r.json(); })
       .then(function (rows) {
         if (!Array.isArray(rows)) return;
         rows.forEach(function (p) {
           if (p.status && p.status !== "live") return;
           (PHOTOS[p.item_id] = PHOTOS[p.item_id] || []).push(p.photo_url);
+          if (p.submitted_at && (!PHOTO_AT[p.item_id] || p.submitted_at > PHOTO_AT[p.item_id])) PHOTO_AT[p.item_id] = p.submitted_at;
         });
         if (state.activeVenue) openSheet(state.activeVenue); // перерисовать открытую шторку
         render(); checkNewCoins();
@@ -889,11 +925,11 @@
 
   function loadConfirms(done) {
     if (!CFG.SUPABASE_URL) { done && done(); return; }
-    fetch(CFG.SUPABASE_URL + "/rest/v1/confirms?select=item_id,device&limit=5000", { headers: sbHeaders() })
+    fetch(CFG.SUPABASE_URL + "/rest/v1/confirms?select=item_id,device,created_at&limit=5000", { headers: sbHeaders() })
       .then(function (r) { return r.ok ? r.json() : []; })
       .then(function (rows) {
         if (Array.isArray(rows)) rows.forEach(function (c) {
-          (CONFIRMS[c.item_id] = CONFIRMS[c.item_id] || {})[c.device] = 1;
+          (CONFIRMS[c.item_id] = CONFIRMS[c.item_id] || {})[c.device] = c.created_at || "";
         });
         done && done();
       }).catch(function () { done && done(); });
@@ -910,11 +946,7 @@
     setTimeout(function () { wrap.classList.add("is-out"); }, 2200);
     setTimeout(function () { wrap.remove(); }, 2900);
   }
-  function myCoins() {
-    var base = myItems().filter(function (id) { return hasPhoto(id) || confirmCount(id) >= 2; }).length;
-    myCoinsCache = base;
-    return base;
-  }
+  function myCoins() { return myItems().filter(isVerified).length; }
   function checkNewCoins() {
     var known;
     try { known = JSON.parse(localStorage.getItem("nishemap.coins.known")) || []; } catch (e) { known = []; }
