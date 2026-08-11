@@ -6,7 +6,7 @@
 
 ## Настройка (≈10 минут, делает основатель — нужен аккаунт)
 1. supabase.com → New project (Free tier), регион EU.
-2. SQL Editor → вставить содержимое `schema.sql` → Run.
+2. SQL Editor → вставить содержимое `01_core.sql` → Run.
 3. Storage → New bucket → `menus`, галочка Public.
 4. Settings → API → скопировать Project URL и anon public key
    → вставить в `config.js`: SUPABASE_URL и SUPABASE_ANON_KEY.
