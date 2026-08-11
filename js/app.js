@@ -870,6 +870,10 @@
     mapEl.hidden = toList;
     fallbackEl.hidden = !toList;
     viewToggle.textContent = toList ? "Карта" : "Список";
+    // в списке карте нечего подсказывать: прячем и подсказку, и выбор районов не трогаем
+    var hint = document.getElementById("gray-hint");
+    if (hint && toList) hint.hidden = true;
+    document.getElementById("district-box").classList.toggle("in-list", toList);
     render();
     if (!toList && state.map) state.map.container.fitToViewport();
   });
@@ -972,6 +976,8 @@
     state.grayMarkers.forEach(function (m) { state.map.geoObjects.remove(m); });
     state.grayMarkers = [];
     var hint = document.getElementById("gray-hint");
+    var inList = document.getElementById("map").hidden;
+    if (inList) { if (hint) hint.hidden = true; return; }
     var zoom = state.map.getZoom();
     if (!state.showGray || !OSM.length) { if (hint) hint.hidden = true; return; }
     if (zoom < GRAY_MIN_ZOOM) {
