@@ -42,6 +42,36 @@
     }
   }
 
+  /* ---------- личность устройства и вклад ---------- */
+  function deviceId() {
+    var d = localStorage.getItem("nishemap.device");
+    if (!d) {
+      d = "d" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+      localStorage.setItem("nishemap.device", d);
+    }
+    return d;
+  }
+  function myItems() {
+    try { return JSON.parse(localStorage.getItem("nishemap.myitems")) || []; } catch (e) { return []; }
+  }
+  function addMyItem(id) {
+    var a = myItems();
+    if (a.indexOf(id) === -1) { a.push(id); localStorage.setItem("nishemap.myitems", JSON.stringify(a)); }
+  }
+
+  var CONFIRMS = {};   // itemId -> Set-подобный объект устройств
+  function confirmCount(id) { return CONFIRMS[id] ? Object.keys(CONFIRMS[id]).length : 0; }
+  function hasPhoto(id) { return !!(PHOTOS[id] && PHOTOS[id].length); }
+  /* позиция проверена: есть фото ИЛИ два разных устройства подтвердили */
+  function isVerified(id) {
+    if (hasPhoto(id)) return true;
+    var n = confirmCount(id);
+    if (CONFIRMS[id] && CONFIRMS[id][deviceId()] && myCoinsCache >= 3) n += 1; // вес доверенного
+    if (myCoinsCache >= 10 && myItems().indexOf(id) !== -1) return true;       // доверенный автор
+    return n >= 2;
+  }
+  var myCoinsCache = 0;
+
   /* ---------- helpers ---------- */
   function bandOf(price) { return price <= 100 ? 100 : price <= 200 ? 200 : price <= 300 ? 300 : 500; }
 
@@ -61,6 +91,10 @@
     return n + " дней";
   }
   function freshBadge(it) {
+    if (isVerified(it.id)) {
+      var n = confirmCount(it.id);
+      return { text: hasPhoto(it.id) ? "проверено фото" : "проверено народом · " + n, cls: "is-fresh" };
+    }
     var ca = confirmedAt(it);
     if (!ca) return { text: "цена из подборки · не проверена", cls: "is-stale" };
     var d = daysAgo(ca);
@@ -114,10 +148,11 @@
   function paintRank() {
     var el0 = document.getElementById("rank");
     if (!el0) return;
-    var n = myCount();
-    if (!n) { el0.hidden = true; return; }
+    var coins = myCoins(), sent = myCount();
+    if (!sent) { el0.hidden = true; return; }
     el0.hidden = false;
-    el0.textContent = rankFor(n).t + " · " + n;
+    el0.textContent = rankFor(coins).t + " · " + coins + "🪙";
+    el0.title = "Монет: " + coins + " (за проверенные цены). Сдано всего: " + sent + ".";
   }
 
   function coordsFromLink(s) {
@@ -147,6 +182,32 @@
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
+
+  /* объясняем, зачем монеты — прямо в интерфейсе */
+  var rankBtn = document.getElementById("rank");
+  if (rankBtn) rankBtn.addEventListener("click", function () {
+    var old = document.querySelector(".coins-info");
+    if (old) { old.remove(); return; }
+    var coins = myCoins(), nx = nextRank(coins);
+    var box = el("div", "coins-info",
+      "<h4>Монеты</h4>" +
+      "<p style='margin:0 0 8px'>Монета = твоя цена, которую подтвердил район. У тебя <b>" + coins + "</b>.</p>" +
+      "<ul>" +
+      "<li>Цену проверяют: фото меню <b>или</b> двое других людей жмут «Ещё по этой цене?»</li>" +
+      "<li>С <b>3</b> монет твоё подтверждение весит вдвое</li>" +
+      "<li>С <b>10</b> монет твои цены выходят сразу проверенными</li>" +
+      "<li>Звание: <b>" + rankFor(coins).t + "</b>" + (nx ? " → до «" + nx.t + "» ещё " + (nx.n - coins) : " — потолок") + "</li>" +
+      "</ul>");
+    document.querySelector(".brand").appendChild(box);
+    setTimeout(function () {
+      document.addEventListener("click", function h(e) {
+        if (!e.target.closest(".coins-info") && !e.target.closest("#rank")) { box.remove(); document.removeEventListener("click", h); }
+      });
+    }, 10);
+  });
+
+  /* привилегия: с 3 монет голос весит вдвое, с 10 — свои цены сразу проверены */
+  function myWeight() { return myCoins() >= 3 ? 2 : 1; }
 
   /* ---------- band chips ---------- */
   document.querySelectorAll(".chip[data-band]").forEach(function (chip) {
@@ -315,6 +376,18 @@
     localStorage.setItem(LS_CONFIRM, JSON.stringify(c));
     btn.disabled = true;
     btn.textContent = "Спасибо, зафиксировали";
+    if (CFG.SUPABASE_URL) {
+      fetch(CFG.SUPABASE_URL + "/rest/v1/confirms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "apikey": CFG.SUPABASE_ANON_KEY,
+                   "Authorization": "Bearer " + CFG.SUPABASE_ANON_KEY, "Prefer": "return=minimal" },
+        body: JSON.stringify({ item_id: id, device: deviceId() }),
+      }).then(function () {
+        (CONFIRMS[id] = CONFIRMS[id] || {})[deviceId()] = 1;
+        var badge = btn.parentElement.querySelector(".badge");
+        if (badge && isVerified(id)) { badge.textContent = "проверено народом · " + confirmCount(id); badge.className = "badge is-fresh"; }
+      }).catch(function () {});
+    }
     var badge = btn.parentElement.querySelector(".badge");
     if (badge) { badge.textContent = "цена жива · проверено сегодня"; badge.className = "badge is-fresh"; }
   });
@@ -563,6 +636,9 @@
       }).then(function (resp) {
         if (resp && resp.ok) {
           markSent(entry.at);
+          resp.clone().json().then(function (rows) {
+            if (rows && rows[0] && rows[0].id) addMyItem("ui-" + rows[0].id);
+          }).catch(function () {});
           var mine = submissionToVenues([{
             id: "local-" + Date.now(), dish: record.dish, price: record.price,
             category: record.category, venue: record.venue, address: record.address,
@@ -791,6 +867,7 @@
           (PHOTOS[p.item_id] = PHOTOS[p.item_id] || []).push(p.photo_url);
         });
         if (state.activeVenue) openSheet(state.activeVenue); // перерисовать открытую шторку
+        render(); checkNewCoins();
       }).catch(function () {});
   }
   function safePhoto(u) {
@@ -809,6 +886,44 @@
     var img = e.target.closest(".photos img");
     if (img) { var u = safePhoto(img.dataset.full); if (u) window.open(u, "_blank", "noopener"); }
   });
+
+  function loadConfirms(done) {
+    if (!CFG.SUPABASE_URL) { done && done(); return; }
+    fetch(CFG.SUPABASE_URL + "/rest/v1/confirms?select=item_id,device&limit=5000", { headers: sbHeaders() })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .then(function (rows) {
+        if (Array.isArray(rows)) rows.forEach(function (c) {
+          (CONFIRMS[c.item_id] = CONFIRMS[c.item_id] || {})[c.device] = 1;
+        });
+        done && done();
+      }).catch(function () { done && done(); });
+  }
+
+  /* ---------- монета за проверенную точку ---------- */
+  function coinCelebration(n) {
+    var wrap = el("div", "coin-cheer",
+      '<div class="coin-cheer-coin"></div>' +
+      '<p class="coin-cheer-title">' + (n > 1 ? "+" + n + " монеты" : "+1 монета") + "</p>" +
+      '<p class="coin-cheer-sub">Твою цену подтвердил район</p>');
+    document.body.appendChild(wrap);
+    haptic("success");
+    setTimeout(function () { wrap.classList.add("is-out"); }, 2200);
+    setTimeout(function () { wrap.remove(); }, 2900);
+  }
+  function myCoins() {
+    var base = myItems().filter(function (id) { return hasPhoto(id) || confirmCount(id) >= 2; }).length;
+    myCoinsCache = base;
+    return base;
+  }
+  function checkNewCoins() {
+    var known;
+    try { known = JSON.parse(localStorage.getItem("nishemap.coins.known")) || []; } catch (e) { known = []; }
+    var nowVerified = myItems().filter(isVerified);
+    var fresh = nowVerified.filter(function (id) { return known.indexOf(id) === -1; });
+    localStorage.setItem("nishemap.coins.known", JSON.stringify(nowVerified));
+    if (fresh.length) coinCelebration(fresh.length);
+    paintRank();
+  }
 
   /* ---------- народные точки из общей копилки ---------- */
   function sbHeaders() {
@@ -918,6 +1033,7 @@
   render();
   loadSubmissions();
   loadPhotos();
+  loadConfirms(function () { render(); checkNewCoins(); });
   loadTotals();
   flushInbox();
   paintRank();
