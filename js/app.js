@@ -162,6 +162,33 @@
     return null;
   }
 
+  var AVATARS = [
+    { id: "student",  t: "студент",        d: "живу на дошике до стипендии" },
+    { id: "office",   t: "офисный",        d: "обед за свой счёт, увы" },
+    { id: "doshik",   t: "дошик-энджоер",  d: "кипяток — мой шеф-повар" },
+    { id: "investor", t: "инвестор",       d: "экономлю, чтобы вложиться" },
+    { id: "babushka", t: "запасливый",     d: "у меня всё с собой" },
+  ];
+  function avatarSvg(id, size) {
+    var s = size || 28;
+    var skin = "#e8c9a0", ink = "#232323";
+    var body = {
+      student:  '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#4a6fa5"/><path d="M8 11l8-4 8 4-8 3z" fill="#232323"/>',
+      office:   '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#3a3a3a"/><path d="M16 18l2 3-2 5-2-5z" fill="#ad2f26"/><path d="M13 18l3 2 3-2" stroke="#fff" stroke-width="1.5" fill="none"/>',
+      doshik:   '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#c8621f"/><path d="M10 9h12l-1 4H11z" fill="#f2cf5c" stroke="#232323" stroke-width="1"/>',
+      investor: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#2f4858"/><circle cx="12" cy="12" r="3" fill="none" stroke="#232323" stroke-width="1.4"/><circle cx="20" cy="12" r="3" fill="none" stroke="#232323" stroke-width="1.4"/><path d="M15 12h2" stroke="#232323" stroke-width="1.4"/>',
+      babushka: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#7a5c8f"/><path d="M9 10c2-4 12-4 14 0 1 3-1 6-7 6s-8-3-7-6z" fill="#d94f6a"/>',
+    }[id] || "";
+    return '<svg class="avt" width="' + s + '" height="' + s + '" viewBox="0 0 32 32" aria-hidden="true">' +
+      '<circle cx="16" cy="16" r="16" fill="#f6f5f1"/>' +
+      '<circle cx="16" cy="13" r="6" fill="' + skin + '"/>' + body + "</svg>";
+  }
+  function myAvatar() { return localStorage.getItem("nishemap.avatar") || ""; }
+  function avatarTitle(id) {
+    var a = AVATARS.filter(function (x) { return x.id === id; })[0];
+    return a ? a.t : "";
+  }
+
   var RANKS = [
     { n: 0,  t: "прохожий" },
     { n: 1,  t: "стажёр" },
@@ -185,7 +212,8 @@
     var coins = myCoins(), sent = myCount();
     if (!sent) { el0.hidden = true; return; }
     el0.hidden = false;
-    el0.textContent = rankFor(coins).t + " · " + coins + "🪙";
+    el0.innerHTML = (myAvatar() ? avatarSvg(myAvatar(), 18) : "") +
+      "<span>" + esc(rankFor(coins).t) + " · " + coins + "</span>";
     el0.title = "Монет: " + coins + " (за проверенные цены). Сдано всего: " + sent + ".";
   }
 
@@ -234,6 +262,23 @@
           return nm ? " (до вехи ещё <b>" + (nm.places - verifiedCount()) + "</b>)" : " — все взяты"; })() + "</li>" +
       "<li>Звание: <b>" + rankFor(coins).t + "</b>" + (nx ? " → до «" + nx.t + "» ещё " + (nx.n - coins) : " — потолок") + "</li>" +
       "</ul>");
+    var pick = el("div", "avatar-pick",
+      "<h4 style='margin:12px 0 6px'>Твой аватар</h4>" +
+      '<div class="avatar-row">' + AVATARS.map(function (a) {
+        return '<button type="button" class="avatar-opt' + (myAvatar() === a.id ? " is-on" : "") +
+          '" data-avatar="' + a.id + '" title="' + esc(a.d) + '">' + avatarSvg(a.id, 34) +
+          "<span>" + esc(a.t) + "</span></button>";
+      }).join("") + "</div>");
+    box.appendChild(pick);
+    pick.querySelectorAll("[data-avatar]").forEach(function (b) {
+      b.addEventListener("click", function (ev) {
+        ev.stopPropagation();
+        localStorage.setItem("nishemap.avatar", b.dataset.avatar);
+        pick.querySelectorAll("[data-avatar]").forEach(function (x) { x.classList.remove("is-on"); });
+        b.classList.add("is-on");
+        paintRank();
+      });
+    });
     document.querySelector(".brand").appendChild(box);
     setTimeout(function () {
       document.addEventListener("click", function h(e) {
@@ -490,6 +535,23 @@
     });
   });
 
+  function showViewCount(v) {
+    var box = document.getElementById("sheet-views");
+    if (!box || !CFG.SUPABASE_URL) return;
+    box.hidden = true;
+    var key = (v.name + "|" + (v.address || "")).toLowerCase();
+    fetch(CFG.SUPABASE_URL + "/rest/v1/rpc/venue_views", {
+      method: "POST",
+      headers: Object.assign({ "Content-Type": "application/json" }, sbHeaders()),
+      body: JSON.stringify({ vkey: key }),
+    }).then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (n) {
+        if (state.activeVenue !== v || !n || n < 3) return;   // не хвастаемся единицами
+        box.textContent = "За неделю сюда заглядывали " + n + " раз";
+        box.hidden = false;
+      }).catch(function () {});
+  }
+
   var VIEWED = {};
   function logView(v) {
     if (!CFG.SUPABASE_URL || !v || !v.name) return;
@@ -570,6 +632,7 @@
         '<button class="reconfirm" data-item="' + esc(it.id) + '">Ещё по этой цене?</button>' +
         '<button class="photo-add" data-item="' + esc(it.id) + '" title="Меню/вывеска с ценами — или сама еда">📷 фото</button>' +
         '<button class="flag" data-item="' + esc(it.id) + '" title="Цена неверна или это не еда">неверно</button></div>' +
+        (it.avatar ? '<div class="by-who">' + avatarSvg(it.avatar, 20) + "сдал " + esc(avatarTitle(it.avatar)) + "</div>" : "") +
         photosHtml(it.id);
       ul.appendChild(li);
     });
@@ -578,6 +641,7 @@
     backdrop.hidden = false;
     tgBack(true);
     logView(v);
+    showViewCount(v);
     sheet.querySelector(".sheet-close").focus();
   }
   function tgBack(show) {
@@ -721,6 +785,7 @@
     // бэкенд подключён — шлём в общую копилку (вердикт совета: мгновенно, без очереди)
     if (CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY) {
       var withGeo = Object.assign({ device: deviceId() }, record);
+      if (myAvatar()) withGeo.avatar = myAvatar();
       if (state.formPos) { withGeo.lat = state.formPos[0]; withGeo.lon = state.formPos[1]; }
       function post(body) {
         return fetch(CFG.SUPABASE_URL + "/rest/v1/submissions", {
@@ -1081,7 +1146,7 @@
       }
       byVenue[key].items.push({
         id: "ui-" + s.id, item: s.dish, price: s.price, category: s.category,
-        confirmedAt: (s.submitted_at || "").slice(0, 10), source: "user",
+        confirmedAt: (s.submitted_at || "").slice(0, 10), source: "user", avatar: s.avatar || "",
       });
     });
     return Object.keys(byVenue).map(function (k) { return byVenue[k]; });
@@ -1138,7 +1203,7 @@
 
   function loadSubmissions() {
     if (!CFG.SUPABASE_URL || !CFG.SUPABASE_ANON_KEY) return;
-    fetch(CFG.SUPABASE_URL + "/rest/v1/submissions?select=id,dish,price,category,venue,address,lat,lon,submitted_at&order=submitted_at.desc&limit=500", { headers: sbHeaders() })
+    fetch(CFG.SUPABASE_URL + "/rest/v1/submissions?select=id,dish,price,category,venue,address,lat,lon,submitted_at,avatar&order=submitted_at.desc&limit=500", { headers: sbHeaders() })
       .then(function (r) { return r.json(); })
       .then(function (rows) {
         if (!Array.isArray(rows) || !rows.length) return;
