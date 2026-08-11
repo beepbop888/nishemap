@@ -3,6 +3,13 @@
  * Запускается GitHub Actions. Секреты: BOT_TOKEN, SUPABASE_URL, SUPABASE_SERVICE_KEY.
  * Каждый запуск: подбирает новых подписчиков (/start), по пятницам — шлёт дайджест.
  */
+import { readFileSync } from "node:fs";
+
+/** Экранируем всё, что пришло от пользователей: имя заведения — недоверенные данные. */
+const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+/** Обрезаем и чистим управляющие символы, чтобы никто не ломал вёрстку сообщения. */
+const clean = (s) => esc(String(s).replace(/[\u0000-\u001f\u007f]/g, " ").trim()).slice(0, 60);
+
 const BOT = process.env.BOT_TOKEN;
 const SB = process.env.SUPABASE_URL;
 const SKEY = process.env.SUPABASE_SERVICE_KEY;
@@ -49,15 +56,40 @@ async function collectSubscribers() {
   return added;
 }
 
+/** Доверенные названия: из собственных данных репозитория + отправок пользователей.
+ *  Таблица views открыта на запись анониму, поэтому venue_name оттуда НЕ печатаем. */
+function loadTrustedNames() {
+  const map = new Map();
+  const add = (name, address) => {
+    if (!name) return;
+    map.set((name + "|" + (address || "")).toLowerCase(), name);
+  };
+  for (const f of ["data/seed.json", "data/osm.json"]) {
+    try {
+      const j = JSON.parse(readFileSync(new URL("../" + f, import.meta.url), "utf8"));
+      (j.venues || []).forEach(v => add(v.name, v.address));
+    } catch {}
+  }
+  return map;
+}
+
 /* ---- 2. топ-5 мест недели по просмотрам ---- */
 async function topFive() {
+  const trusted = loadTrustedNames();
+  try { // названия из пользовательских точек тоже считаем известными
+    const subs = await fetch(`${SB}/rest/v1/submissions?select=venue,address&limit=5000`, { headers: sbHeaders })
+      .then(r => r.ok ? r.json() : []);
+    subs.forEach(s2 => trusted.set(((s2.venue || "") + "|" + (s2.address || "")).toLowerCase(), s2.venue));
+  } catch {}
   const since = new Date(Date.now() - 7 * 864e5).toISOString();
   const rows = await fetch(`${SB}/rest/v1/views?select=venue_key,venue_name&created_at=gte.${since}&limit=10000`,
     { headers: sbHeaders }).then(r => r.ok ? r.json() : []);
   const count = {};
   for (const v of rows) {
-    const k = v.venue_key;
-    count[k] = count[k] || { n: 0, name: v.venue_name || k };
+    const k = String(v.venue_key || "").toLowerCase();
+    const canonical = trusted.get(k);
+    if (!canonical) continue;                 // неизвестный ключ — накрутка, пропускаем
+    count[k] = count[k] || { n: 0, name: canonical };
     count[k].n++;
   }
   return Object.values(count).sort((a, b) => b.n - a.n).slice(0, 5);
@@ -71,12 +103,12 @@ async function sendDigest() {
     .then(r => r.ok ? r.json() : []);
   if (!subs.length) { console.log("no subscribers"); return; }
   const medals = ["🥇", "🥈", "🥉", "4.", "5."];
-  const text = "*Топ-5 мест недели*\nКуда народ ходил есть за копейки:\n\n" +
-    top.map((t, i) => `${medals[i]} ${t.name} — смотрели ${t.n} раз`).join("\n") +
+  const text = "<b>Топ-5 мест недели</b>\nКуда народ ходил есть за копейки:\n\n" +
+    top.map((t, i) => `${medals[i]} ${clean(t.name)} — смотрели ${Number(t.n) | 0} раз`).join("\n") +
     `\n\nСдай свою точку: ${SITE}`;
   let ok = 0, dead = 0;
   for (const s of subs) {
-    const r = await tg("sendMessage", { chat_id: s.chat_id, text, parse_mode: "Markdown", disable_web_page_preview: false });
+    const r = await tg("sendMessage", { chat_id: s.chat_id, text, parse_mode: "HTML", disable_web_page_preview: false });
     if (r.ok) ok++;
     else if (r.error_code === 403) {           // пользователь заблокировал бота
       dead++;
