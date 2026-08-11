@@ -147,6 +147,21 @@
     if (html !== undefined) n.innerHTML = html;
     return n;
   }
+  var MILESTONES = [
+    { places: 10, bonus: 3 },
+    { places: 30, bonus: 5 },
+    { places: 50, bonus: 10 },
+  ];
+  function bonusFor(verified) {
+    var b = 0;
+    MILESTONES.forEach(function (m) { if (verified >= m.places) b += m.bonus; });
+    return b;
+  }
+  function nextMilestone(verified) {
+    for (var i = 0; i < MILESTONES.length; i++) if (MILESTONES[i].places > verified) return MILESTONES[i];
+    return null;
+  }
+
   var RANKS = [
     { n: 0,  t: "прохожий" },
     { n: 1,  t: "стажёр" },
@@ -214,6 +229,9 @@
       "<ul>" +
       "<li>Цену проверяют: фото меню <b>или</b> двое других людей жмут «Ещё по этой цене?»</li>" +
       "<li>Монеты — личный счёт: район видит их в звании, но проверку цены решают только фото и чужие подтверждения</li>" +
+      "<li>Вехи: 10 мест → +3 монеты, 30 → +5, 50 → +10" +
+        (function () { var nm = nextMilestone(verifiedCount());
+          return nm ? " (до вехи ещё <b>" + (nm.places - verifiedCount()) + "</b>)" : " — все взяты"; })() + "</li>" +
       "<li>Звание: <b>" + rankFor(coins).t + "</b>" + (nx ? " → до «" + nx.t + "» ещё " + (nx.n - coins) : " — потолок") + "</li>" +
       "</ul>");
     document.querySelector(".brand").appendChild(box);
@@ -459,6 +477,20 @@
     });
   });
 
+  var VIEWED = {};
+  function logView(v) {
+    if (!CFG.SUPABASE_URL || !v || !v.name) return;
+    var key = (v.name + "|" + (v.address || "")).toLowerCase();
+    if (VIEWED[key]) return;           // один раз за сессию
+    VIEWED[key] = 1;
+    fetch(CFG.SUPABASE_URL + "/rest/v1/views", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "apikey": CFG.SUPABASE_ANON_KEY,
+                 "Authorization": "Bearer " + CFG.SUPABASE_ANON_KEY, "Prefer": "return=minimal" },
+      body: JSON.stringify({ venue_key: key, venue_name: v.name }),
+    }).catch(function () {});
+  }
+
   /* ---------- bottom sheet ---------- */
   var sheet = document.getElementById("sheet");
   var backdrop = document.getElementById("backdrop");
@@ -532,6 +564,7 @@
     sheet.hidden = false;
     backdrop.hidden = false;
     tgBack(true);
+    logView(v);
     sheet.querySelector(".sheet-close").focus();
   }
   function tgBack(show) {
@@ -634,6 +667,30 @@
     var ok = f.dish.value.trim() && f.venue.value.trim() && f.address.value.trim() &&
       price >= 1 && price <= 500;
     if (!ok) { formError.hidden = false; formError.textContent = "Цена до 500 ₽ и все поля — иначе никак."; return; }
+    // антиспам: такое блюдо здесь уже сдавали?
+    var normV = f.venue.value.trim().toLowerCase().replace(/[«»"'ё]/g, function (c) { return c === "ё" ? "е" : ""; });
+    var normD = f.dish.value.trim().toLowerCase().replace(/ё/g, "е");
+    var dup = null;
+    SEED.venues.forEach(function (v) {
+      var vn = (v.name || "").toLowerCase().replace(/[«»"'ё]/g, function (c) { return c === "ё" ? "е" : ""; });
+      if (vn.indexOf(normV) === -1 && normV.indexOf(vn) === -1) return;
+      v.items.forEach(function (it) {
+        if ((it.item || "").toLowerCase().replace(/ё/g, "е") === normD) dup = { v: v, it: it };
+      });
+    });
+    if (dup && !state.dupOverride) {
+      formError.hidden = false;
+      formError.innerHTML = "«" + esc(dup.it.item) + "» в «" + esc(dup.v.name) + "» уже на карте за " + dup.it.price +
+        " ₽. Лучше подтверди её — <button type='button' class='linklike' id='go-dup'>открыть</button>." +
+        " Если цена изменилась — <button type='button' class='linklike' id='dup-anyway'>всё равно отправить</button>.";
+      document.getElementById("go-dup").onclick = function () { closeForm(); openSheet(dup.v); };
+      document.getElementById("dup-anyway").onclick = function () {
+        state.dupOverride = true; formError.hidden = true;
+        form.querySelector("[type=submit]").click();
+      };
+      return;
+    }
+    state.dupOverride = false;
     var linkPos = coordsFromLink(f.address.value);
     if (linkPos) state.formPos = linkPos;
     if (!state.formPos && !GEO_FIX[f.address.value.trim().toLowerCase()] && !/[а-яё]/i.test(f.address.value)) {
@@ -650,9 +707,8 @@
     };
     // бэкенд подключён — шлём в общую копилку (вердикт совета: мгновенно, без очереди)
     if (CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY) {
-      var withGeo = state.formPos
-        ? Object.assign({}, record, { lat: state.formPos[0], lon: state.formPos[1] })
-        : record;
+      var withGeo = Object.assign({ device: deviceId() }, record);
+      if (state.formPos) { withGeo.lat = state.formPos[0]; withGeo.lon = state.formPos[1]; }
       function post(body) {
         return fetch(CFG.SUPABASE_URL + "/rest/v1/submissions", {
           method: "POST",
@@ -946,7 +1002,28 @@
     setTimeout(function () { wrap.classList.add("is-out"); }, 2200);
     setTimeout(function () { wrap.remove(); }, 2900);
   }
-  function myCoins() { return myItems().filter(isVerified).length; }
+  function verifiedCount() { return myItems().filter(isVerified).length; }
+  function myCoins() { var v = verifiedCount(); return v + bonusFor(v); }
+  function checkMilestone() {
+    var v = verifiedCount();
+    var reached = MILESTONES.filter(function (m) { return v >= m.places; });
+    if (!reached.length) return;
+    var top = reached[reached.length - 1];
+    var seen = parseInt(localStorage.getItem("nishemap.milestone") || "0", 10);
+    if (top.places <= seen) return;
+    localStorage.setItem("nishemap.milestone", String(top.places));
+    setTimeout(function () {
+      var wrap = el("div", "coin-cheer is-milestone",
+        '<div class="coin-cheer-coin"></div>' +
+        '<p class="coin-cheer-title">Веха: ' + top.places + " мест</p>" +
+        '<p class="coin-cheer-sub">+' + top.bonus + " монет сверху. Район запомнит.</p>");
+      document.body.appendChild(wrap);
+      haptic("success");
+      setTimeout(function () { wrap.classList.add("is-out"); }, 3000);
+      setTimeout(function () { wrap.remove(); }, 3700);
+    }, 900);
+  }
+
   function checkNewCoins() {
     var known;
     try { known = JSON.parse(localStorage.getItem("nishemap.coins.known")) || []; } catch (e) { known = []; }
@@ -954,6 +1031,7 @@
     var fresh = nowVerified.filter(function (id) { return known.indexOf(id) === -1; });
     localStorage.setItem("nishemap.coins.known", JSON.stringify(nowVerified));
     if (fresh.length) coinCelebration(fresh.length);
+    checkMilestone();
     paintRank();
   }
 

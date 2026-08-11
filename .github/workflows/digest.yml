@@ -1,0 +1,25 @@
+name: НищеMap Telegram digest
+on:
+  schedule:
+    - cron: "0 */6 * * *"    # каждые 6 часов — подбираем новых подписчиков
+    - cron: "0 12 * * 5"     # пятница 12:00 UTC = 15:00 МСК — рассылка
+  workflow_dispatch:
+    inputs:
+      send:
+        description: "Отправить дайджест сейчас"
+        type: boolean
+        default: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - name: Collect subscribers (and send digest on Friday)
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          SEND_DIGEST: ${{ github.event.schedule == '0 12 * * 5' || inputs.send }}
+        run: node scripts/digest.mjs
