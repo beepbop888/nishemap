@@ -11,7 +11,7 @@
 
 ### Что нужно включить один раз (5 минут)
 
-**Шаг 1. Запусти `supabase/addon3.sql`** (SQL Editor → New query → вставить → Run).
+**Шаг 1. Запусти `supabase/04_digest.sql`** (SQL Editor → New query → вставить → Run).
 Создаст: `views` (просмотры), `subscribers` (кто нажал Start), `kv` (служебная), плюс колонку `device` у submissions.
 
 **Шаг 2. Возьми три значения:**

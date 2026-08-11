@@ -10,7 +10,7 @@
 1. Открой **supabase.com** → войди → проект **nishemap**.
 2. Слева нажми **SQL Editor**.
 3. Нажми зелёную **+ New query**.
-4. На компьютере открой файл `Desktop → Claude Projects → Jaison → supabase → addon3.sql`.
+4. На компьютере открой файл `Desktop → Claude Projects → Jaison → supabase → 04_digest.sql`.
 5. Выдели всё (**Cmd+A**), скопируй (**Cmd+C**).
 6. Вставь в окно Supabase (**Cmd+V**) и нажми **Run** (или Cmd+Enter).
 7. Должно появиться **Success. No rows returned**. Готово.
