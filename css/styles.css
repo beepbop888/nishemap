@@ -363,6 +363,20 @@ input[type="file"]{height:auto; padding:10px 12px; font-size:var(--fs-sm)}
 .coins-info b{font-family:var(--font-mono)}
 .brand{position:relative}
 
+/* атрибуция и «о карте» */
+.attrib{
+  position:absolute; left:8px; bottom:calc(72px + env(safe-area-inset-bottom)); z-index:8;
+  font-size:10px; line-height:1.3; color:var(--ink-soft);
+  background:color-mix(in srgb, var(--paper-raised) 88%, transparent);
+  border-radius:var(--r-sm); padding:3px 7px; max-width:62vw;
+}
+.attrib a{color:var(--ink-soft)}
+.attrib-link{background:none;border:none;padding:0;font:inherit;color:var(--stamp-deep);text-decoration:underline;cursor:pointer}
+.about-body{font-size:var(--fs-sm); line-height:1.55; margin-bottom:16px}
+.about-body h3{margin:14px 0 4px; font:600 var(--fs-sm)/1.2 var(--font-display); text-transform:uppercase; letter-spacing:.04em}
+.about-body p{margin:0 0 8px}
+.about-body a{color:var(--stamp-deep)}
+
 /* ============ пустое состояние ============ */
 .empty{
   position:absolute; inset:0; z-index:5; display:flex; flex-direction:column; align-items:center;

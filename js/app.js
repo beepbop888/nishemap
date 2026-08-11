@@ -242,6 +242,19 @@
     }, 10);
   });
 
+  /* ---------- «О карте» ---------- */
+  var aboutModal = document.getElementById("about-modal");
+  var aboutBtn = document.getElementById("about-btn");
+  if (aboutBtn) aboutBtn.addEventListener("click", function () {
+    aboutModal.hidden = false; backdrop.hidden = false;
+  });
+  document.querySelectorAll("[data-close-about]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      aboutModal.hidden = true;
+      if (sheet.hidden && formModal.hidden) backdrop.hidden = true;
+    });
+  });
+
   /* ---------- band chips ---------- */
   document.querySelectorAll(".chip[data-band]").forEach(function (chip) {
     chip.addEventListener("click", function () {
@@ -769,9 +782,9 @@
     formDone.hidden = false;
   });
 
-  backdrop.addEventListener("click", function () { closeSheet(); closeForm(); });
+  backdrop.addEventListener("click", function () { closeSheet(); closeForm(); aboutModal.hidden = true; });
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") { closeSheet(); closeForm(); }
+    if (e.key === "Escape") { closeSheet(); closeForm(); aboutModal.hidden = true; }
   });
 
   /* ---------- map <-> list toggle ---------- */
