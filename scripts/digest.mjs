@@ -19,7 +19,11 @@ const MINIAPP = "https://t.me/nishemap_bot/map";
 /** id → ссылка, открывающая ровно эту точку в мини-аппе Telegram */
 const spotLink = (id) => `${MINIAPP}?startapp=v_${String(id).replace(/-/g, "_").replace(/[^A-Za-z0-9_]/g, "")}`;
 
-if (!BOT || !SB || !SKEY) { console.error("missing secrets"); process.exit(1); }
+if (!BOT || !SB || !SKEY) {
+  console.log("Секреты рассылки ещё не заведены (BOT_TOKEN / SUPABASE_URL / SUPABASE_SERVICE_KEY) — пропускаю запуск.");
+  console.log("Инструкция: DIGEST-SETUP.md");
+  process.exit(0);   // выходим успешно, чтобы GitHub не слал письма о падении
+}
 const sbHeaders = { apikey: SKEY, Authorization: `Bearer ${SKEY}`, "Content-Type": "application/json" };
 const tg = (m, body) => fetch(`https://api.telegram.org/bot${BOT}/${m}`, {
   method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),

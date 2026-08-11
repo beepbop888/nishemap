@@ -10,10 +10,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=PT+Mono:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=38">
+<link rel="stylesheet" href="css/styles.css?v=39">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23d9a514' stroke='%23f2cf5c' stroke-width='5'/><text x='50' y='68' font-size='52' font-weight='bold' text-anchor='middle' fill='%236e5104' font-family='Menlo,monospace'>₽</text></svg>">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="config.js?v=38"></script>
+<script src="config.js?v=39"></script>
 </head>
 <body>
 
@@ -21,8 +21,9 @@
   <div class="brand">
     <span class="brand-coin" aria-hidden="true">₽</span>
     <h1 class="brand-name"><span class="brand-nishe">Нище</span>Map</h1>
-    <span class="build" aria-hidden="true">сб.38</span>
+    <span class="build" aria-hidden="true">сб.39</span>
     <button id="rank" class="rank" hidden type="button" title="Твой вклад в народную копилку"></button>
+    <button type="button" id="about-btn" class="about-btn" title="О карте, источники, приватность">?</button>
   </div>
   <p class="tagline">Еда до 500 ₽. Для тех, кто считает медяки.</p>
   <div class="filters">
@@ -102,10 +103,7 @@
   <button class="fab" data-open-form aria-label="Добавить точку">+ Сдать точку</button>
   <button id="view-toggle" class="view-toggle" hidden aria-label="Переключить вид">Список</button>
   <div id="gray-hint" class="gray-hint" hidden>Приблизь карту — покажем точки без цен</div>
-  <div class="attrib">
-    <button type="button" id="about-btn" class="attrib-link">О карте</button> ·
-    точки без цен © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>
-  </div>
+  <div class="attrib">© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a></div>
 </main>
 
 <!-- Bottom sheet: venue detail -->
@@ -217,8 +215,8 @@
 
 <div id="backdrop" class="backdrop" hidden></div>
 
-<script src="data/seed.js?v=38"></script>
-<script src="data/osm.js?v=38" onerror="window.NISHEMAP_OSM=null"></script>
-<script src="js/app.js?v=38"></script>
+<script src="data/seed.js?v=39"></script>
+<script src="data/osm.js?v=39" onerror="window.NISHEMAP_OSM=null"></script>
+<script src="js/app.js?v=39"></script>
 </body>
 </html>
