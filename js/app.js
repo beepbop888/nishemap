@@ -1127,8 +1127,15 @@
   }
 
   function openDeepLink() {
-    var m = location.search.match(/[?&]v=([^&]+)/); if (!m) return;
-    var id = decodeURIComponent(m[1]);
+    var id = null;
+    var m = location.search.match(/[?&]v=([^&]+)/);
+    if (m) id = decodeURIComponent(m[1]);
+    // ссылка из телеграм-дайджеста: t.me/bot/map?startapp=v_<id>
+    if (!id && TG && TG.initDataUnsafe && TG.initDataUnsafe.start_param) {
+      var sp = String(TG.initDataUnsafe.start_param);
+      if (sp.indexOf("v_") === 0) id = sp.slice(2).replace(/_/g, "-");
+    }
+    if (!id) return;
     var v = SEED.venues.concat(OSM).filter(function (x) { return x.id === id; })[0];
     if (!v) return;
     openSheet(v);
