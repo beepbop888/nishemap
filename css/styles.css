@@ -482,6 +482,12 @@ input[name="price"]{font-family:var(--font-mono); font-weight:700}
 .form-note{color:var(--ink-soft); font-size:var(--fs-xs); text-align:center; margin:12px 0 0}
 .form-done{text-align:center; padding:24px 8px 8px}
 
+.lightbox{
+  position:fixed; inset:0; z-index:80; display:flex; align-items:center; justify-content:center;
+  background:rgba(35,35,35,.9); cursor:zoom-out; padding:20px;
+}
+.lightbox img{max-width:100%; max-height:100%; border:2px solid var(--paper-raised); border-radius:var(--r-sm)}
+
 /* ============ затемнение ============ */
 .backdrop{position:fixed; inset:0; z-index:var(--z-backdrop); background:rgba(35,35,35,.45)}
 

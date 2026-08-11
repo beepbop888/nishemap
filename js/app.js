@@ -402,12 +402,12 @@
         li.setAttribute("role", "button");
         li.innerHTML =
           '<div class="card-top"><span class="card-item">' + esc(it.item) + "</span>" +
-          '<span class="price price--' + b + '">' + it.price + ' ₽</span></div>' +
+          '<span class="price price--' + b + '">' + esc(it.price) + ' ₽</span></div>' +
           '<div class="card-venue">' + (row.d !== undefined && row.d < 1e9 ? '<span class="dist">' + fmtDist(row.d) + "</span> · " : "") +
           esc(v.name) + " · " + esc(v.type) +
           (v.district ? " · " + esc(v.district) : "") + " · " + esc(v.address) + "</div>" +
           '<div class="fresh"><span class="badge ' + fb.cls + '">' + fb.text + "</span>" +
-          '<button class="reconfirm" data-item="' + it.id + '">Ещё по этой цене?</button></div>';
+          '<button class="reconfirm" data-item="' + esc(it.id) + '">Ещё по этой цене?</button></div>';
         li.addEventListener("click", function (e) {
           if (e.target.closest(".reconfirm")) return;
           openSheet(v);
@@ -565,11 +565,11 @@
       var li = el("li", "sheet-item");
       li.innerHTML =
         '<div class="sheet-item-top"><span class="card-item">' + esc(it.item) + "</span>" +
-        '<span class="price price--' + b + '">' + it.price + " ₽</span></div>" +
+        '<span class="price price--' + b + '">' + esc(it.price) + " ₽</span></div>" +
         '<div class="fresh"><span class="badge ' + fb.cls + '">' + fb.text + "</span>" +
-        '<button class="reconfirm" data-item="' + it.id + '">Ещё по этой цене?</button>' +
-        '<button class="photo-add" data-item="' + it.id + '" title="Меню/вывеска с ценами — или сама еда">📷 фото</button>' +
-        '<button class="flag" data-item="' + it.id + '" title="Цена неверна или это не еда">неверно</button></div>' +
+        '<button class="reconfirm" data-item="' + esc(it.id) + '">Ещё по этой цене?</button>' +
+        '<button class="photo-add" data-item="' + esc(it.id) + '" title="Меню/вывеска с ценами — или сама еда">📷 фото</button>' +
+        '<button class="flag" data-item="' + esc(it.id) + '" title="Цена неверна или это не еда">неверно</button></div>' +
         photosHtml(it.id);
       ul.appendChild(li);
     });
@@ -693,7 +693,7 @@
     });
     if (dup && !state.dupOverride) {
       formError.hidden = false;
-      formError.innerHTML = "«" + esc(dup.it.item) + "» в «" + esc(dup.v.name) + "» уже на карте за " + dup.it.price +
+      formError.innerHTML = "«" + esc(dup.it.item) + "» в «" + esc(dup.v.name) + "» уже на карте за " + esc(dup.it.price) +
         " ₽. Лучше подтверди её — <button type='button' class='linklike' id='go-dup'>открыть</button>." +
         " Если цена изменилась — <button type='button' class='linklike' id='dup-anyway'>всё равно отправить</button>.";
       document.getElementById("go-dup").onclick = function () { closeForm(); openSheet(dup.v); };
@@ -989,7 +989,18 @@
   }
   document.addEventListener("click", function (e) {
     var img = e.target.closest(".photos img");
-    if (img) { var u = safePhoto(img.dataset.full); if (u) window.open(u, "_blank", "noopener"); }
+    if (!img) return;
+    var u = safePhoto(img.dataset.full);
+    if (!u) return;
+    // показываем внутри страницы картинкой: файл не рендерится как документ,
+    // поэтому подсунутый SVG/HTML не выполнит скрипт и не изобразит фишинг-страницу
+    var lb = el("div", "lightbox");
+    var im = document.createElement("img");
+    im.src = u;
+    im.alt = "Фото меню или блюда";
+    lb.appendChild(im);
+    lb.addEventListener("click", function () { lb.remove(); });
+    document.body.appendChild(lb);
   });
 
   function loadConfirms(done) {
@@ -1127,7 +1138,7 @@
 
   function loadSubmissions() {
     if (!CFG.SUPABASE_URL || !CFG.SUPABASE_ANON_KEY) return;
-    fetch(CFG.SUPABASE_URL + "/rest/v1/submissions?select=*&order=submitted_at.desc&limit=500", { headers: sbHeaders() })
+    fetch(CFG.SUPABASE_URL + "/rest/v1/submissions?select=id,dish,price,category,venue,address,lat,lon,submitted_at&order=submitted_at.desc&limit=500", { headers: sbHeaders() })
       .then(function (r) { return r.json(); })
       .then(function (rows) {
         if (!Array.isArray(rows) || !rows.length) return;

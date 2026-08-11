@@ -9,6 +9,9 @@ on:
         description: "Отправить дайджест сейчас"
         type: boolean
         default: false
+permissions:
+  contents: read          # воркфлоу ничего не пишет в репозиторий
+
 jobs:
   run:
     runs-on: ubuntu-latest
