@@ -9,7 +9,7 @@
   var STALE_DAYS = 14;
 
   var LS_CONFIRM = "nishemap.confirms"; // {itemId: "YYYY-MM-DD"}
-  var LS_INBOX = "nishemap.inbox";      // [{item,price,category,venue,address,at}]
+  var LS_INBOX = "nishemap.inbox";      // [{...,sent:bool}] — неотправленные шлём позже
 
   var state = {
     bands: { 100: true, 200: true, 300: true, 500: true },
@@ -474,6 +474,18 @@
   var formDone = document.getElementById("form-done");
   var formError = document.getElementById("form-error");
 
+  var againBtn = document.getElementById("again-btn");
+  if (againBtn) againBtn.addEventListener("click", function () {
+    var v = state.lastVenue || {};
+    form.hidden = false; formDone.hidden = true; formError.hidden = true;
+    form.reset();
+    form.elements.venue.value = v.venue || "";
+    form.elements.address.value = v.address || "";
+    state.formPos = v.pos || null;              // координаты сохраняем — мы всё ещё здесь
+    if (hereBtn && state.formPos) { hereBtn.textContent = "✓ точка на карте есть"; hereBtn.classList.add("is-on"); }
+    form.elements.dish.focus();
+  });
+
   document.querySelectorAll("[data-open-form]").forEach(function (b) {
     b.addEventListener("click", function () {
       form.hidden = false;
@@ -550,6 +562,7 @@
         return (!r.ok && withGeo !== record) ? post(record) : r;
       }).then(function (resp) {
         if (resp && resp.ok) {
+          markSent(entry.at);
           var mine = submissionToVenues([{
             id: "local-" + Date.now(), dish: record.dish, price: record.price,
             category: record.category, venue: record.venue, address: record.address,
@@ -563,15 +576,20 @@
     }
     var inbox;
     try { inbox = JSON.parse(localStorage.getItem(LS_INBOX)) || []; } catch (err) { inbox = []; }
-    inbox.push({
+    var entry = {
       item: f.dish.value.trim(),
       price: price,
       category: f.category.value,
       venue: f.venue.value.trim(),
       address: f.address.value.trim(),
       at: new Date().toISOString(),
-    });
+      sent: false,
+      body: state.formPos ? Object.assign({}, record, { lat: state.formPos[0], lon: state.formPos[1] }) : record,
+    };
+    inbox.push(entry);
     localStorage.setItem(LS_INBOX, JSON.stringify(inbox));
+    markSent(entry.at); // если POST уже прошёл — пометит; иначе останется в очереди
+    state.lastVenue = { venue: record.venue, address: record.address, pos: state.formPos };
     localStorage.setItem("nishemap.mine", String(myCount() + 1));
     paintRank();
     haptic("success");
@@ -727,6 +745,39 @@
     if (state.map) { renderMarkers(); renderGray(); }
   }
 
+  /* ---------- очередь неотправленных точек (метро, подвал, нет сети) ---------- */
+  function inboxAll() {
+    try { return JSON.parse(localStorage.getItem(LS_INBOX)) || []; } catch (e) { return []; }
+  }
+  function markSent(at) {
+    var arr = inboxAll();
+    arr.forEach(function (x) { if (x.at === at) x.sent = true; });
+    localStorage.setItem(LS_INBOX, JSON.stringify(arr));
+  }
+  function flushInbox() {
+    if (!CFG.SUPABASE_URL) return;
+    var pending = inboxAll().filter(function (x) { return x.sent === false && x.body; });
+    if (!pending.length) return;
+    var okCount = 0;
+    (function step(i) {
+      if (i >= pending.length) {
+        if (okCount) { toast("Досдали " + okCount + " точек из очереди"); loadSubmissions(); }
+        return;
+      }
+      var x = pending[i];
+      fetch(CFG.SUPABASE_URL + "/rest/v1/submissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "apikey": CFG.SUPABASE_ANON_KEY,
+                   "Authorization": "Bearer " + CFG.SUPABASE_ANON_KEY, "Prefer": "return=minimal" },
+        body: JSON.stringify(x.body),
+      }).then(function (r) {
+        if (r.ok) { markSent(x.at); okCount++; }
+        step(i + 1);
+      }).catch(function () { step(i + 1); });
+    })(0);
+  }
+  window.addEventListener("online", flushInbox);
+
   /* ---------- фото позиций ---------- */
   var PHOTOS = {};
   function loadPhotos() {
@@ -868,6 +919,7 @@
   loadSubmissions();
   loadPhotos();
   loadTotals();
+  flushInbox();
   paintRank();
   setTimeout(openDeepLink, 1200);
 })();
