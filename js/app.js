@@ -447,8 +447,8 @@
       x.beginPath(); x.moveTo(W / 2 - 150, 838); x.lineTo(W / 2 + 150, 838); x.stroke();
       x.fillStyle = "#fdfdfb"; x.font = '36px -apple-system, Arial, sans-serif';
       x.fillText(tr.s, W / 2, 890);
-      x.fillStyle = "#8f8b84"; x.font = '24px -apple-system, Arial, sans-serif';
-      x.fillText("собрано ногами по Москве", W / 2, 934);
+      x.fillStyle = "#8f8b84"; x.font = '26px -apple-system, Arial, sans-serif';
+      x.fillText("единственная карта еды, которая нужна в Москве", W / 2, 936);
       x.fillStyle = "#d9a514"; x.font = '28px Menlo, monospace';
       x.fillText("t.me/nishemap_bot/map", W / 2, 1000);
 

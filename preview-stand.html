@@ -251,7 +251,7 @@ function drawTile(places){ var t=TROPHIES[places],c=document.getElementById("til
     x.fillStyle="#f2cf5c"; x.font='600 72px "Arial Narrow",Impact,sans-serif'; x.fillText(t.t.toUpperCase(),W/2,812);
     x.strokeStyle="rgba(217,165,20,.5)"; x.lineWidth=2; x.beginPath(); x.moveTo(W/2-150,838); x.lineTo(W/2+150,838); x.stroke();
     x.fillStyle="#fdfdfb"; x.font='36px -apple-system,Arial,sans-serif'; x.fillText(t.s,W/2,890);
-    x.fillStyle="#8f8b84"; x.font='24px -apple-system,Arial,sans-serif'; x.fillText("собрано ногами по Москве",W/2,934);
+    x.fillStyle="#8f8b84"; x.font='26px -apple-system,Arial,sans-serif'; x.fillText("единственная карта еды, которая нужна в Москве",W/2,936);
     x.fillStyle="#d9a514"; x.font='28px Menlo,monospace'; x.fillText("t.me/nishemap_bot/map",W/2,1000); };
   img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent((BADGES["t"+places]||"").replace(' class="badge-svg"','')); }
 document.querySelectorAll("[data-tile]").forEach(function(b){ b.addEventListener("click",function(){ drawTile(+b.dataset.tile); }); });
