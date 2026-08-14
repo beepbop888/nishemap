@@ -317,7 +317,9 @@
     var bal = coinsBalance(), earned = myCoins();
     document.getElementById("shop-balance").innerHTML =
       "<b>" + bal + "</b> монет на руках · заработано за всё время: " + earned;
-    body.innerHTML = "";
+    body.innerHTML = bal === 0 && earned === 0
+      ? '<p class="shop-hint">Монет пока нет. Самый быстрый способ: сдай точку <b>с фото меню</b> — такая цена считается проверенной сразу, без чужих подтверждений. Это +1 монета.</p>'
+      : '';
     ["Бесплатные", "За монеты"].forEach(function (title, gi) {
       var list = AVATARS.filter(function (a) { return gi === 0 ? !a.price : a.price; });
       var h = el("h3", "shop-group", esc(title));

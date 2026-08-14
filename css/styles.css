@@ -91,6 +91,7 @@ body{
   border-radius:var(--r-sm); padding:4px 8px; cursor:pointer; margin-left:6px;
 }
 .rank:hover{background:rgba(217,165,20,.14)}
+.shop-hint{margin:0 0 10px; padding:10px 12px; background:var(--gold-bg); border:1px solid var(--gold); border-radius:var(--r-sm); font-size:var(--fs-sm); line-height:1.45; color:var(--gold-ink)}
 .shop-group{margin:14px 0 8px; font:600 var(--fs-sm)/1 var(--font-display); text-transform:uppercase; letter-spacing:.06em; color:var(--ink-soft)}
 .shop-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:8px}
 .shop-card{
