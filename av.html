@@ -1,0 +1,19 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=PT+Mono:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css?v=44"><title>avatars</title>
+<style>body{display:block;height:auto;overflow:auto;padding:16px;background:#f6f5f1}
+.modal-card{max-height:none;animation:none}</style></head><body>
+<div class="modal-card"><h2 class="form-title">Лавка аватаров</h2>
+<p class="form-sub"><b>95</b> монет на руках · заработано за всё время: 95</p>
+<div id="shop-body"></div></div>
+<script src="config.js?v=44"></script><script>window.NISHEMAP_SEED={venues:[]};window.NISHEMAP_OSM=null;</script>
+<script src="js/app.js?v=44"></script>
+<script>setTimeout(function(){
+  var r=document.getElementById("rank"); r.hidden=false;
+  localStorage.setItem("nishemap.avatar","doshik_f");
+  r.click(); setTimeout(function(){ var s=document.getElementById("open-shop"); if(s) s.click();
+    setTimeout(function(){
+      var m=document.getElementById("shop-modal");
+      if(m){ document.getElementById("shop-body").innerHTML=""; 
+        document.querySelector(".modal-card").appendChild(m.querySelector("#shop-body")); }
+    },300); },200); },1200);</script></body></html>
