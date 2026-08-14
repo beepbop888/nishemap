@@ -98,7 +98,7 @@ body{
   font:600 9px/1.15 var(--font-display); text-transform:uppercase; letter-spacing:.03em; color:var(--ink); text-align:center}
 .trophy-cell.is-locked{opacity:.32; cursor:default; filter:grayscale(1)}
 .trophy-cell:not(.is-locked):hover{border-color:var(--ink); transform:translateY(-1px)}
-.coin-cheer.is-trophy{gap:14px; pointer-events:auto}
+.coin-cheer.is-trophy{gap:14px; pointer-events:auto; background:color-mix(in srgb, var(--ink) 88%, transparent)}
 .coin-cheer.is-trophy .btn{pointer-events:auto; min-width:180px}
 .trophy-spin{animation:coin-twirl 1.3s cubic-bezier(.3,.7,.3,1) 1; transform-style:preserve-3d;
   filter:drop-shadow(0 10px 24px rgba(0,0,0,.5))}
