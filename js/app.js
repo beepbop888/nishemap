@@ -163,11 +163,18 @@
   }
 
   var AVATARS = [
-    { id: "student",  t: "студент",        d: "живу на дошике до стипендии" },
-    { id: "office",   t: "офисный",        d: "обед за свой счёт, увы" },
-    { id: "doshik",   t: "дошик-энджоер",  d: "кипяток — мой шеф-повар" },
-    { id: "investor", t: "инвестор",       d: "экономлю, чтобы вложиться" },
-    { id: "babushka", t: "запасливый",     d: "у меня всё с собой" },
+    // базовые — доступны сразу
+    { id: "student",  t: "студент",       d: "живу на дошике до стипендии",  price: 0 },
+    { id: "office",   t: "офисный",       d: "обед за свой счёт, увы",        price: 0 },
+    { id: "doshik",   t: "дошик-энджоер", d: "кипяток — мой шеф-повар",       price: 0 },
+    { id: "investor", t: "инвестор",      d: "экономлю, чтобы вложиться",     price: 0 },
+    { id: "babushka", t: "запасливый",    d: "у меня всё с собой",            price: 0 },
+    // за монеты — только для тех, чьи цены подтвердил район
+    { id: "shaurmaster", t: "шаурмастер",   d: "знает лучший лаваш в городе",   price: 5 },
+    { id: "tsar",        t: "царь столовой", d: "компот наливают без очереди",  price: 12 },
+    { id: "kosmonavt",   t: "космонавт",     d: "ел борщ в невесомости",        price: 25 },
+    { id: "oligarkh",    t: "олигарх",       d: "берёт добавку не глядя",       price: 40 },
+    { id: "legenda",     t: "легенда района", d: "его цены цитируют в чатах",   price: 60 },
   ];
   function avatarSvg(id, size) {
     var s = size || 28;
@@ -178,12 +185,40 @@
       doshik:   '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#c8621f"/><path d="M10 9h12l-1 4H11z" fill="#f2cf5c" stroke="#232323" stroke-width="1"/>',
       investor: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#2f4858"/><circle cx="12" cy="12" r="3" fill="none" stroke="#232323" stroke-width="1.4"/><circle cx="20" cy="12" r="3" fill="none" stroke="#232323" stroke-width="1.4"/><path d="M15 12h2" stroke="#232323" stroke-width="1.4"/>',
       babushka: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#7a5c8f"/><path d="M9 10c2-4 12-4 14 0 1 3-1 6-7 6s-8-3-7-6z" fill="#d94f6a"/>',
+      shaurmaster: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#e8e3d8"/><path d="M10 9c0-2 2-3 3-2 1-2 5-2 6 0 1-1 3 0 3 2v2H10z" fill="#fff" stroke="#232323" stroke-width="0.8"/><path d="M22 20l4 6h-3l-3-5z" fill="#c8621f"/>',
+      tsar: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#8f2f4a"/><path d="M9 9l2 3 3-4 2 4 3-4 2 4 2-3v3H9z" fill="#d9a514" stroke="#a37c0a" stroke-width="0.7"/>',
+      kosmonavt: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#cfd6dd"/><circle cx="16" cy="12" r="8" fill="none" stroke="#8a939e" stroke-width="2"/><path d="M11 11a5 5 0 0 1 5-4" stroke="#fff" stroke-width="1.6" fill="none"/>',
+      oligarkh: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#232323"/><path d="M10 8h12v2H10z" fill="#232323"/><path d="M12 2h8v6h-8z" fill="#232323"/><circle cx="19" cy="13" r="3" fill="none" stroke="#d9a514" stroke-width="1.2"/><path d="M22 13l3 3" stroke="#d9a514" stroke-width="1.2"/>',
+      legenda: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#6e5104"/><path d="M7 14c-1-5 3-8 9-8s10 3 9 8" fill="none" stroke="#d9a514" stroke-width="2"/><path d="M16 3l1.6 3.3 3.4.5-2.5 2.4.6 3.4-3.1-1.7-3.1 1.7.6-3.4-2.5-2.4 3.4-.5z" fill="#f2cf5c"/>',
     }[id] || "";
     return '<svg class="avt" width="' + s + '" height="' + s + '" viewBox="0 0 32 32" aria-hidden="true">' +
       '<circle cx="16" cy="16" r="16" fill="#f6f5f1"/>' +
       '<circle cx="16" cy="13" r="6" fill="' + skin + '"/>' + body + "</svg>";
   }
   function myAvatar() { return localStorage.getItem("nishemap.avatar") || ""; }
+  function ownedAvatars() {
+    try { return JSON.parse(localStorage.getItem("nishemap.owned")) || []; } catch (e) { return []; }
+  }
+  function ownsAvatar(id) {
+    var a = AVATARS.filter(function (x) { return x.id === id; })[0];
+    return !a || !a.price || ownedAvatars().indexOf(id) !== -1;
+  }
+  function coinsSpent() {
+    return ownedAvatars().reduce(function (s, id) {
+      var a = AVATARS.filter(function (x) { return x.id === id; })[0];
+      return s + (a ? a.price : 0);
+    }, 0);
+  }
+  /* звание считаем по ЗАРАБОТАННЫМ за всё время, покупки его не сбивают */
+  function coinsBalance() { return Math.max(0, myCoins() - coinsSpent()); }
+  function buyAvatar(id) {
+    var a = AVATARS.filter(function (x) { return x.id === id; })[0];
+    if (!a || !a.price || ownsAvatar(id)) return false;
+    if (coinsBalance() < a.price) return false;
+    var own = ownedAvatars(); own.push(id);
+    localStorage.setItem("nishemap.owned", JSON.stringify(own));
+    return true;
+  }
   function avatarTitle(id) {
     var a = AVATARS.filter(function (x) { return x.id === id; })[0];
     return a ? a.t : "";
@@ -253,7 +288,8 @@
     var coins = myCoins(), nx = nextRank(coins);
     var box = el("div", "coins-info",
       "<h4>Монеты</h4>" +
-      "<p style='margin:0 0 8px'>Монета = твоя цена, которую подтвердил район. У тебя <b>" + coins + "</b>.</p>" +
+      "<p style='margin:0 0 8px'>Монета = твоя цена, которую подтвердил район. Заработано: <b>" + coins +
+        "</b>, на руках: <b>" + coinsBalance() + "</b>.</p>" +
       "<ul>" +
       "<li>Цену проверяют: фото меню <b>или</b> двое других людей жмут «Ещё по этой цене?»</li>" +
       "<li>Монеты — личный счёт: район видит их в звании, но проверку цены решают только фото и чужие подтверждения</li>" +
@@ -262,22 +298,9 @@
           return nm ? " (до вехи ещё <b>" + (nm.places - verifiedCount()) + "</b>)" : " — все взяты"; })() + "</li>" +
       "<li>Звание: <b>" + rankFor(coins).t + "</b>" + (nx ? " → до «" + nx.t + "» ещё " + (nx.n - coins) : " — потолок") + "</li>" +
       "</ul>");
-    var pick = el("div", "avatar-pick",
-      "<h4 style='margin:12px 0 6px'>Твой аватар</h4>" +
-      '<div class="avatar-row">' + AVATARS.map(function (a) {
-        return '<button type="button" class="avatar-opt' + (myAvatar() === a.id ? " is-on" : "") +
-          '" data-avatar="' + a.id + '" title="' + esc(a.d) + '">' + avatarSvg(a.id, 34) +
-          "<span>" + esc(a.t) + "</span></button>";
-      }).join("") + "</div>");
-    box.appendChild(pick);
-    pick.querySelectorAll("[data-avatar]").forEach(function (b) {
-      b.addEventListener("click", function (ev) {
-        ev.stopPropagation();
-        localStorage.setItem("nishemap.avatar", b.dataset.avatar);
-        pick.querySelectorAll("[data-avatar]").forEach(function (x) { x.classList.remove("is-on"); });
-        b.classList.add("is-on");
-        paintRank();
-      });
+    box.appendChild(el("div", "", '<button type="button" class="btn btn-primary btn-wide" id="open-shop" style="margin-top:12px">Лавка аватаров</button>'));
+    box.querySelector("#open-shop").addEventListener("click", function (ev) {
+      ev.stopPropagation(); box.remove(); openShop();
     });
     document.querySelector(".brand").appendChild(box);
     setTimeout(function () {
@@ -285,6 +308,60 @@
         if (!e.target.closest(".coins-info") && !e.target.closest("#rank")) { box.remove(); document.removeEventListener("click", h); }
       });
     }, 10);
+  });
+
+  /* ---------- лавка аватаров ---------- */
+  function openShop() {
+    var modal = document.getElementById("shop-modal");
+    var body = document.getElementById("shop-body");
+    var bal = coinsBalance(), earned = myCoins();
+    document.getElementById("shop-balance").innerHTML =
+      "<b>" + bal + "</b> монет на руках · заработано за всё время: " + earned;
+    body.innerHTML = "";
+    ["Бесплатные", "За монеты"].forEach(function (title, gi) {
+      var list = AVATARS.filter(function (a) { return gi === 0 ? !a.price : a.price; });
+      var h = el("h3", "shop-group", esc(title));
+      body.appendChild(h);
+      var grid = el("div", "shop-grid");
+      list.forEach(function (a) {
+        var owned = ownsAvatar(a.id), active = myAvatar() === a.id, can = bal >= a.price;
+        var card = el("button", "shop-card" + (active ? " is-active" : "") + (!owned && !can ? " is-locked" : ""));
+        card.type = "button";
+        card.innerHTML = avatarSvg(a.id, 48) +
+          '<span class="shop-name">' + esc(a.t) + "</span>" +
+          '<span class="shop-desc">' + esc(a.d) + "</span>" +
+          '<span class="shop-tag">' + (active ? "надет" : owned ? "выбрать" :
+            '<span class="coin coin--gold"></span>' + a.price) + "</span>";
+        card.addEventListener("click", function () {
+          if (owned) {
+            localStorage.setItem("nishemap.avatar", a.id);
+            paintRank(); openShop();
+            return;
+          }
+          if (!can) { toast("Не хватает " + (a.price - bal) + " монет. Сдавай цены — район подтвердит."); return; }
+          if (buyAvatar(a.id)) {
+            localStorage.setItem("nishemap.avatar", a.id);
+            haptic("success"); paintRank(); openShop();
+            var cheer = el("div", "coin-cheer is-milestone",
+              '<div class="coin-cheer-coin"></div>' +
+              '<p class="coin-cheer-title">' + esc(a.t) + "</p>" +
+              '<p class="coin-cheer-sub">Аватар твой. Носи с достоинством.</p>');
+            document.body.appendChild(cheer);
+            setTimeout(function () { cheer.classList.add("is-out"); }, 2200);
+            setTimeout(function () { cheer.remove(); }, 2900);
+          }
+        });
+        grid.appendChild(card);
+      });
+      body.appendChild(grid);
+    });
+    modal.hidden = false; backdrop.hidden = false;
+  }
+  document.querySelectorAll("[data-close-shop]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      document.getElementById("shop-modal").hidden = true;
+      if (sheet.hidden && formModal.hidden) backdrop.hidden = true;
+    });
   });
 
   /* ---------- «О карте» ---------- */
@@ -856,9 +933,15 @@
     formDone.hidden = false;
   });
 
-  backdrop.addEventListener("click", function () { closeSheet(); closeForm(); aboutModal.hidden = true; });
+  backdrop.addEventListener("click", function () {
+    closeSheet(); closeForm(); aboutModal.hidden = true;
+    document.getElementById("shop-modal").hidden = true;
+  });
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape") { closeSheet(); closeForm(); aboutModal.hidden = true; }
+    if (e.key === "Escape") {
+      closeSheet(); closeForm(); aboutModal.hidden = true;
+      document.getElementById("shop-modal").hidden = true;
+    }
   });
 
   /* ---------- map <-> list toggle ---------- */
