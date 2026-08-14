@@ -483,6 +483,8 @@
     img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
   }
 
+  window.__showTrophy = showTrophy;   // для визуальной проверки
+
   /* ---------- лавка аватаров ---------- */
   function openShop() {
     var modal = document.getElementById("shop-modal");
