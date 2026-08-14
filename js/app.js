@@ -80,10 +80,17 @@
   /* позиция проверена: есть фото ИЛИ два разных устройства подтвердили */
   /* Проверка считается ОДИНАКОВО у всех: только по данным сервера.
      Никаких локальных привилегий — иначе автор видит «проверено», а район нет. */
+  var CONFIRM_GAP_MS = 60 * 60 * 1000;   // час между подтверждениями: сговор «два телефона за минуту» не проходит
+  function confirmsSpread(id) {
+    var c = CONFIRMS[id] || {}, times = Object.keys(c).map(function (d) { return c[d]; })
+      .filter(Boolean).map(function (t) { return new Date(t).getTime(); }).sort();
+    if (times.length < 2) return 0;
+    return times[times.length - 1] - times[0];
+  }
   function isVerified(id) {
     if (verifyAgeDays(id) > VERIFY_TTL) return false;   // проверка протухла
     if (hasPhoto(id)) return true;
-    return confirmCount(id) >= 2;
+    return confirmCount(id) >= 2 && confirmsSpread(id) >= CONFIRM_GAP_MS;
   }
 
   /* ---------- helpers ---------- */
@@ -109,6 +116,9 @@
       var n = confirmCount(it.id), age = verifyAgeDays(it.id);
       var when = age === 0 ? "сегодня" : age + " дн. назад";
       return { text: (hasPhoto(it.id) ? "проверено фото · " : "проверено народом · ") + when, cls: "is-fresh" };
+    }
+    if (confirmCount(it.id) >= 2 && confirmsSpread(it.id) < CONFIRM_GAP_MS) {
+      return { text: "проверяем цену…", cls: "" };
     }
     if (verifiedAt(it.id) && verifyAgeDays(it.id) > VERIFY_TTL) {
       return { text: "проверяли " + verifyAgeDays(it.id) + " дн. назад — уже неточно", cls: "is-stale" };
@@ -179,9 +189,14 @@
   }
 
   var MILESTONES = [
+    { places: 10,  bonus: 5 },
     { places: 25,  bonus: 10 },
-    { places: 75,  bonus: 25 },
-    { places: 150, bonus: 50 },
+    { places: 50,  bonus: 15 },
+    { places: 100, bonus: 25 },
+    { places: 175, bonus: 40 },
+    { places: 275, bonus: 60 },
+    { places: 400, bonus: 90 },
+    { places: 550, bonus: 150 },
   ];
   function bonusFor(verified) {
     var b = 0;
@@ -202,17 +217,17 @@
     { id: "zapas_m",   t: "запасливый", d: "у меня всё с собой",          price: 0 },
     { id: "zapas_f",   t: "запасливая", d: "у меня всё с собой",          price: 0 },
     // за монеты
-    { id: "doshik_m",     t: "дошиковод",      d: "кипяток — мой шеф-повар",      price: 50 },
-    { id: "doshik_f",     t: "дошиководка",    d: "кипяток — мой шеф-повар",      price: 50 },
-    { id: "shaurmaster",  t: "шаурмастер",     d: "знает лучший лаваш в городе",  price: 100 },
-    { id: "shaurmaster_f",t: "шаурмастерица",  d: "знает лучший лаваш в городе",  price: 100 },
-    { id: "tsar",         t: "царь столовой",  d: "компот наливают без очереди",  price: 175 },
-    { id: "tsar_f",       t: "царица столовой",d: "компот наливают без очереди",  price: 175 },
-    { id: "kosmonavt",    t: "космонавт",      d: "ел борщ в невесомости",        price: 275 },
-    { id: "oligarkh",     t: "олигарх",        d: "берёт добавку не глядя",       price: 400 },
-    { id: "oligarkh_f",   t: "олигархиня",     d: "берёт добавку не глядя",       price: 400 },
-    { id: "legenda",      t: "легенда района", d: "его цены цитируют в чатах",    price: 600 },
-    { id: "zoloto",       t: "золотой нищеброд", d: "200 мест на карте. выше только звёзды", price: 1200 },
+    { id: "doshik_m",     t: "дошиковод",      d: "кипяток — мой шеф-повар",      price: 75 },
+    { id: "doshik_f",     t: "дошиководка",    d: "кипяток — мой шеф-повар",      price: 75 },
+    { id: "shaurmaster",  t: "шаурмастер",     d: "знает лучший лаваш в городе",  price: 150 },
+    { id: "shaurmaster_f",t: "шаурмастерица",  d: "знает лучший лаваш в городе",  price: 150 },
+    { id: "tsar",         t: "царь столовой",  d: "компот наливают без очереди",  price: 275 },
+    { id: "tsar_f",       t: "царица столовой",d: "компот наливают без очереди",  price: 275 },
+    { id: "kosmonavt",    t: "космонавт",      d: "ел борщ в невесомости",        price: 425 },
+    { id: "oligarkh",     t: "олигарх",        d: "берёт добавку не глядя",       price: 650 },
+    { id: "oligarkh_f",   t: "олигархиня",     d: "берёт добавку не глядя",       price: 650 },
+    { id: "legenda",      t: "легенда района", d: "его цены цитируют в чатах",    price: 900 },
+    { id: "zoloto",       t: "золотой нищеброд", d: "200 мест на карте. выше только звёзды", price: 1250 },
   ];
   function avatarSvg(id, size) {
     var s = size || 28, skin = "#e8c9a0";
@@ -643,6 +658,15 @@
     photoInput.value = "";
     if (file.size > 8 * 1024 * 1024) { toast("Фото тяжелее 8 МБ — сожми"); return; }
     if (!CFG.SUPABASE_URL) { toast("Загрузка фото ещё не включена"); return; }
+    // у места уже есть свежее фото — второе не нужно ни карте, ни хранилищу
+    var venueFresh = (state.activeVenue && (state.activeVenue.items || []).some(function (x) {
+      return PHOTO_AT[x.id] && daysSinceISO(PHOTO_AT[x.id]) <= 7;
+    }));
+    if (venueFresh) {
+      btn.disabled = false;
+      toast("У этого места уже есть свежее фото меню. Спасибо, но хватит одного в неделю.");
+      return;
+    }
     btn.disabled = true; btn.textContent = "гружу…";
     var path = "items/" + itemId + "-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8) +
                (file.name.match(/\.[a-z0-9]+$/i) || [".jpg"])[0];
@@ -1282,7 +1306,7 @@
         var districtHadOthers = SEED.venues.some(function (v) {
           return v.district === d && (v.items || []).some(function (it) { return myItems().indexOf(it.id) === -1; });
         });
-        if (!districtHadOthers) b.districts += 10;
+        if (!districtHadOthers) b.districts += 5;
       }
     });
     b.total = b.items + b.venues + b.photos + b.districts + b.streak;
