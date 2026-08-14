@@ -174,7 +174,7 @@
   }
   function streakCoins() {
     var w = streakState().weeks, total = 0;
-    for (var i = 1; i <= w; i++) total += Math.floor((i - 1) / 4) + 1;   // +1, с 5-й недели +2, с 9-й +3…
+    for (var i = 1; i <= w; i++) total += Math.min(Math.floor((i - 1) / 4) + 1, 5);  // +1, каждые 4 недели +1, потолок +5
     return total;
   }
 
@@ -212,7 +212,7 @@
     { id: "oligarkh",     t: "олигарх",        d: "берёт добавку не глядя",       price: 400 },
     { id: "oligarkh_f",   t: "олигархиня",     d: "берёт добавку не глядя",       price: 400 },
     { id: "legenda",      t: "легенда района", d: "его цены цитируют в чатах",    price: 600 },
-    { id: "zoloto",       t: "золотой нищеброд", d: "200 мест на карте. выше только звёзды", price: 1000 },
+    { id: "zoloto",       t: "золотой нищеброд", d: "200 мест на карте. выше только звёзды", price: 1200 },
   ];
   function avatarSvg(id, size) {
     var s = size || 28, skin = "#e8c9a0";
