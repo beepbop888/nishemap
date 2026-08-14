@@ -401,33 +401,57 @@
   function shareTrophy(places) {
     var tr = TROPHIES[places];
     if (!tr) return;
-    var W = 1080, H = 1080, c = document.createElement("canvas");
-    c.width = W; c.height = H;
+    var W = 1080, c = document.createElement("canvas");
+    c.width = W; c.height = W;
     var x = c.getContext("2d");
-    x.fillStyle = "#232323"; x.fillRect(0, 0, W, H);
-    x.fillStyle = "#ad2f26"; x.fillRect(0, 0, W, 14);
-    // марка
-    x.fillStyle = "#fdfdfb";
-    x.font = "600 64px Oswald, Arial Narrow, sans-serif";
+
+    // фон и рамка
+    x.fillStyle = "#232323"; x.fillRect(0, 0, W, W);
+    var g = x.createRadialGradient(W / 2, 430, 40, W / 2, 430, 620);
+    g.addColorStop(0, "rgba(242,207,92,.16)"); g.addColorStop(1, "rgba(242,207,92,0)");
+    x.fillStyle = g; x.fillRect(0, 0, W, W);
+    x.strokeStyle = "#d9a514"; x.lineWidth = 3;
+    x.strokeRect(34, 34, W - 68, W - 68);
+    x.strokeStyle = "rgba(217,165,20,.35)"; x.lineWidth = 1;
+    x.strokeRect(46, 46, W - 92, W - 92);
+    x.fillStyle = "#ad2f26"; x.fillRect(34, 34, W - 68, 12);
+
+    // логотип-монета + слово
+    var lx = W / 2 - 168, ly = 128;
+    var cg = x.createRadialGradient(lx - 6, ly - 8, 4, lx, ly, 40);
+    cg.addColorStop(0, "#f2cf5c"); cg.addColorStop(.62, "#d9a514"); cg.addColorStop(1, "#a37c0a");
+    x.beginPath(); x.arc(lx, ly, 34, 0, 6.2832); x.fillStyle = cg; x.fill();
+    x.lineWidth = 3; x.strokeStyle = "#f7e6b0"; x.stroke();
+    x.fillStyle = "#6e5104"; x.font = "700 38px Menlo, monospace";
+    x.textAlign = "center"; x.textBaseline = "middle";
+    x.fillText("₽", lx, ly + 2);
+    x.textBaseline = "alphabetic";
+    x.textAlign = "left";
+    x.font = '600 60px Oswald, "Arial Narrow", Impact, sans-serif';
+    x.fillStyle = "#e0564a"; x.fillText("НИЩЕ", lx + 48, ly + 20);
+    var wNishe = x.measureText("НИЩЕ").width;
+    x.fillStyle = "#fdfdfb"; x.fillText("MAP", lx + 48 + wNishe, ly + 20);
+
     x.textAlign = "center";
-    x.fillText("НИЩЕMAP", W / 2, 130);
-    x.fillStyle = "#b3b1aa";
-    x.font = "28px -apple-system, Arial, sans-serif";
-    x.fillText("карта еды до 500 ₽ в Москве", W / 2, 178);
+    x.fillStyle = "#b3b1aa"; x.font = '26px -apple-system, Arial, sans-serif';
+    x.fillText("карта еды до 500 ₽ в Москве", W / 2, 186);
 
     var img = new Image();
-    var svg = trophySvg(places, 520).replace('class="trophy" ', "");
     img.onload = function () {
-      x.drawImage(img, (W - 520) / 2, 250, 520, 520);
+      x.drawImage(img, (W - 480) / 2, 236, 480, 480);
+      // подпись трофея
       x.fillStyle = "#f2cf5c";
-      x.font = "600 76px Oswald, Arial Narrow, sans-serif";
-      x.fillText(tr.t.toUpperCase(), W / 2, 870);
-      x.fillStyle = "#fdfdfb";
-      x.font = "38px -apple-system, Arial, sans-serif";
-      x.fillText(tr.s, W / 2, 930);
-      x.fillStyle = "#b3b1aa";
-      x.font = "30px PT Mono, Menlo, monospace";
-      x.fillText("t.me/nishemap_bot/map", W / 2, 1010);
+      x.font = '600 72px Oswald, "Arial Narrow", Impact, sans-serif';
+      x.fillText(tr.t.toUpperCase(), W / 2, 812);
+      x.strokeStyle = "rgba(217,165,20,.5)"; x.lineWidth = 2;
+      x.beginPath(); x.moveTo(W / 2 - 150, 838); x.lineTo(W / 2 + 150, 838); x.stroke();
+      x.fillStyle = "#fdfdfb"; x.font = '36px -apple-system, Arial, sans-serif';
+      x.fillText(tr.s, W / 2, 890);
+      x.fillStyle = "#8f8b84"; x.font = '24px -apple-system, Arial, sans-serif';
+      x.fillText("собрано ногами по Москве", W / 2, 934);
+      x.fillStyle = "#d9a514"; x.font = '28px Menlo, monospace';
+      x.fillText("t.me/nishemap_bot/map", W / 2, 1000);
+
       c.toBlob(function (blob) {
         if (!blob) return;
         var file = new File([blob], "nishemap-trophy.png", { type: "image/png" });
@@ -443,7 +467,8 @@
       }, "image/png");
     };
     img.onerror = function () { toast("Не получилось нарисовать плитку"); };
-    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+    img.src = "data:image/svg+xml;charset=utf-8," +
+      encodeURIComponent((BADGES["t" + places] || "").replace(' class="badge-svg"', ""));
   }
 
   /* ---------- лавка аватаров ---------- */
@@ -496,8 +521,8 @@
           if (buyAvatar(a.id)) {
             localStorage.setItem("nishemap.avatar", a.id);
             haptic("success"); paintRank(); openShop();
-            var cheer = el("div", "coin-cheer is-milestone",
-              '<div class="coin-cheer-coin"></div>' +
+            var cheer = el("div", "coin-cheer",
+              '<div class="badge-flip">' + avatarSvg(a.id, 150) + "</div>" +
               '<p class="coin-cheer-title">' + esc(a.t) + "</p>" +
               '<p class="coin-cheer-sub">Аватар твой. Носи с достоинством.</p>');
             document.body.appendChild(cheer);

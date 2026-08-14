@@ -10,10 +10,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=PT+Mono:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=52">
+<link rel="stylesheet" href="css/styles.css?v=54">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23d9a514' stroke='%23f2cf5c' stroke-width='5'/><text x='50' y='68' font-size='52' font-weight='bold' text-anchor='middle' fill='%236e5104' font-family='Menlo,monospace'>₽</text></svg>">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="config.js?v=52"></script>
+<script src="config.js?v=54"></script>
 </head>
 <body>
 
@@ -22,7 +22,7 @@
     <span class="brand-coin" aria-hidden="true">₽</span>
     <h1 class="brand-name"><span class="brand-nishe">Нище</span>Map</h1>
     <span class="buildbox">
-      <span class="build" aria-hidden="true">сб.52</span>
+      <span class="build" aria-hidden="true">сб.54</span>
       <button type="button" id="about-btn" class="about-btn" title="О карте, монеты, источники">?</button>
     </span>
     <button id="rank" class="rank" hidden type="button" title="Твой вклад в народную копилку"></button>
@@ -198,17 +198,21 @@
     <button class="sheet-close" data-close-about aria-label="Закрыть">✕</button>
     <h2 id="about-title" class="form-title">О карте</h2>
     <div class="about-body">
-      <p><b>Что это.</b> Народная карта дешёвой еды в Москве. Цены сдают сами люди — как на korean «карте нищих».</p>
+      <p><b>Что это.</b> Народная карта дешёвой еды в Москве. Цены сдают сами люди.</p>
 
       <h3>Цены могут быть неточными</h3>
-      <p>Часть цен взята из открытых публикаций (Афиша Daily, Т—Ж, KudaGo, Открытая кухня, Time Out, РИАМО, msk1)
-      и помечена «не проверена». Остальные сдают пользователи. Цены меняются — проверяйте на месте.
+      <p>Часть цен взята из открытых публикаций и помечена «не проверена». Остальные сдают пользователи. Цены меняются — проверяйте на месте.
       Карта носит справочный характер и не является офертой.</p>
 
       <h3>Монеты: как это работает</h3>
-      <p>Монета — это твоя цена, которую подтвердил район. Просто выложить цену мало: её должны
-      подтвердить. Самый быстрый путь — <b>сфотографировать меню на месте</b>: такая цена засчитывается сразу.
-      Без фото цену подтверждают другие люди, и это занимает какое-то время.</p>
+      <p>Монета — это твоя цена, которую подтвердил район. Просто выложить цену мало: её должны подтвердить.</p>
+      <p><b>Два пути к монете.</b> Первый: сфотографировать меню прямо на месте — тогда цена
+      считается подтверждённой сразу, и монета твоя. Второй: без фото — тогда цену подтверждают
+      другие посетители, и это занимает какое-то время.</p>
+      <p><b>Важно про фото.</b> Фото подтверждает <u>каждую позицию</u>, которую ты сдал — за них
+      начисляются монеты как обычно. А вот бонус «+1 за фото меню» даётся <u>один раз на заведение</u>:
+      второе и третье фото того же меню бонуса не принесут. Смысл простой — нам нужно одно свежее
+      фото на место, а не двадцать одинаковых.</p>
       <p><b>За что начисляют:</b></p>
       <ul>
         <li>подтверждённая позиция — <b>1</b> монета (не больше трёх с одного заведения, чтобы не переписывать меню целиком);</li>
@@ -222,6 +226,8 @@
       <p><b>Звание</b> считается по монетам, заработанным за всё время, — покупки в лавке его не понижают.
       Монеты тратятся на аватары: от дошиковода за 75 до золотого нищеброда за 1650
       (это примерно 200 занесённых на карту мест).</p>
+      <p style="background:var(--gold-bg);border:1px solid var(--gold);border-radius:2px;padding:10px 12px">
+      <b>Другие способы потратить монеты — скоро.</b> Копи: то, что заработано сейчас, никуда не денется.</p>
 
       <h3>Данные и лицензии</h3>
       <p>Точки без цен — © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, лицензия ODbL.
@@ -248,9 +254,9 @@
 
 <div id="backdrop" class="backdrop" hidden></div>
 
-<script src="assets/badges.js?v=52"></script>
-<script src="data/seed.js?v=52"></script>
-<script src="data/osm.js?v=52" onerror="window.NISHEMAP_OSM=null"></script>
-<script src="js/app.js?v=52"></script>
+<script src="assets/badges.js?v=54"></script>
+<script src="data/seed.js?v=54"></script>
+<script src="data/osm.js?v=54" onerror="window.NISHEMAP_OSM=null"></script>
+<script src="js/app.js?v=54"></script>
 </body>
 </html>
