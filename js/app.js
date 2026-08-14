@@ -717,6 +717,7 @@
   var photoInput = document.createElement("input");
   photoInput.type = "file";
   photoInput.accept = "image/*";
+  photoInput.setAttribute("capture", "environment");   // на телефоне открывается камера, а не галерея
   photoInput.hidden = true;
   document.body.appendChild(photoInput);
   var photoTarget = null;
@@ -726,6 +727,36 @@
     photoTarget = btn;
     photoInput.click();
   });
+  /* дата съёмки из EXIF: скачанную из интернета картинку так не подсунуть */
+  function exifShotTime(file) {
+    return new Promise(function (resolve) {
+      var r = new FileReader();
+      r.onload = function () {
+        try {
+          var v = new DataView(r.result);
+          if (v.getUint16(0) !== 0xFFD8) return resolve(null);      // не JPEG — пропускаем
+          var off = 2, len = v.byteLength;
+          while (off < len - 4) {
+            if (v.getUint16(off) === 0xFFE1) {                       // APP1 = EXIF
+              var s = "";
+              for (var i = off + 4; i < Math.min(off + 4 + v.getUint16(off + 2), len); i++) {
+                s += String.fromCharCode(v.getUint8(i));
+              }
+              var m = s.match(/(20\d\d):(\d\d):(\d\d) (\d\d):(\d\d):(\d\d)/);
+              if (m) return resolve(new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]));
+              return resolve(null);
+            }
+            if (v.getUint8(off) !== 0xFF) break;
+            off += 2 + v.getUint16(off + 2);
+          }
+        } catch (e) {}
+        resolve(null);
+      };
+      r.onerror = function () { resolve(null); };
+      r.readAsArrayBuffer(file.slice(0, 131072));
+    });
+  }
+
   photoInput.addEventListener("change", function () {
     if (!photoInput.files.length || !photoTarget) return;
     var file = photoInput.files[0], btn = photoTarget, itemId = btn.dataset.item;
@@ -741,7 +772,19 @@
       toast("У этого места уже есть свежее фото меню. Спасибо, но хватит одного в неделю.");
       return;
     }
-    btn.disabled = true; btn.textContent = "гружу…";
+    btn.disabled = true; btn.textContent = "проверяю…";
+    exifShotTime(file).then(function (shot) {
+      if (shot && (Date.now() - shot.getTime()) > 24 * 3600 * 1000) {
+        btn.disabled = false; btn.textContent = "📷 фото";
+        toast("Это фото снято " + shot.toLocaleDateString("ru-RU") + ". Нужно сегодняшнее — сфотографируй меню на месте.");
+        return;
+      }
+      uploadPhoto(file, btn, itemId);
+    });
+  });
+
+  function uploadPhoto(file, btn, itemId) {
+    btn.textContent = "гружу…";
     var path = "items/" + itemId + "-" + Date.now() + "-" + Math.random().toString(36).slice(2, 8) +
                (file.name.match(/\.[a-z0-9]+$/i) || [".jpg"])[0];
     fetch(CFG.SUPABASE_URL + "/storage/v1/object/menus/" + path, {
@@ -764,7 +807,7 @@
       btn.disabled = false; btn.textContent = "📷 фото";
       toast("Фото не загрузилось — включи политику Storage");
     });
-  });
+  }
 
   function showViewCount(v) {
     var box = document.getElementById("sheet-views");

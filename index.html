@@ -10,10 +10,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=PT+Mono:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/styles.css?v=50">
+<link rel="stylesheet" href="css/styles.css?v=51">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%23d9a514' stroke='%23f2cf5c' stroke-width='5'/><text x='50' y='68' font-size='52' font-weight='bold' text-anchor='middle' fill='%236e5104' font-family='Menlo,monospace'>₽</text></svg>">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script src="config.js?v=50"></script>
+<script src="config.js?v=51"></script>
 </head>
 <body>
 
@@ -21,9 +21,11 @@
   <div class="brand">
     <span class="brand-coin" aria-hidden="true">₽</span>
     <h1 class="brand-name"><span class="brand-nishe">Нище</span>Map</h1>
-    <span class="build" aria-hidden="true">сб.50</span>
+    <span class="buildbox">
+      <span class="build" aria-hidden="true">сб.51</span>
+      <button type="button" id="about-btn" class="about-btn" title="О карте, монеты, источники">?</button>
+    </span>
     <button id="rank" class="rank" hidden type="button" title="Твой вклад в народную копилку"></button>
-    <button type="button" id="about-btn" class="about-btn" title="О карте, источники, приватность">?</button>
   </div>
   <p class="tagline">Еда до 500 ₽. Для тех, кто считает медяки.</p>
   <div class="filters">
@@ -164,8 +166,8 @@
       </label>
       <label class="field">
         <span class="field-label">Фото меню, цен или самой еды — по желанию</span>
-        <input type="file" name="photo" accept="image/*">
-        <span class="field-hint">Селфи district не оценит.</span>
+        <input type="file" name="photo" accept="image/*" capture="environment">
+        <span class="field-hint">Снимай на месте: старые картинки из интернета не принимаем.</span>
       </label>
       <p class="form-error" id="form-error" role="alert" hidden>Цена до 500 ₽ и все поля — иначе никак.</p>
       <button type="submit" class="btn btn-primary btn-wide">Отправить в народ</button>
@@ -203,13 +205,34 @@
       и помечена «не проверена». Остальные сдают пользователи. Цены меняются — проверяйте на месте.
       Карта носит справочный характер и не является офертой.</p>
 
+      <h3>Монеты: как это работает</h3>
+      <p>Монета — это твоя цена, которую подтвердил район. Просто выложить цену мало: её должны
+      подтвердить. Самый быстрый путь — <b>сфотографировать меню на месте</b>: такая цена засчитывается сразу.
+      Без фото цену подтверждают другие люди, и это занимает какое-то время.</p>
+      <p><b>За что начисляют:</b></p>
+      <ul>
+        <li>подтверждённая позиция — <b>1</b> монета (не больше трёх с одного заведения, чтобы не переписывать меню целиком);</li>
+        <li>первая цена в заведении, где её ещё не было, — <b>+2</b>;</li>
+        <li>фото меню — <b>+1</b> за заведение;</li>
+        <li>первая цена в районе, где вообще пусто, — <b>+5</b>;</li>
+        <li>серия: 3 подтверждённые цены за неделю — <b>+1</b>, и награда растёт каждые 4 недели подряд (до +5).</li>
+      </ul>
+      <p><b>Вехи и трофеи.</b> На 10, 25, 50, 100, 175, 275, 400 и 550 подтверждённых ценах выдают
+      кубок и разовую премию монетами. Трофей можно превратить в картинку и кинуть в чат.</p>
+      <p><b>Звание</b> считается по монетам, заработанным за всё время, — покупки в лавке его не понижают.
+      Монеты тратятся на аватары: от дошиковода за 75 до золотого нищеброда за 1650
+      (это примерно 200 занесённых на карту мест).</p>
+
       <h3>Данные и лицензии</h3>
       <p>Точки без цен — © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a>, лицензия ODbL.
-      Карта — Яндекс Карты. Геокодирование — Nominatim/OSM.</p>
+      Карта — Яндекс Карты. Геокодирование — Nominatim/OSM.
+      Символы на значках — <a href="https://game-icons.net" target="_blank" rel="noopener">game-icons.net</a>
+      (Lorc, Delapouite), лицензия CC BY 3.0.</p>
 
       <h3>Фото</h3>
-      <p>Загружая фото, вы подтверждаете, что вправе им делиться, и разрешаете показывать его на карте.
-      Только меню, ценники и еда — не люди.</p>
+      <p>Фотографируйте меню на месте: приложение открывает камеру и проверяет дату съёмки,
+      так что скачанная из интернета картинка не подойдёт. Одного свежего фото на заведение достаточно.
+      Только меню, ценники и еда — не люди. Загружая фото, вы подтверждаете, что вправе им делиться.</p>
 
       <h3>Вы владелец заведения?</h3>
       <p>Напишите боту <a href="https://t.me/nishemap_bot" target="_blank" rel="noopener">@nishemap_bot</a> —
@@ -225,9 +248,9 @@
 
 <div id="backdrop" class="backdrop" hidden></div>
 
-<script src="assets/badges.js?v=50"></script>
-<script src="data/seed.js?v=50"></script>
-<script src="data/osm.js?v=50" onerror="window.NISHEMAP_OSM=null"></script>
-<script src="js/app.js?v=50"></script>
+<script src="assets/badges.js?v=51"></script>
+<script src="data/seed.js?v=51"></script>
+<script src="data/osm.js?v=51" onerror="window.NISHEMAP_OSM=null"></script>
+<script src="js/app.js?v=51"></script>
 </body>
 </html>
