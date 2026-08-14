@@ -4,7 +4,16 @@
 
   var CFG = window.NISHEMAP_CONFIG || {};
   var SEED = window.NISHEMAP_SEED || { venues: [] };
-  var OSM = (window.NISHEMAP_OSM && window.NISHEMAP_OSM.venues) || [];
+  var OSM = (function () {
+    var r = (window.NISHEMAP_OSM_ROWS && window.NISHEMAP_OSM_ROWS.rows) || [];
+    return r.map(function (a, i) {
+      return { id: "osm-" + i, name: a[0], type: a[1], lat: a[2], lon: a[3],
+               address: a[4] || "", district: "", source: "osm", noPrice: true,
+               yandexUrl: "https://yandex.ru/maps/?text=" + encodeURIComponent(a[0] + " " + (a[4] || "")),
+               items: [] };
+    });
+  })();
+  var GRAY_MAX_ON_SCREEN = 220;   // больше глазу всё равно не нужно, а карте тяжело
   var GRAY_MIN_ZOOM = 14; // серые точки — только при приближении, чтобы обзор был монетным
   var STALE_DAYS = 14;
 
@@ -1178,8 +1187,10 @@
           }, { suppressMapOpenBlock: true });
           renderMarkers();
           renderGray();
-          state.map.events.add("boundschange", function (e) {
-            if (e.get("newZoom") !== e.get("oldZoom")) renderGray();
+          var grayTimer = null;
+          state.map.events.add("boundschange", function () {
+            clearTimeout(grayTimer);
+            grayTimer = setTimeout(renderGray, 220);   // ждём, пока человек домотает
           });
           viewToggle.hidden = false; // карта живая — можно переключаться
           document.getElementById("map-loading").hidden = true;
@@ -1266,7 +1277,11 @@
     }
     if (hint) hint.hidden = true;
     var Layout = ymaps.templateLayoutFactory.createClass('<div class="graypin"></div>');
-    visibleGray().forEach(function (v) {
+    // рисуем только то, что реально видно в кадре — иначе 2700 меток кладут карту
+    var b = state.map.getBounds(), lo = b[0], hi = b[1], shown = 0;
+    visibleGray().filter(function (v) {
+      return v.lat >= lo[0] && v.lat <= hi[0] && v.lon >= lo[1] && v.lon <= hi[1];
+    }).slice(0, GRAY_MAX_ON_SCREEN).forEach(function (v) {
       var pm = new ymaps.Placemark([v.lat, v.lon], { hintContent: esc(v.name) + " · цены нет" }, {
         iconLayout: Layout,
         iconShape: { type: "Circle", coordinates: [0, 0], radius: 11 },
