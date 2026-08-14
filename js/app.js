@@ -188,6 +188,45 @@
     return total;
   }
 
+  var TROPHIES = {
+    10:  { t: "Первый десяток",   s: "10 подтверждённых цен",  metal: "bronze" },
+    25:  { t: "Разведчик",        s: "25 подтверждённых цен",  metal: "bronze" },
+    50:  { t: "Полсотни",         s: "50 подтверждённых цен",  metal: "silver" },
+    100: { t: "Сотня",            s: "100 подтверждённых цен", metal: "silver" },
+    175: { t: "Знаток района",    s: "175 подтверждённых цен", metal: "gold"   },
+    275: { t: "Хранитель карты",  s: "275 подтверждённых цен", metal: "gold"   },
+    400: { t: "Ветеран копеек",   s: "400 подтверждённых цен", metal: "gold"   },
+    550: { t: "Легенда НищеMap",  s: "550 подтверждённых цен", metal: "legend" },
+  };
+  function trophySvg(places, size) {
+    var s = size || 64, tr = TROPHIES[places];
+    if (!tr) return "";
+    var pal = {
+      bronze: ["#d69a68", "#a8683c", "#7c4a23"],
+      silver: ["#d3dae1", "#8a939e", "#5d6771"],
+      gold:   ["#f2cf5c", "#d9a514", "#a37c0a"],
+      legend: ["#fff1b8", "#f2cf5c", "#b8860b"],
+    }[tr.metal];
+    var gid = "tg" + places;
+    return '<svg class="trophy" width="' + s + '" height="' + s + '" viewBox="0 0 64 64" aria-hidden="true">' +
+      '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="' + pal[0] + '"/><stop offset=".55" stop-color="' + pal[1] +
+      '"/><stop offset="1" stop-color="' + pal[2] + '"/></linearGradient></defs>' +
+      (tr.metal === "legend" ? '<circle cx="32" cy="30" r="29" fill="rgba(242,207,92,.18)"/>' : "") +
+      '<path d="M18 10h28v10a14 14 0 0 1-28 0z" fill="url(#' + gid + ')" stroke="' + pal[2] + '" stroke-width="1.5"/>' +
+      '<path d="M18 13h-6a8 8 0 0 0 8 8" fill="none" stroke="' + pal[1] + '" stroke-width="3"/>' +
+      '<path d="M46 13h6a8 8 0 0 1-8 8" fill="none" stroke="' + pal[1] + '" stroke-width="3"/>' +
+      '<rect x="28" y="33" width="8" height="10" fill="' + pal[1] + '"/>' +
+      '<rect x="20" y="43" width="24" height="6" rx="1.5" fill="url(#' + gid + ')" stroke="' + pal[2] + '" stroke-width="1.2"/>' +
+      '<text x="32" y="26" font-size="13" font-weight="bold" text-anchor="middle" fill="' + pal[2] +
+      '" font-family="Menlo,monospace">' + places + "</text></svg>";
+  }
+  function earnedTrophies() {
+    var v = verifiedCount();
+    return Object.keys(TROPHIES).map(Number).sort(function (a, b) { return a - b; })
+      .filter(function (p) { return v >= p; });
+  }
+
   var MILESTONES = [
     { places: 10,  bonus: 5 },
     { places: 25,  bonus: 10 },
@@ -227,7 +266,7 @@
     { id: "oligarkh",     t: "олигарх",        d: "берёт добавку не глядя",       price: 650 },
     { id: "oligarkh_f",   t: "олигархиня",     d: "берёт добавку не глядя",       price: 650 },
     { id: "legenda",      t: "легенда района", d: "его цены цитируют в чатах",    price: 900 },
-    { id: "zoloto",       t: "золотой нищеброд", d: "200 мест на карте. выше только звёзды", price: 1250 },
+    { id: "zoloto",       t: "золотой нищеброд", d: "200 мест на карте. выше только звёзды", price: 1650 },
   ];
   function avatarSvg(id, size) {
     var s = size || 28, skin = "#e8c9a0";
@@ -379,6 +418,71 @@
     }, 10);
   });
 
+  /* ---------- трофей: крутится, потом предлагает похвастаться ---------- */
+  function showTrophy(places, bonus) {
+    var tr = TROPHIES[places];
+    if (!tr) return;
+    var wrap = el("div", "coin-cheer is-trophy",
+      '<div class="trophy-spin">' + trophySvg(places, 150) + "</div>" +
+      '<p class="coin-cheer-title">' + esc(tr.t) + "</p>" +
+      '<p class="coin-cheer-sub">' + esc(tr.s) + (bonus ? " · +" + bonus + " монет" : "") + "</p>" +
+      '<button type="button" class="btn btn-primary" id="share-trophy">Похвастаться</button>' +
+      '<button type="button" class="btn" id="close-trophy">Потом</button>');
+    document.body.appendChild(wrap);
+    haptic("success");
+    wrap.querySelector("#close-trophy").addEventListener("click", function () { wrap.remove(); });
+    wrap.querySelector("#share-trophy").addEventListener("click", function () { shareTrophy(places); });
+  }
+
+  /* плитка для шеринга: рисуем на canvas, чтобы можно было кинуть картинкой в чат */
+  function shareTrophy(places) {
+    var tr = TROPHIES[places];
+    if (!tr) return;
+    var W = 1080, H = 1080, c = document.createElement("canvas");
+    c.width = W; c.height = H;
+    var x = c.getContext("2d");
+    x.fillStyle = "#232323"; x.fillRect(0, 0, W, H);
+    x.fillStyle = "#ad2f26"; x.fillRect(0, 0, W, 14);
+    // марка
+    x.fillStyle = "#fdfdfb";
+    x.font = "600 64px Oswald, Arial Narrow, sans-serif";
+    x.textAlign = "center";
+    x.fillText("НИЩЕMAP", W / 2, 130);
+    x.fillStyle = "#b3b1aa";
+    x.font = "28px -apple-system, Arial, sans-serif";
+    x.fillText("карта еды до 500 ₽ в Москве", W / 2, 178);
+
+    var img = new Image();
+    var svg = trophySvg(places, 520).replace('class="trophy" ', "");
+    img.onload = function () {
+      x.drawImage(img, (W - 520) / 2, 250, 520, 520);
+      x.fillStyle = "#f2cf5c";
+      x.font = "600 76px Oswald, Arial Narrow, sans-serif";
+      x.fillText(tr.t.toUpperCase(), W / 2, 870);
+      x.fillStyle = "#fdfdfb";
+      x.font = "38px -apple-system, Arial, sans-serif";
+      x.fillText(tr.s, W / 2, 930);
+      x.fillStyle = "#b3b1aa";
+      x.font = "30px PT Mono, Menlo, monospace";
+      x.fillText("t.me/nishemap_bot/map", W / 2, 1010);
+      c.toBlob(function (blob) {
+        if (!blob) return;
+        var file = new File([blob], "nishemap-trophy.png", { type: "image/png" });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({ files: [file], text: tr.t + " — " + tr.s + " на НищеMap" }).catch(function () {});
+        } else {
+          var a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = "nishemap-" + places + ".png";
+          a.click();
+          toast("Плитка сохранена — кидай в чат");
+        }
+      }, "image/png");
+    };
+    img.onerror = function () { toast("Не получилось нарисовать плитку"); };
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+  }
+
   /* ---------- лавка аватаров ---------- */
   function openShop() {
     var modal = document.getElementById("shop-modal");
@@ -389,6 +493,22 @@
     body.innerHTML = bal === 0 && earned === 0
       ? '<p class="shop-hint">Монет пока нет. Самый быстрый способ: сдай точку <b>с фото меню</b> — такая цена считается проверенной сразу, без чужих подтверждений. Это +1 монета.</p>'
       : '';
+    var earned = earnedTrophies(), allT = Object.keys(TROPHIES).map(Number).sort(function (a, b) { return a - b; });
+    var tw = el("div", "");
+    tw.innerHTML = '<h3 class="shop-group">Трофеи · ' + earned.length + " из " + allT.length + "</h3>";
+    var trow = el("div", "trophy-row");
+    allT.forEach(function (p) {
+      var got = earned.indexOf(p) !== -1;
+      var b = el("button", "trophy-cell" + (got ? "" : " is-locked"));
+      b.type = "button";
+      b.innerHTML = trophySvg(p, 44) + '<span>' + esc(TROPHIES[p].t) + "</span>";
+      b.title = TROPHIES[p].s;
+      if (got) b.addEventListener("click", function () { shareTrophy(p); });
+      trow.appendChild(b);
+    });
+    tw.appendChild(trow);
+    body.appendChild(tw);
+
     ["Бесплатные", "За монеты"].forEach(function (title, gi) {
       var list = AVATARS.filter(function (a) { return gi === 0 ? !a.price : a.price; });
       var h = el("h3", "shop-group", esc(title));
@@ -1321,16 +1441,7 @@
     var seen = parseInt(localStorage.getItem("nishemap.milestone") || "0", 10);
     if (top.places <= seen) return;
     localStorage.setItem("nishemap.milestone", String(top.places));
-    setTimeout(function () {
-      var wrap = el("div", "coin-cheer is-milestone",
-        '<div class="coin-cheer-coin"></div>' +
-        '<p class="coin-cheer-title">Веха: ' + top.places + " мест</p>" +
-        '<p class="coin-cheer-sub">+' + top.bonus + " монет сверху. Район запомнит.</p>");
-      document.body.appendChild(wrap);
-      haptic("success");
-      setTimeout(function () { wrap.classList.add("is-out"); }, 3000);
-      setTimeout(function () { wrap.remove(); }, 3700);
-    }, 900);
+    setTimeout(function () { showTrophy(top.places, top.bonus); }, 900);
   }
 
   function checkNewCoins() {
