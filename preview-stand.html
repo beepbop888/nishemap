@@ -1,0 +1,313 @@
+<title>НищеMap — стенд аватаров, трофеев и анимаций</title>
+<style>
+:root{
+  --paper:#f6f5f1; --card:#fdfdfb; --ink:#232323; --ink-soft:#6b6b66;
+  --line:#dcdad2; --dash:#c9c6bb; --stamp:#ad2f26; --stamp-deep:#8c241d; --stamp-tint:#f6e7e5;
+  --gold:#d9a514; --gold-hi:#f2cf5c; --gold-lo:#a37c0a; --gold-bg:#f8f0d5; --gold-ink:#6e5104;
+  --ok:#3d7a3f;
+  --disp:"Arial Narrow","Helvetica Neue Condensed",Haettenschweiler,Impact,system-ui,sans-serif;
+  --mono:ui-monospace,Menlo,Consolas,"PT Mono",monospace;
+  --body:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#161514; --card:#1f1e1c; --ink:#f2efe8; --ink-soft:#a6a199;
+    --line:#33312d; --dash:#3d3a35; --stamp-tint:#3a1f1c; --gold-bg:#2e2711;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#161514; --card:#1f1e1c; --ink:#f2efe8; --ink-soft:#a6a199;
+  --line:#33312d; --dash:#3d3a35; --stamp-tint:#3a1f1c; --gold-bg:#2e2711;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 var(--body)}
+.wrap{max-width:1080px;margin:0 auto;padding:36px 20px 90px}
+.masthead{background:var(--ink);color:var(--card);border-bottom:4px solid var(--stamp);
+  margin:-36px -20px 28px;padding:26px 20px 22px}
+.masthead h1{margin:0;font:600 30px/1 var(--disp);text-transform:uppercase;letter-spacing:.06em}
+.masthead h1 span{color:#e0564a}
+.masthead p{margin:8px 0 0;color:#b3b1aa;font-size:14px;max-width:62ch}
+h2{font:600 19px/1.15 var(--disp);text-transform:uppercase;letter-spacing:.06em;
+  margin:40px 0 6px;padding-bottom:8px;border-bottom:2px solid var(--ink)}
+.lede{color:var(--ink-soft);font-size:14px;margin:0 0 18px;max-width:70ch}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(158px,1fr));gap:10px}
+.cell{background:var(--card);border:1px solid var(--line);border-radius:2px;
+  padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
+.cell .nm{font:600 12px/1.15 var(--disp);text-transform:uppercase;letter-spacing:.05em}
+.cell .ds{font-size:10.5px;line-height:1.3;color:var(--ink-soft);min-height:26px}
+.tag{display:inline-flex;align-items:center;gap:5px;font:700 12px/1 var(--mono);
+  background:var(--gold-bg);color:var(--gold-ink);border-radius:2px;padding:4px 8px;font-variant-numeric:tabular-nums}
+.tag.free{background:#e3ebe3;color:var(--ok)}
+.eff{font:600 9.5px/1 var(--disp);text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)}
+.coin{width:13px;height:13px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,var(--gold-hi),var(--gold));
+  box-shadow:inset 0 -2px 3px rgba(0,0,0,.18),inset 0 2px 3px rgba(255,255,255,.5)}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:8px 0 0}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:left}
+th{background:var(--stamp-tint);color:var(--stamp-deep);font:600 11px/1 var(--disp);
+  text-transform:uppercase;letter-spacing:.06em}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 16px}
+button.play{font:600 12px/1 var(--disp);text-transform:uppercase;letter-spacing:.06em;
+  background:var(--stamp);color:#fff;border:none;border-radius:4px;padding:12px 16px;cursor:pointer;
+  box-shadow:3px 3px 0 rgba(35,35,35,.85)}
+button.play:active{transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(35,35,35,.85)}
+button.play.alt{background:var(--card);color:var(--ink);border:1px solid var(--ink)}
+button.play:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.stage{position:relative;height:420px;background:var(--card);border:1px solid var(--line);
+  border-radius:2px;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.stage .hint{color:var(--ink-soft);font-size:13px}
+.cheer{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:12px;background:rgba(35,35,35,.88);color:#fdfdfb}
+.cheer .big{width:130px;height:130px;border-radius:50%;
+  background:radial-gradient(circle at 35% 28%,var(--gold-hi),var(--gold) 60%,var(--gold-lo));
+  box-shadow:inset 0 -10px 16px rgba(0,0,0,.3),inset 0 10px 16px rgba(255,255,255,.5),0 12px 30px rgba(0,0,0,.45);
+  border:4px solid var(--gold-hi);display:flex;align-items:center;justify-content:center;
+  font:700 60px/1 var(--mono);color:var(--gold-ink);animation:twirl 1.15s cubic-bezier(.3,.7,.3,1) 2}
+.cheer .spin{animation:twirl 1.3s cubic-bezier(.3,.7,.3,1) 1;filter:drop-shadow(0 10px 24px rgba(0,0,0,.5))}
+.cheer h3{margin:0;font:600 26px/1 var(--disp);text-transform:uppercase;letter-spacing:.06em;color:var(--gold-hi)}
+.cheer p{margin:0;font-size:14px;color:#e8e4dc}
+@keyframes twirl{0%{transform:rotateY(0) scale(.4);opacity:0}25%{opacity:1}
+  100%{transform:rotateY(1080deg) scale(1);opacity:1}}
+@media (prefers-reduced-motion: reduce){.cheer .big,.cheer .spin{animation:none}}
+.note{background:var(--stamp-tint);border-left:4px solid var(--stamp);border-radius:2px;
+  padding:12px 14px;font-size:13.5px;line-height:1.55;margin:14px 0 0;color:var(--ink)}
+.note b{color:var(--stamp-deep)}
+canvas{max-width:100%;height:auto;border:1px solid var(--line);border-radius:2px;display:block}
+.split{display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:720px){.split{grid-template-columns:1fr}}
+ul.check{margin:8px 0 0;padding-left:20px;font-size:14px}
+ul.check li{margin:.35em 0}
+</style>
+
+<div class="wrap">
+<header class="masthead">
+  <h1><span>Нище</span>Map · стенд</h1>
+  <p>Все аватары, трофеи и анимации в одном месте — чтобы найти косяки до того, как их увидят люди.
+     Рисунки и цены взяты прямо из кода приложения, не перерисованы.</p>
+</header>
+
+<h2>Аватары · бесплатные</h2>
+<p class="lede">Три характера в мужской и женской версии. Доступны сразу, без монет.</p>
+<div class="grid" id="free"></div>
+
+<h2>Аватары · за монеты</h2>
+<p class="lede">Цена в монетах и — что важнее — сколько это реальных заведений на карте.
+   Расчёт: одно новое место с фото даёт 6 монет.</p>
+<div class="grid" id="paid"></div>
+
+<h2>Трофеи за вехи</h2>
+<p class="lede">Выдаются автоматически на 10, 25, 50, 100, 175, 275, 400 и 550 подтверждённых ценах.
+   Бронза → серебро → золото → легенда.</p>
+<div class="grid" id="trophies"></div>
+
+<h2>Анимации</h2>
+<p class="lede">Нажми — проиграется ровно то, что увидит пользователь. Смотри на плавность,
+   читаемость текста поверх затемнения и на то, не обрезается ли что-нибудь.</p>
+<div class="btnrow">
+  <button class="play" data-anim="coin">Монета за подтверждённую цену</button>
+  <button class="play" data-anim="trophy175">Трофей «Знаток района»</button>
+  <button class="play" data-anim="trophy550">Трофей «Легенда НищеMap»</button>
+  <button class="play alt" data-anim="buy">Покупка аватара</button>
+  <button class="play alt" data-anim="clear">Очистить</button>
+</div>
+<div class="stage" id="stage"><span class="hint">Здесь проиграется анимация</span></div>
+
+<h2>Плитка для шеринга</h2>
+<p class="lede">То, что уходит в чат при нажатии «Похвастаться». Рисуется прямо в браузере, 1080×1080.</p>
+<div class="split">
+  <div>
+    <div class="btnrow">
+      <button class="play alt" data-tile="175">Знаток района</button>
+      <button class="play alt" data-tile="550">Легенда</button>
+      <button class="play alt" data-tile="10">Первый десяток</button>
+    </div>
+    <div class="note"><b>На что смотреть:</b> не наезжает ли текст на кубок, читается ли название
+      целиком, видна ли ссылка внизу.</div>
+  </div>
+  <canvas id="tile" width="1080" height="1080" style="width:100%"></canvas>
+</div>
+
+<h2>Чек-лист проверки</h2>
+<div class="note">
+<ul class="check">
+  <li>Мужские и женские версии отличимы с первого взгляда (волосы, не только цвет).</li>
+  <li>Космонавт узнаётся без лица — шлем читается как шлем.</li>
+  <li>Золотой нищеброд отличается от обычной монеты в анимации.</li>
+  <li>Трофеи разных металлов различимы: бронза vs золото на мелком размере.</li>
+  <li>Текст поверх затемнения читается и на светлой, и на тёмной теме.</li>
+  <li>Кубок с номером: цифра не вылезает за чашу на 44px (витрина в лавке).</li>
+</ul>
+</div>
+</div>
+<script>
+var AVATARS = [
+    // бесплатные: три характера в мужской и женской версии
+    { id: "student_m", t: "студент",    d: "живу на дошике до стипендии", price: 0 },
+    { id: "student_f", t: "студентка",  d: "живу на дошике до стипендии", price: 0 },
+    { id: "office_m",  t: "офисный",    d: "обед за свой счёт, увы",      price: 0 },
+    { id: "office_f",  t: "офисная",    d: "обед за свой счёт, увы",      price: 0 },
+    { id: "zapas_m",   t: "запасливый", d: "у меня всё с собой",          price: 0 },
+    { id: "zapas_f",   t: "запасливая", d: "у меня всё с собой",          price: 0 },
+    // за монеты
+    { id: "doshik_m",     t: "дошиковод",      d: "кипяток — мой шеф-повар",      price: 75 },
+    { id: "doshik_f",     t: "дошиководка",    d: "кипяток — мой шеф-повар",      price: 75 },
+    { id: "shaurmaster",  t: "шаурмастер",     d: "знает лучший лаваш в городе",  price: 150 },
+    { id: "shaurmaster_f",t: "шаурмастерица",  d: "знает лучший лаваш в городе",  price: 150 },
+    { id: "tsar",         t: "царь столовой",  d: "компот наливают без очереди",  price: 275 },
+    { id: "tsar_f",       t: "царица столовой",d: "компот наливают без очереди",  price: 275 },
+    { id: "kosmonavt",    t: "космонавт",      d: "ел борщ в невесомости",        price: 425 },
+    { id: "oligarkh",     t: "олигарх",        d: "берёт добавку не глядя",       price: 650 },
+    { id: "oligarkh_f",   t: "олигархиня",     d: "берёт добавку не глядя",       price: 650 },
+    { id: "legenda",      t: "легенда района", d: "его цены цитируют в чатах",    price: 900 },
+    { id: "zoloto",       t: "золотой нищеброд", d: "200 мест на карте. выше только звёзды", price: 1650 },
+  ];
+var TROPHIES = {
+    10:  { t: "Первый десяток",   s: "10 подтверждённых цен",  metal: "bronze" },
+    25:  { t: "Разведчик",        s: "25 подтверждённых цен",  metal: "bronze" },
+    50:  { t: "Полсотни",         s: "50 подтверждённых цен",  metal: "silver" },
+    100: { t: "Сотня",            s: "100 подтверждённых цен", metal: "silver" },
+    175: { t: "Знаток района",    s: "175 подтверждённых цен", metal: "gold"   },
+    275: { t: "Хранитель карты",  s: "275 подтверждённых цен", metal: "gold"   },
+    400: { t: "Ветеран копеек",   s: "400 подтверждённых цен", metal: "gold"   },
+    550: { t: "Легенда НищеMap",  s: "550 подтверждённых цен", metal: "legend" },
+  };
+function avatarSvg(id, size) {
+    var s = size || 28, skin = "#e8c9a0";
+    var longHair = '<path d="M8 14c-1-7 3-10 8-10s9 3 8 10c0 3 0 6-1 8l-2-1c1-3 1-6 1-8-2 2-8 3-12 0 0 2 0 5 1 8l-2 1c-1-2-1-5-1-8z" fill="HAIR"/>';
+    var shortHair = '<path d="M9 12c-1-6 3-9 7-9s8 3 7 9c-1-3-3-4-7-4s-6 1-7 4z" fill="HAIR"/>';
+    var A = {
+      student_m: { hair: "#4a3728", head: shortHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#4a6fa5"/><path d="M13 18h6v3l-3 2-3-2z" fill="#38547d"/>' },
+      student_f: { hair: "#5c3a2e", head: longHair,  body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#4a6fa5"/><path d="M13 18h6v3l-3 2-3-2z" fill="#38547d"/>' },
+      office_m:  { hair: "#2e2a26", head: shortHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#3a3a3a"/><path d="M16 18l2 3-2 5-2-5z" fill="#ad2f26"/>' },
+      office_f:  { hair: "#3d2b22", head: longHair,  body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#3a3a3a"/><path d="M12 19l4 4 4-4" stroke="#fdfdfb" stroke-width="1.4" fill="none"/>' },
+      doshik_m:  { hair: "#4a3728", head: shortHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#c8621f"/><path d="M11 20h10l-1 5H12z" fill="#f2cf5c" stroke="#7c4a23" stroke-width="0.8"/>' },
+      doshik_f:  { hair: "#6b4034", head: longHair,  body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#c8621f"/><path d="M11 20h10l-1 5H12z" fill="#f2cf5c" stroke="#7c4a23" stroke-width="0.8"/>' },
+      zapas_m:   { hair: "#6e6e6e", head: shortHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#5d7052"/><path d="M20 19l5 3-1 4-5-2z" fill="#8a6b4a"/>' },
+      zapas_f:   { hair: "#8a8378", head: longHair,  body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#7a5c8f"/><path d="M9 10c2-4 12-4 14 0 1 3-1 5-7 5s-8-2-7-5z" fill="#d94f6a"/>' },
+      shaurmaster_f: { hair: "#5c3a2e", head: longHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#e8e3d8"/><path d="M9 8c0-2 2-3 3.5-2C13.5 4 18 4 19 6c1.5-1 4 0 4 2v2H9z" fill="#fff" stroke="#232323" stroke-width="0.8"/><path d="M21 19l5 7h-3.5l-3.5-6z" fill="#c8621f"/>' },
+      tsar_f:      { hair: "#3d2b22", head: longHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#8f2f4a"/><path d="M8 8l2.5 3.5L14 6l2 4.5L18 6l3.5 5.5L24 8v4H8z" fill="#d9a514" stroke="#a37c0a" stroke-width="0.7"/>' },
+      oligarkh_f:  { hair: "#2e2a26", head: longHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#1f1f1f"/><circle cx="19.5" cy="13" r="3" fill="none" stroke="#d9a514" stroke-width="1.2"/><path d="M22.5 13.5l3.5 3" stroke="#d9a514" stroke-width="1.2"/><circle cx="11" cy="19" r="1.6" fill="#f2cf5c"/><circle cx="16" cy="20" r="1.6" fill="#f2cf5c"/><circle cx="21" cy="19" r="1.6" fill="#f2cf5c"/>' },
+      shaurmaster:{ hair: "#3a2f28", head: shortHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#e8e3d8"/><path d="M9 8c0-2 2-3 3.5-2C13.5 4 18 4 19 6c1.5-1 4 0 4 2v2H9z" fill="#fff" stroke="#232323" stroke-width="0.8"/><path d="M21 19l5 7h-3.5l-3.5-6z" fill="#c8621f"/>' },
+      tsar:      { hair: "#2e2a26", head: shortHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#8f2f4a"/><path d="M8 8l2.5 3.5L14 6l2 4.5L18 6l3.5 5.5L24 8v4H8z" fill="#d9a514" stroke="#a37c0a" stroke-width="0.7"/>' },
+      kosmonavt: { hair: "#000", head: "", body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#cfd6dd"/><circle cx="16" cy="12" r="8.5" fill="rgba(120,160,190,.35)" stroke="#8a939e" stroke-width="2"/><path d="M11.5 10.5a5 5 0 0 1 5-4" stroke="#fff" stroke-width="1.6" fill="none"/>' },
+      oligarkh:  { hair: "#2e2a26", head: shortHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#1f1f1f"/><path d="M9 7h14v1.6H9z" fill="#232323"/><path d="M12 1.5h8V7h-8z" fill="#232323"/><circle cx="19.5" cy="13" r="3" fill="none" stroke="#d9a514" stroke-width="1.2"/><path d="M22.5 13.5l3.5 3" stroke="#d9a514" stroke-width="1.2"/>' },
+      legenda:   { hair: "#3a2f28", head: shortHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#6e5104"/><path d="M6 15c-1-6 4-10 10-10s11 4 10 10" fill="none" stroke="#d9a514" stroke-width="2.2"/><path d="M16 1.5l1.7 3.5 3.8.5-2.8 2.6.7 3.8-3.4-1.9-3.4 1.9.7-3.8L10.5 5.5l3.8-.5z" fill="#f2cf5c"/>' },
+      zoloto:    { hair: "#a37c0a", head: shortHair, body: '<circle cx="16" cy="16" r="15" fill="url(#gsh)"/><circle cx="16" cy="13" r="6" fill="#f7e6b0"/><path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#d9a514"/><text x="16" y="25" font-size="9" font-weight="bold" text-anchor="middle" fill="#6e5104" font-family="Menlo,monospace">₽</text>' },
+    };
+    var a = A[id];
+    if (!a) return '<svg class="avt" width="' + s + '" height="' + s + '" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#e8e0d2"/></svg>';
+    return '<svg class="avt" width="' + s + '" height="' + s + '" viewBox="0 0 32 32" aria-hidden="true">' +
+      '<defs><radialGradient id="gsh" cx="35%" cy="28%"><stop offset="0" stop-color="#f2cf5c"/><stop offset="1" stop-color="#a37c0a"/></radialGradient></defs>' +
+      '<circle cx="16" cy="16" r="16" fill="#f6f5f1"/>' +
+      (id === "zoloto" ? "" : '<circle cx="16" cy="13" r="6" fill="' + skin + '"/>') +
+      (a.head ? a.head.replace(/HAIR/g, a.hair) : "") + a.body + "</svg>";
+  }
+function trophySvg(places, size) {
+    var s = size || 64, tr = TROPHIES[places];
+    if (!tr) return "";
+    var pal = {
+      bronze: ["#d69a68", "#a8683c", "#7c4a23"],
+      silver: ["#d3dae1", "#8a939e", "#5d6771"],
+      gold:   ["#f2cf5c", "#d9a514", "#a37c0a"],
+      legend: ["#fff1b8", "#f2cf5c", "#b8860b"],
+    }[tr.metal];
+    var gid = "tg" + places;
+    return '<svg class="trophy" width="' + s + '" height="' + s + '" viewBox="0 0 64 64" aria-hidden="true">' +
+      '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" stop-color="' + pal[0] + '"/><stop offset=".55" stop-color="' + pal[1] +
+      '"/><stop offset="1" stop-color="' + pal[2] + '"/></linearGradient></defs>' +
+      (tr.metal === "legend" ? '<circle cx="32" cy="30" r="29" fill="rgba(242,207,92,.18)"/>' : "") +
+      '<path d="M18 10h28v10a14 14 0 0 1-28 0z" fill="url(#' + gid + ')" stroke="' + pal[2] + '" stroke-width="1.5"/>' +
+      '<path d="M18 13h-6a8 8 0 0 0 8 8" fill="none" stroke="' + pal[1] + '" stroke-width="3"/>' +
+      '<path d="M46 13h6a8 8 0 0 1-8 8" fill="none" stroke="' + pal[1] + '" stroke-width="3"/>' +
+      '<rect x="28" y="33" width="8" height="10" fill="' + pal[1] + '"/>' +
+      '<rect x="20" y="43" width="24" height="6" rx="1.5" fill="url(#' + gid + ')" stroke="' + pal[2] + '" stroke-width="1.2"/>' +
+      '<text x="32" y="26" font-size="13" font-weight="bold" text-anchor="middle" fill="' + pal[2] +
+      '" font-family="Menlo,monospace">' + places + "</text></svg>";
+  }
+
+var PER_VENUE = 6;
+function venues(price){ return Math.max(1, Math.round(price / PER_VENUE)); }
+
+function cell(inner, name, desc, tagHtml, eff){
+  var d = document.createElement("div");
+  d.className = "cell";
+  d.innerHTML = inner +
+    '<span class="nm">' + name + '</span>' +
+    '<span class="ds">' + desc + '</span>' + tagHtml +
+    (eff ? '<span class="eff">' + eff + '</span>' : '');
+  return d;
+}
+var free = document.getElementById("free"), paid = document.getElementById("paid");
+AVATARS.forEach(function(a){
+  var tag = a.price
+    ? '<span class="tag"><span class="coin"></span>' + a.price + '</span>'
+    : '<span class="tag free">даром</span>';
+  var eff = a.price ? "≈ " + venues(a.price) + " заведений" : "";
+  (a.price ? paid : free).appendChild(cell(avatarSvg(a.id, 64), a.t, a.d, tag, eff));
+});
+
+var tw = document.getElementById("trophies");
+Object.keys(TROPHIES).map(Number).sort(function(x,y){return x-y}).forEach(function(p){
+  var t = TROPHIES[p];
+  tw.appendChild(cell(trophySvg(p, 64), t.t, t.s,
+    '<span class="tag"><span class="coin"></span>' + p + " позиций</span>", ""));
+});
+
+/* ---- анимации ---- */
+var stage = document.getElementById("stage");
+function clearStage(){ stage.innerHTML = '<span class="hint">Здесь проиграется анимация</span>'; }
+function play(kind){
+  stage.innerHTML = "";
+  var box = document.createElement("div");
+  box.className = "cheer";
+  if (kind === "coin") {
+    box.innerHTML = '<div class="big">₽</div><h3>+1 монета</h3><p>Твою цену подтвердил район</p>';
+  } else if (kind === "buy") {
+    box.innerHTML = '<div class="spin">' + avatarSvg("kosmonavt", 150) + '</div>' +
+      '<h3>космонавт</h3><p>Аватар твой. Носи с достоинством.</p>';
+  } else {
+    var p = kind === "trophy550" ? 550 : 175, t = TROPHIES[p];
+    box.innerHTML = '<div class="spin">' + trophySvg(p, 150) + '</div>' +
+      '<h3>' + t.t + '</h3><p>' + t.s + ' · +' + (p === 550 ? 150 : 40) + ' монет</p>';
+  }
+  stage.appendChild(box);
+}
+document.querySelectorAll("[data-anim]").forEach(function(b){
+  b.addEventListener("click", function(){
+    var k = b.dataset.anim;
+    if (k === "clear") clearStage(); else play(k);
+  });
+});
+
+/* ---- плитка ---- */
+function drawTile(places){
+  var t = TROPHIES[places], c = document.getElementById("tile"), x = c.getContext("2d"), W = 1080;
+  x.fillStyle = "#232323"; x.fillRect(0,0,W,W);
+  x.fillStyle = "#ad2f26"; x.fillRect(0,0,W,14);
+  x.textAlign = "center";
+  x.fillStyle = "#fdfdfb";
+  x.font = '600 64px "Arial Narrow", Impact, sans-serif';
+  x.fillText("НИЩЕMAP", W/2, 130);
+  x.fillStyle = "#b3b1aa"; x.font = '28px -apple-system, Arial, sans-serif';
+  x.fillText("карта еды до 500 ₽ в Москве", W/2, 178);
+  var img = new Image();
+  img.onload = function(){
+    x.drawImage(img, (W-520)/2, 250, 520, 520);
+    x.fillStyle = "#f2cf5c"; x.font = '600 76px "Arial Narrow", Impact, sans-serif';
+    x.fillText(t.t.toUpperCase(), W/2, 870);
+    x.fillStyle = "#fdfdfb"; x.font = '38px -apple-system, Arial, sans-serif';
+    x.fillText(t.s, W/2, 930);
+    x.fillStyle = "#b3b1aa"; x.font = '30px Menlo, monospace';
+    x.fillText("t.me/nishemap_bot/map", W/2, 1010);
+  };
+  img.src = "data:image/svg+xml;charset=utf-8," +
+    encodeURIComponent(trophySvg(places, 520).replace('class="trophy" ',""));
+}
+document.querySelectorAll("[data-tile]").forEach(function(b){
+  b.addEventListener("click", function(){ drawTile(+b.dataset.tile); });
+});
+drawTile(175);
+</script>

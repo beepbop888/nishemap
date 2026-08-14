@@ -198,29 +198,7 @@
     400: { t: "Ветеран копеек",   s: "400 подтверждённых цен", metal: "gold"   },
     550: { t: "Легенда НищеMap",  s: "550 подтверждённых цен", metal: "legend" },
   };
-  function trophySvg(places, size) {
-    var s = size || 64, tr = TROPHIES[places];
-    if (!tr) return "";
-    var pal = {
-      bronze: ["#d69a68", "#a8683c", "#7c4a23"],
-      silver: ["#d3dae1", "#8a939e", "#5d6771"],
-      gold:   ["#f2cf5c", "#d9a514", "#a37c0a"],
-      legend: ["#fff1b8", "#f2cf5c", "#b8860b"],
-    }[tr.metal];
-    var gid = "tg" + places;
-    return '<svg class="trophy" width="' + s + '" height="' + s + '" viewBox="0 0 64 64" aria-hidden="true">' +
-      '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1">' +
-      '<stop offset="0" stop-color="' + pal[0] + '"/><stop offset=".55" stop-color="' + pal[1] +
-      '"/><stop offset="1" stop-color="' + pal[2] + '"/></linearGradient></defs>' +
-      (tr.metal === "legend" ? '<circle cx="32" cy="30" r="29" fill="rgba(242,207,92,.18)"/>' : "") +
-      '<path d="M18 10h28v10a14 14 0 0 1-28 0z" fill="url(#' + gid + ')" stroke="' + pal[2] + '" stroke-width="1.5"/>' +
-      '<path d="M18 13h-6a8 8 0 0 0 8 8" fill="none" stroke="' + pal[1] + '" stroke-width="3"/>' +
-      '<path d="M46 13h6a8 8 0 0 1-8 8" fill="none" stroke="' + pal[1] + '" stroke-width="3"/>' +
-      '<rect x="28" y="33" width="8" height="10" fill="' + pal[1] + '"/>' +
-      '<rect x="20" y="43" width="24" height="6" rx="1.5" fill="url(#' + gid + ')" stroke="' + pal[2] + '" stroke-width="1.2"/>' +
-      '<text x="32" y="26" font-size="13" font-weight="bold" text-anchor="middle" fill="' + pal[2] +
-      '" font-family="Menlo,monospace">' + places + "</text></svg>";
-  }
+  function trophySvg(places, size) { return badgeHtml("t" + places, size); }
   function earnedTrophies() {
     var v = verifiedCount();
     return Object.keys(TROPHIES).map(Number).sort(function (a, b) { return a - b; })
@@ -268,37 +246,13 @@
     { id: "legenda",      t: "легенда района", d: "его цены цитируют в чатах",    price: 900 },
     { id: "zoloto",       t: "золотой нищеброд", d: "200 мест на карте. выше только звёзды", price: 1650 },
   ];
-  function avatarSvg(id, size) {
-    var s = size || 28, skin = "#e8c9a0";
-    var longHair = '<path d="M8 14c-1-7 3-10 8-10s9 3 8 10c0 3 0 6-1 8l-2-1c1-3 1-6 1-8-2 2-8 3-12 0 0 2 0 5 1 8l-2 1c-1-2-1-5-1-8z" fill="HAIR"/>';
-    var shortHair = '<path d="M9 12c-1-6 3-9 7-9s8 3 7 9c-1-3-3-4-7-4s-6 1-7 4z" fill="HAIR"/>';
-    var A = {
-      student_m: { hair: "#4a3728", head: shortHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#4a6fa5"/><path d="M13 18h6v3l-3 2-3-2z" fill="#38547d"/>' },
-      student_f: { hair: "#5c3a2e", head: longHair,  body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#4a6fa5"/><path d="M13 18h6v3l-3 2-3-2z" fill="#38547d"/>' },
-      office_m:  { hair: "#2e2a26", head: shortHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#3a3a3a"/><path d="M16 18l2 3-2 5-2-5z" fill="#ad2f26"/>' },
-      office_f:  { hair: "#3d2b22", head: longHair,  body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#3a3a3a"/><path d="M12 19l4 4 4-4" stroke="#fdfdfb" stroke-width="1.4" fill="none"/>' },
-      doshik_m:  { hair: "#4a3728", head: shortHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#c8621f"/><path d="M11 20h10l-1 5H12z" fill="#f2cf5c" stroke="#7c4a23" stroke-width="0.8"/>' },
-      doshik_f:  { hair: "#6b4034", head: longHair,  body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#c8621f"/><path d="M11 20h10l-1 5H12z" fill="#f2cf5c" stroke="#7c4a23" stroke-width="0.8"/>' },
-      zapas_m:   { hair: "#6e6e6e", head: shortHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#5d7052"/><path d="M20 19l5 3-1 4-5-2z" fill="#8a6b4a"/>' },
-      zapas_f:   { hair: "#8a8378", head: longHair,  body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#7a5c8f"/><path d="M9 10c2-4 12-4 14 0 1 3-1 5-7 5s-8-2-7-5z" fill="#d94f6a"/>' },
-      shaurmaster_f: { hair: "#5c3a2e", head: longHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#e8e3d8"/><path d="M9 8c0-2 2-3 3.5-2C13.5 4 18 4 19 6c1.5-1 4 0 4 2v2H9z" fill="#fff" stroke="#232323" stroke-width="0.8"/><path d="M21 19l5 7h-3.5l-3.5-6z" fill="#c8621f"/>' },
-      tsar_f:      { hair: "#3d2b22", head: longHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#8f2f4a"/><path d="M8 8l2.5 3.5L14 6l2 4.5L18 6l3.5 5.5L24 8v4H8z" fill="#d9a514" stroke="#a37c0a" stroke-width="0.7"/>' },
-      oligarkh_f:  { hair: "#2e2a26", head: longHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#1f1f1f"/><circle cx="19.5" cy="13" r="3" fill="none" stroke="#d9a514" stroke-width="1.2"/><path d="M22.5 13.5l3.5 3" stroke="#d9a514" stroke-width="1.2"/><circle cx="11" cy="19" r="1.6" fill="#f2cf5c"/><circle cx="16" cy="20" r="1.6" fill="#f2cf5c"/><circle cx="21" cy="19" r="1.6" fill="#f2cf5c"/>' },
-      shaurmaster:{ hair: "#3a2f28", head: shortHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#e8e3d8"/><path d="M9 8c0-2 2-3 3.5-2C13.5 4 18 4 19 6c1.5-1 4 0 4 2v2H9z" fill="#fff" stroke="#232323" stroke-width="0.8"/><path d="M21 19l5 7h-3.5l-3.5-6z" fill="#c8621f"/>' },
-      tsar:      { hair: "#2e2a26", head: shortHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#8f2f4a"/><path d="M8 8l2.5 3.5L14 6l2 4.5L18 6l3.5 5.5L24 8v4H8z" fill="#d9a514" stroke="#a37c0a" stroke-width="0.7"/>' },
-      kosmonavt: { hair: "#000", head: "", body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#cfd6dd"/><circle cx="16" cy="12" r="8.5" fill="rgba(120,160,190,.35)" stroke="#8a939e" stroke-width="2"/><path d="M11.5 10.5a5 5 0 0 1 5-4" stroke="#fff" stroke-width="1.6" fill="none"/>' },
-      oligarkh:  { hair: "#2e2a26", head: shortHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#1f1f1f"/><path d="M9 7h14v1.6H9z" fill="#232323"/><path d="M12 1.5h8V7h-8z" fill="#232323"/><circle cx="19.5" cy="13" r="3" fill="none" stroke="#d9a514" stroke-width="1.2"/><path d="M22.5 13.5l3.5 3" stroke="#d9a514" stroke-width="1.2"/>' },
-      legenda:   { hair: "#3a2f28", head: shortHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#6e5104"/><path d="M6 15c-1-6 4-10 10-10s11 4 10 10" fill="none" stroke="#d9a514" stroke-width="2.2"/><path d="M16 1.5l1.7 3.5 3.8.5-2.8 2.6.7 3.8-3.4-1.9-3.4 1.9.7-3.8L10.5 5.5l3.8-.5z" fill="#f2cf5c"/>' },
-      zoloto:    { hair: "#a37c0a", head: shortHair, body: '<circle cx="16" cy="16" r="15" fill="url(#gsh)"/><circle cx="16" cy="13" r="6" fill="#f7e6b0"/><path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#d9a514"/><text x="16" y="25" font-size="9" font-weight="bold" text-anchor="middle" fill="#6e5104" font-family="Menlo,monospace">₽</text>' },
-    };
-    var a = A[id];
-    if (!a) return '<svg class="avt" width="' + s + '" height="' + s + '" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#e8e0d2"/></svg>';
-    return '<svg class="avt" width="' + s + '" height="' + s + '" viewBox="0 0 32 32" aria-hidden="true">' +
-      '<defs><radialGradient id="gsh" cx="35%" cy="28%"><stop offset="0" stop-color="#f2cf5c"/><stop offset="1" stop-color="#a37c0a"/></radialGradient></defs>' +
-      '<circle cx="16" cy="16" r="16" fill="#f6f5f1"/>' +
-      (id === "zoloto" ? "" : '<circle cx="16" cy="13" r="6" fill="' + skin + '"/>') +
-      (a.head ? a.head.replace(/HAIR/g, a.hair) : "") + a.body + "</svg>";
+  var BADGES = window.NISHEMAP_BADGES || {};
+  function badgeHtml(key, size) {
+    var s = size || 28, svg = BADGES[key];
+    if (!svg) return '<span class="badge-miss" style="width:' + s + 'px;height:' + s + 'px"></span>';
+    return '<span class="badge-wrap" style="width:' + s + 'px;height:' + s + 'px">' + svg + "</span>";
   }
+  function avatarSvg(id, size) { return badgeHtml(id, size); }
   function myAvatar() { return localStorage.getItem("nishemap.avatar") || ""; }
   function ownedAvatars() {
     try { return JSON.parse(localStorage.getItem("nishemap.owned")) || []; } catch (e) { return []; }
