@@ -108,7 +108,7 @@
     if (isVerified(it.id)) {
       var n = confirmCount(it.id), age = verifyAgeDays(it.id);
       var when = age === 0 ? "сегодня" : age + " дн. назад";
-      return { text: (hasPhoto(it.id) ? "проверено фото · " : "проверено народом · " + n + " · ") + when, cls: "is-fresh" };
+      return { text: (hasPhoto(it.id) ? "проверено фото · " : "проверено народом · ") + when, cls: "is-fresh" };
     }
     if (verifiedAt(it.id) && verifyAgeDays(it.id) > VERIFY_TTL) {
       return { text: "проверяли " + verifyAgeDays(it.id) + " дн. назад — уже неточно", cls: "is-stale" };
@@ -147,10 +147,41 @@
     if (html !== undefined) n.innerHTML = html;
     return n;
   }
+  /* серия: 3+ подтверждённых цены за календарную неделю. Награда растёт на 1 каждые 4 недели. */
+  var STREAK_NEED = 3;
+  function weekKey(d) {
+    var t = new Date(d); t.setHours(0, 0, 0, 0);
+    t.setDate(t.getDate() - ((t.getDay() + 6) % 7));      // понедельник
+    return t.toISOString().slice(0, 10);
+  }
+  function streakState() {
+    var byWeek = {}, ids = myItems();
+    SEED.venues.forEach(function (v) {
+      v.items.forEach(function (it) {
+        if (ids.indexOf(it.id) === -1 || !isVerified(it.id) || !it.confirmedAt) return;
+        var w = weekKey(it.confirmedAt);
+        byWeek[w] = (byWeek[w] || 0) + 1;
+      });
+    });
+    var good = Object.keys(byWeek).filter(function (w) { return byWeek[w] >= STREAK_NEED; }).sort();
+    // считаем подряд идущие недели, заканчивая текущей или прошлой
+    var run = 0, cur = weekKey(new Date());
+    for (var i = good.length - 1; i >= 0; i--) {
+      if (good[i] === cur) { run++; var p = new Date(cur); p.setDate(p.getDate() - 7); cur = weekKey(p); }
+      else break;
+    }
+    return { weeks: run, thisWeek: byWeek[weekKey(new Date())] || 0 };
+  }
+  function streakCoins() {
+    var w = streakState().weeks, total = 0;
+    for (var i = 1; i <= w; i++) total += Math.floor((i - 1) / 4) + 1;   // +1, с 5-й недели +2, с 9-й +3…
+    return total;
+  }
+
   var MILESTONES = [
-    { places: 10, bonus: 3 },
-    { places: 30, bonus: 5 },
-    { places: 50, bonus: 10 },
+    { places: 25,  bonus: 10 },
+    { places: 75,  bonus: 25 },
+    { places: 150, bonus: 50 },
   ];
   function bonusFor(verified) {
     var b = 0;
@@ -163,22 +194,25 @@
   }
 
   var AVATARS = [
-    // базовые: четыре характера в мужской и женской версии
-    { id: "student_m",  t: "студент",     d: "живу на дошике до стипендии", price: 0 },
-    { id: "student_f",  t: "студентка",   d: "живу на дошике до стипендии", price: 0 },
-    { id: "office_m",   t: "офисный",     d: "обед за свой счёт, увы",      price: 0 },
-    { id: "office_f",   t: "офисная",     d: "обед за свой счёт, увы",      price: 0 },
-    { id: "doshik_m",   t: "дошиковод",   d: "кипяток — мой шеф-повар",     price: 0 },
-    { id: "doshik_f",   t: "дошиководка", d: "кипяток — мой шеф-повар",     price: 0 },
-    { id: "zapas_m",    t: "запасливый",  d: "у меня всё с собой",          price: 0 },
-    { id: "zapas_f",    t: "запасливая",  d: "у меня всё с собой",          price: 0 },
-    // за монеты: дорого и заслуженно
-    { id: "shaurmaster", t: "шаурмастер",     d: "знает лучший лаваш в городе",   price: 50 },
-    { id: "tsar",        t: "царь столовой",  d: "компот наливают без очереди",   price: 80 },
-    { id: "kosmonavt",   t: "космонавт",      d: "ел борщ в невесомости",         price: 120 },
-    { id: "oligarkh",    t: "олигарх",        d: "берёт добавку не глядя",        price: 200 },
-    { id: "legenda",     t: "легенда района", d: "его цены цитируют в чатах",     price: 350 },
-    { id: "zoloto",      t: "золотой нищеброд", d: "выше только звёзды",          price: 500 },
+    // бесплатные: три характера в мужской и женской версии
+    { id: "student_m", t: "студент",    d: "живу на дошике до стипендии", price: 0 },
+    { id: "student_f", t: "студентка",  d: "живу на дошике до стипендии", price: 0 },
+    { id: "office_m",  t: "офисный",    d: "обед за свой счёт, увы",      price: 0 },
+    { id: "office_f",  t: "офисная",    d: "обед за свой счёт, увы",      price: 0 },
+    { id: "zapas_m",   t: "запасливый", d: "у меня всё с собой",          price: 0 },
+    { id: "zapas_f",   t: "запасливая", d: "у меня всё с собой",          price: 0 },
+    // за монеты
+    { id: "doshik_m",     t: "дошиковод",      d: "кипяток — мой шеф-повар",      price: 50 },
+    { id: "doshik_f",     t: "дошиководка",    d: "кипяток — мой шеф-повар",      price: 50 },
+    { id: "shaurmaster",  t: "шаурмастер",     d: "знает лучший лаваш в городе",  price: 100 },
+    { id: "shaurmaster_f",t: "шаурмастерица",  d: "знает лучший лаваш в городе",  price: 100 },
+    { id: "tsar",         t: "царь столовой",  d: "компот наливают без очереди",  price: 175 },
+    { id: "tsar_f",       t: "царица столовой",d: "компот наливают без очереди",  price: 175 },
+    { id: "kosmonavt",    t: "космонавт",      d: "ел борщ в невесомости",        price: 275 },
+    { id: "oligarkh",     t: "олигарх",        d: "берёт добавку не глядя",       price: 400 },
+    { id: "oligarkh_f",   t: "олигархиня",     d: "берёт добавку не глядя",       price: 400 },
+    { id: "legenda",      t: "легенда района", d: "его цены цитируют в чатах",    price: 600 },
+    { id: "zoloto",       t: "золотой нищеброд", d: "200 мест на карте. выше только звёзды", price: 1000 },
   ];
   function avatarSvg(id, size) {
     var s = size || 28, skin = "#e8c9a0";
@@ -193,6 +227,9 @@
       doshik_f:  { hair: "#6b4034", head: longHair,  body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#c8621f"/><path d="M11 20h10l-1 5H12z" fill="#f2cf5c" stroke="#7c4a23" stroke-width="0.8"/>' },
       zapas_m:   { hair: "#6e6e6e", head: shortHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#5d7052"/><path d="M20 19l5 3-1 4-5-2z" fill="#8a6b4a"/>' },
       zapas_f:   { hair: "#8a8378", head: longHair,  body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#7a5c8f"/><path d="M9 10c2-4 12-4 14 0 1 3-1 5-7 5s-8-2-7-5z" fill="#d94f6a"/>' },
+      shaurmaster_f: { hair: "#5c3a2e", head: longHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#e8e3d8"/><path d="M9 8c0-2 2-3 3.5-2C13.5 4 18 4 19 6c1.5-1 4 0 4 2v2H9z" fill="#fff" stroke="#232323" stroke-width="0.8"/><path d="M21 19l5 7h-3.5l-3.5-6z" fill="#c8621f"/>' },
+      tsar_f:      { hair: "#3d2b22", head: longHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#8f2f4a"/><path d="M8 8l2.5 3.5L14 6l2 4.5L18 6l3.5 5.5L24 8v4H8z" fill="#d9a514" stroke="#a37c0a" stroke-width="0.7"/>' },
+      oligarkh_f:  { hair: "#2e2a26", head: longHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#1f1f1f"/><circle cx="19.5" cy="13" r="3" fill="none" stroke="#d9a514" stroke-width="1.2"/><path d="M22.5 13.5l3.5 3" stroke="#d9a514" stroke-width="1.2"/><circle cx="11" cy="19" r="1.6" fill="#f2cf5c"/><circle cx="16" cy="20" r="1.6" fill="#f2cf5c"/><circle cx="21" cy="19" r="1.6" fill="#f2cf5c"/>' },
       shaurmaster:{ hair: "#3a2f28", head: shortHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#e8e3d8"/><path d="M9 8c0-2 2-3 3.5-2C13.5 4 18 4 19 6c1.5-1 4 0 4 2v2H9z" fill="#fff" stroke="#232323" stroke-width="0.8"/><path d="M21 19l5 7h-3.5l-3.5-6z" fill="#c8621f"/>' },
       tsar:      { hair: "#2e2a26", head: shortHair, body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#8f2f4a"/><path d="M8 8l2.5 3.5L14 6l2 4.5L18 6l3.5 5.5L24 8v4H8z" fill="#d9a514" stroke="#a37c0a" stroke-width="0.7"/>' },
       kosmonavt: { hair: "#000", head: "", body: '<path d="M6 26c0-5 4-8 10-8s10 3 10 8z" fill="#cfd6dd"/><circle cx="16" cy="12" r="8.5" fill="rgba(120,160,190,.35)" stroke="#8a939e" stroke-width="2"/><path d="M11.5 10.5a5 5 0 0 1 5-4" stroke="#fff" stroke-width="1.6" fill="none"/>' },
@@ -301,16 +338,20 @@
     var coins = myCoins(), nx = nextRank(coins);
     var box = el("div", "coins-info",
       "<h4>Монеты</h4>" +
-      "<p style='margin:0 0 8px'>Монета = твоя цена, которую подтвердил район. Заработано: <b>" + coins +
-        "</b>, на руках: <b>" + coinsBalance() + "</b>.</p>" +
-      "<ul>" +
-      "<li>Цену проверяют: фото меню <b>или</b> двое других людей жмут «Ещё по этой цене?»</li>" +
-      "<li>Монеты — личный счёт: район видит их в звании, но проверку цены решают только фото и чужие подтверждения</li>" +
-      "<li>Вехи: 10 мест → +3 монеты, 30 → +5, 50 → +10" +
-        (function () { var nm = nextMilestone(verifiedCount());
-          return nm ? " (до вехи ещё <b>" + (nm.places - verifiedCount()) + "</b>)" : " — все взяты"; })() + "</li>" +
-      "<li>Звание: <b>" + rankFor(coins).t + "</b>" + (nx ? " → до «" + nx.t + "» ещё " + (nx.n - coins) : " — потолок") + "</li>" +
-      "</ul>");
+      (function () {
+        var b = coinBreakdown(), st = streakState(), nx = nextMilestone(verifiedCount());
+        return "<p style='margin:0 0 8px'>Монета приходит, когда район подтвердит твою цену. " +
+          "Заработано: <b>" + myCoins() + "</b>, на руках: <b>" + coinsBalance() + "</b>.</p>" +
+          "<ul>" +
+          "<li>Позиции: <b>" + b.items + "</b> <span style='opacity:.7'>(до 3 с одного места)</span></li>" +
+          "<li>Новые заведения: <b>" + b.venues + "</b> <span style='opacity:.7'>(+2 за первую цену в месте)</span></li>" +
+          "<li>Фото меню: <b>" + b.photos + "</b> <span style='opacity:.7'>(+1 за место)</span></li>" +
+          "<li>Новые районы: <b>" + b.districts + "</b> <span style='opacity:.7'>(+10 за пустой район)</span></li>" +
+          "<li>Серия: <b>" + b.streak + "</b> · недель подряд: " + st.weeks +
+            " · на этой неделе " + st.thisWeek + " из " + STREAK_NEED + "</li>" +
+          (nx ? "<li>До вехи «" + nx.places + " позиций»: ещё <b>" + (nx.places - verifiedCount()) + "</b> (+" + nx.bonus + ")</li>" : "") +
+          "</ul>";
+      })());
     box.appendChild(el("div", "", '<button type="button" class="btn btn-primary btn-wide" id="open-shop" style="margin-top:12px">Лавка аватаров</button>'));
     box.querySelector("#open-shop").addEventListener("click", function (ev) {
       ev.stopPropagation(); box.remove(); openShop();
@@ -576,7 +617,7 @@
       }).then(function () {
         (CONFIRMS[id] = CONFIRMS[id] || {})[deviceId()] = 1;
         var badge = btn.parentElement.querySelector(".badge");
-        if (badge && isVerified(id)) { badge.textContent = "проверено народом · " + confirmCount(id); badge.className = "badge is-fresh"; }
+        if (badge && isVerified(id)) { badge.textContent = "проверено народом"; badge.className = "badge is-fresh"; }
       }).catch(function () {});
     }
     var badge = btn.parentElement.querySelector(".badge");
@@ -1204,8 +1245,50 @@
     setTimeout(function () { wrap.classList.add("is-out"); }, 2200);
     setTimeout(function () { wrap.remove(); }, 2900);
   }
-  function verifiedCount() { return myItems().filter(isVerified).length; }
-  function myCoins() { var v = verifiedCount(); return v + bonusFor(v); }
+  var COIN_ITEMS_PER_VENUE = 3;   // больше трёх позиций в одном месте монет не приносят
+  /* находим наши проверенные позиции и группируем по заведению */
+  function myVerifiedByVenue() {
+    var mine = {}, ids = myItems();
+    SEED.venues.forEach(function (v) {
+      v.items.forEach(function (it) {
+        if (ids.indexOf(it.id) === -1 || !isVerified(it.id)) return;
+        var k = v.id || (v.name + "|" + v.address);
+        (mine[k] = mine[k] || { venue: v, items: [] }).items.push(it);
+      });
+    });
+    return mine;
+  }
+  function verifiedCount() {
+    var g = myVerifiedByVenue(), n = 0;
+    Object.keys(g).forEach(function (k) { n += g[k].items.length; });
+    return n;
+  }
+  /* сколько монет принесла работа: позиции (до 3 на место) + первопроходство + фото + районы */
+  function coinBreakdown() {
+    var g = myVerifiedByVenue(), b = { items: 0, venues: 0, photos: 0, districts: 0, streak: streakCoins() };
+    var seenDistricts = {};
+    Object.keys(g).forEach(function (k) {
+      var grp = g[k];
+      b.items += Math.min(grp.items.length, COIN_ITEMS_PER_VENUE);
+      // первая цена в заведении: до нас у места не было ни одной цены не от нас
+      var otherPriced = (grp.venue.items || []).some(function (it) {
+        return myItems().indexOf(it.id) === -1;
+      });
+      if (!otherPriced) b.venues += 2;
+      if (grp.items.some(function (it) { return hasPhoto(it.id); })) b.photos += 1;
+      var d = grp.venue.district;
+      if (d && !seenDistricts[d]) {
+        seenDistricts[d] = 1;
+        var districtHadOthers = SEED.venues.some(function (v) {
+          return v.district === d && (v.items || []).some(function (it) { return myItems().indexOf(it.id) === -1; });
+        });
+        if (!districtHadOthers) b.districts += 10;
+      }
+    });
+    b.total = b.items + b.venues + b.photos + b.districts + b.streak;
+    return b;
+  }
+  function myCoins() { var b = coinBreakdown(); return b.total + bonusFor(verifiedCount()); }
   function checkMilestone() {
     var v = verifiedCount();
     var reached = MILESTONES.filter(function (m) { return v >= m.places; });
