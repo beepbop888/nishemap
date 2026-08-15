@@ -236,24 +236,27 @@
 
   var AVATARS = [
     // бесплатные: три мужских, три женских
-    { id: "student",    t: "студент",    d: "живу на дошике до стипендии",   price: 0, sex: "м" },
+    { id: "student",    t: "студент",    d: "живу на дошике до стипендии",    price: 0, sex: "м" },
     { id: "rabotyaga",  t: "работяга",   d: "обед в термосе, добавка в душе", price: 0, sex: "м" },
-    { id: "kurier",     t: "курьер",     d: "знает все дворы наизусть",      price: 0, sex: "м" },
-    { id: "studentka",  t: "студентка",  d: "кофе с собой, еда по акции",    price: 0, sex: "ж" },
-    { id: "babushka",   t: "бабушка",    d: "с авоськой мимо всех наценок",  price: 0, sex: "ж" },
-    { id: "ofisnaya",   t: "офисная",    d: "обед за свой счёт, увы",        price: 0, sex: "ж" },
-    // за монеты — чем выше, тем дольше идти
-    { id: "doshikovod", t: "дошиковод",  d: "кипяток — мой шеф-повар",        price: 50 },
-    { id: "shaurmaster",t: "шаурмастер", d: "знает лучший лаваш в городе",    price: 100 },
-    { id: "gopnik",     t: "гопник",     d: "семки есть? а если найду",       price: 175 },
-    { id: "dvornik",    t: "дворник",    d: "встаёт раньше всей Москвы",      price: 250 },
-    { id: "hokkeist",   t: "хоккеист",   d: "после тренировки — в столовую",  price: 400 },
-    { id: "balerina",   t: "балерина",   d: "порция маленькая, зато красиво", price: 600, sex: "ж" },
-    { id: "kosmonavt",  t: "космонавт",  d: "ел борщ в невесомости",          price: 850 },
-    { id: "tsar",       t: "царь",       d: "компот наливают без очереди",    price: 1100 },
-    { id: "oligarh",    t: "олигарх",    d: "берёт добавку не глядя",         price: 1350 },
-    { id: "oligarhinya",t: "олигархиня", d: "берёт добавку не глядя",         price: 1350, sex: "ж" },
-    { id: "zolotoy",    t: "золотой нищеброд", d: "200 мест на карте. выше только звёзды", price: 1650 },
+    { id: "kurier",     t: "курьер",     d: "знает все дворы наизусть",       price: 0, sex: "м" },
+    { id: "studentka",  t: "студентка",  d: "кофе с собой, еда по акции",     price: 0, sex: "ж" },
+    { id: "babushka",   t: "бабушка",    d: "с авоськой мимо всех наценок",   price: 0, sex: "ж" },
+    { id: "ofisnaya",   t: "офисная",    d: "обед за свой счёт, увы",         price: 0, sex: "ж" },
+    // за монеты — парами, чтобы не выбирать между полом и персонажем
+    { id: "doshikovod",     t: "дошиковод",    d: "кипяток — мой шеф-повар",       price: 50,   sex: "м" },
+    { id: "doshikovodka",   t: "дошиководка",  d: "кипяток — мой шеф-повар",       price: 50,   sex: "ж" },
+    { id: "shaurmaster",    t: "шаурмастер",   d: "знает лучший лаваш в городе",   price: 100,  sex: "м" },
+    { id: "shaurmasterica", t: "шаурмастерица",d: "знает лучший лаваш в городе",   price: 100,  sex: "ж" },
+    { id: "gopnik",         t: "гопник",       d: "семки есть? а если найду",      price: 175 },
+    { id: "dvornik",        t: "дворник",      d: "встаёт раньше всей Москвы",     price: 250 },
+    { id: "hokkeist",       t: "хоккеист",     d: "после тренировки — в столовую", price: 400,  sex: "м" },
+    { id: "figuristka",     t: "фигуристка",   d: "прыжок в четыре оборота за 200 ₽", price: 400, sex: "ж" },
+    { id: "balerina",       t: "балерина",     d: "порция маленькая, зато красиво",price: 600,  sex: "ж" },
+    { id: "kosmonavt",      t: "космонавт",    d: "ел борщ в невесомости",         price: 850 },
+    { id: "tsar",           t: "царь",         d: "компот наливают без очереди",   price: 1100 },
+    { id: "oligarh",        t: "олигарх",      d: "берёт добавку не глядя",        price: 1350, sex: "м" },
+    { id: "oligarhinya",    t: "олигархиня",   d: "берёт добавку не глядя",        price: 1350, sex: "ж" },
+    { id: "zolotoy",        t: "золотой нищеброд", d: "200 мест на карте. выше только звёзды", price: 1650 },
   ];
   var BADGES = window.NISHEMAP_BADGES || {};
   function badgeHtml(key, size) {
@@ -423,7 +426,7 @@
 
     var img = new Image();
     img.onload = function () {
-      x.drawImage(img, (W - 480) / 2, 236, 480, 480);
+      x.drawImage(img, (W - 300) / 2, 210, 300, 549);   // медаль 200×366, пропорция сохранена
       // подпись трофея
       x.fillStyle = "#f2cf5c";
       x.font = '600 72px Oswald, "Arial Narrow", Impact, sans-serif';
@@ -556,50 +559,46 @@
     var metal = tr.metal === "legend" ? "gold" : tr.metal;
     var wrap = el("div", "coin-cheer is-trophy" + (metal === "gold" ? " is-gold" : ""));
     var art = el("div", "rw rw--" + metal, "<span>" + (BADGES["t" + places] || "") + "</span>");
-    art.style.width = "160px"; art.style.height = "160px";
+    art.style.width = "142px"; art.style.height = "260px";
+    /* медаль вытянутая: блик и волны привязываем к диску, а не к прямоугольнику */
+    var DISC = { "--fx": "2%", "--fy": "40%", "--fw": "96%", "--fh": "53%",
+                 "--rx": "50%", "--ry": "67%", "--rs": "146px" };
+    Object.keys(DISC).forEach(function (k) { art.style.setProperty(k, DISC[k]); });
     shadowAfter(art);
     wrap.appendChild(art);
 
     if (metal === "bronze") {
-      fx(wrap, "dust", { left: "41%", top: "55%" }, 360);
-      fx(wrap, "dust", { left: "57%", top: "56%" }, 560);
+      fx(art, "dust", { left: "30%", top: "98%" }, 360);
+      fx(art, "dust", { left: "70%", top: "99%" }, 560);
       hapt("light", 360); hapt("light", 560); hapt("success", 900);
     } else if (metal === "silver") {
-      fx(art, "sweep", { "--swd": "460ms" });
-      fx(wrap, "ring", { "border-color": "var(--silver-hi)" }, 520);
-      fx(wrap, "ring", { "border-color": "var(--silver-hi)", width: "160px", height: "160px" }, 620);
+      fx(art, "sweep", { "--swd": "500ms" });
+      fx(art, "ring", { "border-color": "var(--silver-hi)" }, 520);
+      fx(art, "ring", { "border-color": "var(--silver-hi)" }, 640);
       hapt("medium", 520); hapt("success", 900);
     } else {
       /* всё событие приходится на кадр удара — 33% от 1300 мс */
       var HIT = 430;
-      for (var w = 0; w < 14; w++) {
+      /* ветер: шесть полос, все в узком окне вокруг удара — иначе каша */
+      for (var w = 0; w < 6; w++) {
         fx(wrap, "wind", {
-          top: (12 + w * 5.5) + "%",
-          "--ww": (38 + (w % 5) * 15) + "vw",
-          "--wh": (w % 3 === 0 ? 7 : 3) + "px",
+          top: (30 + w * 8) + "%",
+          "--ww": (44 + (w % 3) * 18) + "vw",
+          "--wh": (w === 1 || w === 4 ? 7 : 4) + "px",
           "--wc": w % 2 ? "#fff" : "var(--gold-hi)",
-        }, HIT - 70 + w * 13);
+        }, HIT - 40 + w * 18);
       }
-      fx(wrap, "ring", {}, HIT);
-      fx(wrap, "ring", { width: "170px", height: "170px" }, HIT + 90);
-      fx(wrap, "dust", { left: "38%", top: "58%" }, HIT + 10);
-      fx(wrap, "dust", { left: "60%", top: "59%" }, HIT + 45);
-      for (var s2 = 0; s2 < 10; s2++) {
-        var ang = Math.PI + (s2 / 9) * Math.PI;                 // разлёт вбок и вниз
-        fx(wrap, "shard", {
-          left: "50%", top: "54%",
-          "--sx": (Math.cos(ang) * 200).toFixed(0) + "px",
-          "--sy": (Math.abs(Math.sin(ang)) * -150 + 90).toFixed(0) + "px",
-          "--sr": (180 + s2 * 47) + "deg",
-        }, HIT + 10 + s2 * 12);
-      }
+      fx(art, "ring", {}, HIT);                       /* волна из самой награды */
+      fx(art, "ring", {}, HIT + 110);
+      fx(art, "dust", { left: "50%", top: "99%" }, HIT + 10);
+      fx(art, "dust", { left: "26%", top: "96%" }, HIT + 40);
+      fx(art, "dust", { left: "74%", top: "96%" }, HIT + 40);
       var fl = el("span", "flash");
       fl.style.animationDelay = HIT + "ms";
       document.body.appendChild(fl);
       setTimeout(function () { fl.remove(); }, HIT + 400);
       hapt("heavy", HIT);
-      hapt("rigid", HIT + 90);
-      if (tr.metal === "legend") { hapt("heavy", HIT + 180); fx(wrap, "ring", { width: "200px", height: "200px" }, HIT + 180); }
+      hapt("rigid", HIT + 100);
       hapt("success", 1100);
     }
 
@@ -649,18 +648,27 @@
     wrap.appendChild(art);
     fx(art, "sweep", { "--swd": "820ms" });
 
-    for (var i = 0; i < 30; i++) {
-      var ang = (i / 30) * 6.2832 + (i % 3) * 0.2;
-      var dist = 190 + (i % 5) * 60;
-      fx(wrap, "confetti", {
-        left: (48 + (i % 7) * 0.7) + "%",
-        "--cc": CONF[i % CONF.length],
-        "--cx": (Math.cos(ang) * dist).toFixed(0) + "px",
-        "--cy": (Math.sin(ang) * dist * 0.8 + 260).toFixed(0) + "px",
-        "--cr": (360 + i * 83) + "deg",
-        "--cd": (1250 + (i % 6) * 190) + "ms",
-      }, 300 + (i % 8) * 35);
-    }
+    /* три источника: сверху дождём, слева и справа — залпом внутрь */
+    var EMIT = [
+      { l: 50, t: -6,  ax: 0,   ay: 1,   n: 16, spread: 460 },   // сверху
+      { l: -4, t: 34,  ax: 1,   ay: .35, n: 11, spread: 240 },   // слева
+      { l: 104, t: 34, ax: -1,  ay: .35, n: 11, spread: 240 },   // справа
+    ];
+    var ci = 0;
+    EMIT.forEach(function (e) {
+      for (var i = 0; i < e.n; i++, ci++) {
+        var sp = (i / e.n - .5) * 2;
+        fx(wrap, "confetti", {
+          "--cl": (e.l + sp * 6) + "%",
+          "--ct": (e.t + Math.abs(sp) * 5) + "%",
+          "--cc": CONF[ci % CONF.length],
+          "--cx": (e.ax * (140 + Math.abs(sp) * e.spread) + sp * 90).toFixed(0) + "px",
+          "--cy": (e.ay * (300 + Math.abs(sp) * 160) + 120).toFixed(0) + "px",
+          "--cr": (300 + ci * 91) + "deg",
+          "--cd": (1400 + (ci % 6) * 220) + "ms",
+        }, 220 + (i % 7) * 45);
+      }
+    });
     for (var k = 0; k < 8; k++) {
       var an = (k / 8) * 6.2832;
       fx(wrap, "spark", { "--sx": Math.cos(an) * 120 + "px", "--sy": Math.sin(an) * 120 + "px" }, 620 + k * 35);

@@ -454,11 +454,15 @@ input[type="file"]{height:auto; padding:10px 12px; font-size:var(--fs-sm)}
   100%{transform:translate3d(0,0,0) scale(1)}
 }
 /* блик: полоса света проходит по трофею */
-.sweep{position:absolute; inset:0; overflow:hidden; border-radius:14px; pointer-events:none}
-.sweep::before{content:""; position:absolute; top:-60%; bottom:-60%; width:60%; left:-70%;
-  background:linear-gradient(100deg, transparent, rgba(255,255,255,.85), transparent);
-  animation:sweep-go 620ms var(--ease-inout) var(--swd,0ms) both}
-@keyframes sweep-go{0%{transform:translate3d(0,0,0) rotate(14deg)} 100%{transform:translate3d(320px,0,0) rotate(14deg)}}
+.sweep{position:absolute; left:var(--fx,0); top:var(--fy,0); width:var(--fw,100%); height:var(--fh,100%);
+  overflow:hidden; border-radius:50%; pointer-events:none}
+.sweep::before{content:""; position:absolute; top:-50%; bottom:-50%; left:0; width:42%;
+  transform:translate3d(-160%,0,0) rotate(18deg);
+  background:linear-gradient(100deg, transparent, rgba(255,255,255,.9), transparent);
+  animation:sweep-go 700ms var(--ease-inout) var(--swd,0ms) both}
+@keyframes sweep-go{
+  0%{transform:translate3d(-160%,0,0) rotate(18deg)}
+  100%{transform:translate3d(400%,0,0) rotate(18deg)}}
 
 /* --- золото: падает с высоты и БЬЁТ, ветер идёт сбоку --- */
 .rw--gold{animation:rw-slam 1300ms 1 both}
@@ -497,10 +501,10 @@ input[type="file"]{height:auto; padding:10px 12px; font-size:var(--fs-sm)}
   0%{transform:translate3d(0,0,0) rotate(0) scale(.4); opacity:1}
   100%{transform:translate3d(var(--sx),var(--sy),0) rotate(var(--sr,220deg)) scale(1); opacity:0}
 }
-.ring{position:absolute; left:50%; top:50%; translate:-50% -50%;
-  width:120px; height:120px; border-radius:50%;
+.ring{position:absolute; left:var(--rx,50%); top:var(--ry,50%); translate:-50% -50%;
+  width:var(--rs,120px); height:var(--rs,120px); border-radius:50%;
   border:4px solid var(--gold-hi); opacity:0; animation:ring-go 520ms var(--ease-settle) both}
-@keyframes ring-go{0%{transform:scale(.25); opacity:.8} 100%{transform:scale(3); opacity:0}}
+@keyframes ring-go{0%{transform:scale(.5); opacity:.9} 100%{transform:scale(2.6); opacity:0}}
 .flash{position:fixed; inset:0; background:var(--gold-hi); opacity:0; pointer-events:none; z-index:80;
   animation:flash-go 200ms ease-out both}
 @keyframes flash-go{0%{opacity:0} 30%{opacity:.34} 100%{opacity:0}}
@@ -517,7 +521,8 @@ input[type="file"]{height:auto; padding:10px 12px; font-size:var(--fs-sm)}
   animation:rays-in 460ms var(--ease-out) both, rays-spin 22s linear infinite}
 @keyframes rays-in{0%{opacity:0; transform:scale(.4)} 100%{opacity:1; transform:scale(1)}}
 @keyframes rays-spin{to{transform:rotate(360deg)}}
-.confetti{position:absolute; top:46%; width:11px; height:16px; border-radius:2px; opacity:0;
+.confetti{position:absolute; left:var(--cl,50%); top:var(--ct,46%);
+  width:11px; height:16px; border-radius:2px; opacity:0;
   background:var(--cc,#f2cf5c); animation:conf-go var(--cd,1500ms) var(--ease-out) both}
 @keyframes conf-go{
   0%{transform:translate3d(0,0,0) rotate(0) scale(.5); opacity:1}
@@ -553,7 +558,7 @@ input[type="file"]{height:auto; padding:10px 12px; font-size:var(--fs-sm)}
 /* тень навешивается ТОЛЬКО после анимации: filter в движении заставляет перерисовывать каждый кадр */
 .rw{position:relative; will-change:transform}
 .rw.is-done{filter:drop-shadow(0 12px 26px rgba(0,0,0,.55)); will-change:auto}
-.rw > span{display:block; width:100%; height:100%}
+.rw > span:not([class]){display:block; width:100%; height:100%}  /* только держатель значка, не эффекты */
 .rw svg{width:100%; height:100%; display:block}
 
 /* меньше движения — но награда всё равно должна ощущаться */
