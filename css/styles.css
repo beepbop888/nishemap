@@ -381,6 +381,149 @@ input[type="file"]{height:auto; padding:10px 12px; font-size:var(--fs-sm)}
   color:var(--ink-soft); box-shadow:var(--shadow); white-space:nowrap; pointer-events:none;
 }
 
+.empty{
+  position:absolute; inset:0; z-index:5; display:flex; flex-direction:column; align-items:center;
+  justify-content:center; text-align:center; padding:32px;
+  background:color-mix(in srgb, var(--paper) 90%, transparent);
+}
+.empty-wallet{width:96px; color:var(--stamp); margin-bottom:16px}
+.empty-title{margin:0 0 8px; font:600 var(--fs-lg)/1.3 var(--font-display); text-transform:uppercase; letter-spacing:.03em}
+.empty-sub{margin:0 auto 16px; color:var(--ink-soft); max-width:340px; font-size:var(--fs-sm)}
+
+/* ============ кнопки ============ */
+.btn{
+  height:44px; font:600 var(--fs-sm)/1 var(--font-display); text-transform:uppercase; letter-spacing:.05em;
+  border:1px solid var(--ink); background:var(--paper-raised);
+  color:var(--ink); border-radius:var(--r-md); padding:0 16px; cursor:pointer; transition:transform .12s;
+}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--stamp); border-color:var(--stamp); color:var(--paper-raised)}
+.btn-primary:hover{background:var(--stamp-deep)}
+.btn-wide{width:100%}
+.fab{
+  position:absolute; right:16px; bottom:calc(16px + env(safe-area-inset-bottom)); z-index:10;
+  height:48px; font:600 var(--fs-sm)/1 var(--font-display); text-transform:uppercase; letter-spacing:.06em;
+  background:var(--stamp); color:var(--paper-raised); border:none;
+  border-radius:var(--r-md); padding:0 20px; box-shadow:var(--shadow-hard); cursor:pointer; transition:transform .12s;
+}
+.fab:active{transform:translate(2px,2px); box-shadow:1px 1px 0 rgba(35,35,35,.9)}
+.view-toggle{
+  position:absolute; left:16px; bottom:calc(16px + env(safe-area-inset-bottom)); z-index:10;
+  height:48px; font:600 var(--fs-sm)/1 var(--font-display); text-transform:uppercase; letter-spacing:.06em;
+  background:var(--paper-raised); color:var(--ink);
+  border:1px solid var(--ink); border-radius:var(--r-md); padding:0 20px;
+  box-shadow:var(--shadow-hard); cursor:pointer; transition:transform .12s;
+}
+.view-toggle:active{transform:translate(2px,2px); box-shadow:1px 1px 0 rgba(35,35,35,.9)}
+
+/* ============ шторка заведения: чек ============ */
+.sheet{
+  position:fixed; left:0; right:0; bottom:0; z-index:var(--z-sheet); max-height:72vh; overflow-y:auto;
+  background:var(--paper-raised); border-radius:var(--r-md) var(--r-md) 0 0;
+  border-top:2px solid var(--ink);
+  box-shadow:0 -6px 24px rgba(35,35,35,.22);
+  padding:8px 16px calc(16px + env(safe-area-inset-bottom));
+  animation:sheet-up .22s ease-out;
+}
+@keyframes sheet-up{from{transform:translateY(40%);opacity:.4}to{transform:none;opacity:1}}
+.sheet-grip{width:40px;height:4px;border-radius:var(--r-pill);background:var(--line);margin:4px auto 12px}
+.sheet-close{
+  position:absolute; top:12px; right:12px; width:32px;height:32px; border:1px solid var(--line);
+  border-radius:var(--r-sm); background:var(--paper); color:var(--ink-soft); font-size:14px; cursor:pointer;
+}
+.sheet-venue{margin:0 40px 4px 0; font:600 var(--fs-lg)/1.25 var(--font-display); text-transform:uppercase; letter-spacing:.02em}
+.sheet-meta{margin:0 0 12px; color:var(--ink-soft); font-size:var(--fs-sm)}
+.sheet-items{list-style:none; margin:0 0 12px; padding:0}
+.sheet-item{
+  display:flex; flex-direction:column; gap:6px; padding:12px 0;
+  border-bottom:1px dashed var(--line-dash);
+}
+.sheet-item:first-child{border-top:1px dashed var(--line-dash)}
+.sheet-item-top{display:flex; justify-content:space-between; align-items:baseline; gap:12px}
+.sheet-link{
+  display:inline-block; color:var(--stamp-deep); font:600 var(--fs-sm)/1 var(--font-display);
+  text-transform:uppercase; letter-spacing:.05em; text-decoration:none; padding:8px 0;
+}
+.sheet-link:hover{text-decoration:underline}
+.sheet-actions{display:flex; align-items:center; gap:16px; flex-wrap:wrap}
+.sheet-link--btn{background:none; border:none; cursor:pointer; padding:8px 0; font-family:var(--font-display)}
+.flag{margin-left:auto; background:none; border:none; cursor:pointer; color:var(--ink-soft);
+  font:600 10px/1 var(--font-display); text-transform:uppercase; letter-spacing:.06em; padding:5px 2px}
+.flag:hover{color:var(--stamp)}
+.toast{
+  position:fixed; left:50%; transform:translateX(-50%); bottom:calc(24px + env(safe-area-inset-bottom));
+  z-index:60; background:var(--ink); color:var(--paper-raised); border-radius:var(--r-md);
+  padding:10px 16px; font:600 var(--fs-sm)/1 var(--font-display); text-transform:uppercase;
+  letter-spacing:.05em; box-shadow:var(--shadow-hard);
+}
+
+/* ============ форма ============ */
+.modal{position:fixed; inset:0; z-index:var(--z-modal); display:flex; align-items:flex-end; justify-content:center}
+.modal-card{
+  position:relative; background:var(--paper-raised); border-radius:var(--r-md) var(--r-md) 0 0; width:100%;
+  max-width:520px; max-height:88vh; overflow-y:auto; border-top:2px solid var(--ink);
+  padding:20px 16px calc(24px + env(safe-area-inset-bottom));
+  animation:sheet-up .22s ease-out;
+}
+.form-title{margin:0 0 4px; font:600 var(--fs-xl)/1.2 var(--font-display); text-transform:uppercase; letter-spacing:.03em}
+.form-sub{margin:0 0 16px; color:var(--ink-soft); font-size:var(--fs-sm)}
+.field{display:block; margin-bottom:12px}
+.field-row{display:flex; gap:8px}
+.field-row .field{flex:1}
+.field--price{max-width:112px}
+.field-label{
+  display:block; font:600 10px/1 var(--font-display); text-transform:uppercase;
+  letter-spacing:.08em; color:var(--ink-soft); margin-bottom:6px;
+}
+input,select{
+  width:100%; height:44px; font:var(--fs-md)/1.3 var(--font-body); color:var(--ink); background:var(--paper);
+  border:1px solid var(--line); border-radius:var(--r-sm); padding:0 12px;
+}
+input:focus-visible,select:focus-visible{border-color:var(--stamp)}
+input[name="price"]{font-family:var(--font-mono); font-weight:700}
+.form-error{color:var(--stamp); font-size:var(--fs-sm); margin:2px 0 8px}
+.form-note{color:var(--ink-soft); font-size:var(--fs-xs); text-align:center; margin:12px 0 0}
+.form-done{text-align:center; padding:24px 8px 8px}
+
+/* ============ затемнение ============ */
+.backdrop{position:fixed; inset:0; z-index:var(--z-backdrop); background:rgba(35,35,35,.45)}
+
+/* ============ desktop ============ */
+/* однострочная шапка — только когда реально хватает места */
+@media(min-width:1180px){
+  .topbar{display:flex; align-items:center; gap:24px; padding:12px 24px}
+  .tagline{margin:0; white-space:nowrap}
+  .filters{margin-left:auto; flex-direction:row; align-items:center; gap:8px}
+  .search{width:220px}
+}
+/* на средних экранах слоган не нужен — место важнее */
+@media(min-width:720px) and (max-width:1179px){
+  .tagline{display:none}
+}
+@media(min-width:720px){
+  .modal{align-items:center}
+  .modal-card{border-radius:var(--r-md); border:1px solid var(--ink); border-top-width:2px}
+  .sheet{left:auto; right:24px; bottom:24px; width:400px; border-radius:var(--r-md); border:1px solid var(--ink); border-top-width:2px}
+  .map-fallback{padding:16px 24px}
+  .cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+}
+
+/* ============ мобильные тач-цели ============ */
+/* «?» был 23×21 — в него было не попасть пальцем. Минимум 44×44 по рекомендациям Apple/Google. */
+.about-btn{
+  min-width:44px; min-height:44px; display:inline-flex; align-items:center; justify-content:center;
+  font-size:17px; line-height:1;
+}
+.about-btn[aria-expanded="true"]{background:var(--ink); color:var(--paper)}
+/* чипы фильтров: 30px мало для пальца */
+.chip{min-height:36px}
+.filters select,.chip select{min-height:36px}
+@media (pointer:coarse){
+  .chip{min-height:40px}
+  .filters select{min-height:40px}
+  .sheet-close{min-width:44px; min-height:44px}
+  .view-toggle{min-height:40px}
+}
 
 /* ============ НАГРАДЫ: движение только transform/opacity ============ */
 :root{
@@ -521,9 +664,8 @@ input[type="file"]{height:auto; padding:10px 12px; font-size:var(--fs-sm)}
 
 /* --- покупка аватара: за это отдали монеты, значит это праздник --- */
 .rays{position:absolute; left:50%; top:50%; translate:-50% -50%;
-  width:260vmax; height:260vmax; opacity:0; pointer-events:none;
-  background:repeating-conic-gradient(from 0deg,
-    rgba(242,207,92,var(--ra,.20)) 0deg 7deg, transparent 7deg 20deg);
+  width:230vmax; height:230vmax; opacity:0; pointer-events:none;
+  background:var(--rimg) center/100% 100% no-repeat;
   animation:rays-in var(--rd,460ms) var(--ease-out) forwards, rays-spin var(--rs2,22s) linear infinite}
 @keyframes rays-in{0%{opacity:0; transform:scale(.25)} 100%{opacity:1; transform:scale(1)}}
 @keyframes rays-spin{to{transform:rotate(360deg)}}
@@ -531,8 +673,11 @@ input[type="file"]{height:auto; padding:10px 12px; font-size:var(--fs-sm)}
   width:11px; height:16px; border-radius:2px; opacity:0;
   background:var(--cc,#f2cf5c); animation:conf-go var(--cd,1500ms) var(--ease-out) forwards}
 @keyframes conf-go{
-  0%{transform:translate3d(0,0,0) rotate(0) scale(.5); opacity:1}
-  18%{opacity:1}
+  0%  {transform:translate3d(0,0,0) rotate(0) scale(.5); opacity:0; animation-timing-function:var(--ease-out)}
+  6%  {opacity:1}
+  45% {transform:translate3d(calc(var(--cx) * .62), calc(var(--cy) * .48),0)
+       rotate(calc(var(--cr,540deg) * .5)) scale(1); animation-timing-function:linear}
+  86% {opacity:1}
   100%{transform:translate3d(var(--cx),var(--cy),0) rotate(var(--cr,540deg)) scale(1); opacity:0}
 }
 .rw--reveal{animation:rw-reveal 760ms 1 both}

@@ -510,6 +510,21 @@
     };
   })();
 
+  /* Веер лучей как SVG-картинка: conic-gradient на весь экран рассыпается на ступеньки. */
+  function rayImage(col, n, op) {
+    var g = "", i, a, b, R = 100, w = Math.PI / n * 0.42;
+    for (i = 0; i < n; i++) {
+      a = i * 2 * Math.PI / n;
+      b = "";
+      b += "M0 0 L" + (Math.cos(a - w) * R).toFixed(2) + " " + (Math.sin(a - w) * R).toFixed(2);
+      b += " L" + (Math.cos(a + w) * R).toFixed(2) + " " + (Math.sin(a + w) * R).toFixed(2) + "Z";
+      g += '<path d="' + b + '"/>';
+    }
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-100 -100 200 200">'
+            + '<g fill="' + col + '" fill-opacity="' + op + '">' + g + "</g></svg>";
+    return 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")';
+  }
+
   function fx(parent, cls, styles, delay) {
     var n = el("span", cls);
     Object.keys(styles || {}).forEach(function (k) { n.style.setProperty(k, styles[k]); });
@@ -569,7 +584,7 @@
       fx(art, "dust", { left: "70%", top: "99%" }, 560);
       hapt("light", 360); hapt("light", 560); hapt("success", 900);
     } else if (metal === "silver") {
-      fx(wrap, "rays", { "--ra": ".10", "--rd": "700ms", "--rs2": "40s" }, 260);
+      fx(wrap, "rays", { "--rimg": rayImage("#dfe4ea", 28, .12), "--rd": "800ms", "--rs2": "48s" }, 300);
       fx(art, "sweep", { "--swd": "760ms", "--rs": "210px" });
       fx(art, "ring", { "border-color": "var(--silver-hi)", "--rs": "200px" }, 620);
       fx(art, "ring", { "border-color": "var(--silver-hi)", "--rs": "200px" }, 780);
@@ -582,7 +597,7 @@
     } else {
       /* удар — 66 % от 2200 мс. Всё событие собирается ровно в этот кадр. */
       var HIT = 1452;
-      fx(wrap, "rays", { "--ra": ".26", "--rd": "900ms", "--rs2": "30s" }, 120);
+      fx(wrap, "rays", { "--rimg": rayImage("#f2cf5c", 30, .30), "--rd": "1000ms", "--rs2": "34s" }, 120);
       /* ветер сбоку: шесть полос в узком окне вокруг удара */
       for (var w = 0; w < 6; w++) {
         fx(wrap, "wind", {
@@ -644,7 +659,7 @@
   var CONF = ["#f2cf5c", "#e8b93c", "#ffffff", "#c8492f", "#6d8299", "#e6c76a"];
   function revealAvatar(a) {
     var wrap = el("div", "coin-cheer is-buy");
-    fx(wrap, "rays", {}, 0);
+    fx(wrap, "rays", { "--rimg": rayImage("#f2cf5c", 26, .22), "--rd": "600ms", "--rs2": "26s" }, 0);
     fx(wrap, "burst", {}, 180);
     var art = el("div", "rw rw--reveal", "<span>" + avatarSvg(a.id, 180) + "</span>");
     art.style.width = "180px"; art.style.height = "180px";
@@ -674,8 +689,8 @@
           "--cx": (e.ax * (140 + Math.abs(sp) * e.spread) + sp * 90).toFixed(0) + "px",
           "--cy": (e.ay * (300 + Math.abs(sp) * 160) + 120).toFixed(0) + "px",
           "--cr": (300 + ci * 91) + "deg",
-          "--cd": (1400 + (ci % 6) * 220) + "ms",
-        }, 220 + (i % 7) * 45);
+          "--cd": (2400 + (ci % 6) * 380) + "ms",
+        }, 220 + (i % 7) * 70);
       }
     });
     for (var k = 0; k < 8; k++) {
@@ -691,7 +706,7 @@
     hapt("medium", 300);
     hapt("rigid", 480);        // момент прилёта
     hapt("success", 820);
-    autoClose(wrap, 4200);
+    autoClose(wrap, 5600);
   }
 
   /* ---------- лавка аватаров ---------- */
@@ -763,14 +778,28 @@
   /* ---------- «О карте» ---------- */
   var aboutModal = document.getElementById("about-modal");
   var aboutBtn = document.getElementById("about-btn");
-  if (aboutBtn) aboutBtn.addEventListener("click", function () {
-    aboutModal.hidden = false; backdrop.hidden = false;
-  });
-  document.querySelectorAll("[data-close-about]").forEach(function (b) {
-    b.addEventListener("click", function () {
-      aboutModal.hidden = true;
-      if (sheet.hidden && formModal.hidden) backdrop.hidden = true;
+  /* «?» работает как переключатель: нажал — открыл, нажал ещё раз — вернулся к карте */
+  function closeAbout() {
+    aboutModal.hidden = true;
+    aboutBtn && aboutBtn.setAttribute("aria-expanded", "false");
+    if (sheet.hidden && formModal.hidden) backdrop.hidden = true;
+  }
+  if (aboutBtn) {
+    aboutBtn.setAttribute("aria-expanded", "false");
+    aboutBtn.addEventListener("click", function () {
+      if (!aboutModal.hidden) { closeAbout(); return; }
+      aboutModal.hidden = false; backdrop.hidden = false;
+      aboutBtn.setAttribute("aria-expanded", "true");
+      var card = aboutModal.querySelector(".modal-card");
+      if (card) card.scrollTop = 0;
     });
+  }
+  document.querySelectorAll("[data-close-about]").forEach(function (b) {
+    b.addEventListener("click", closeAbout);
+  });
+  /* тап по затемнению рядом с окном тоже возвращает на карту */
+  aboutModal.addEventListener("click", function (e) {
+    if (e.target === aboutModal) closeAbout();
   });
 
   /* ---------- band chips ---------- */
