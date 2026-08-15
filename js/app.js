@@ -381,21 +381,6 @@
     }, 10);
   });
 
-  /* ---------- трофей: крутится, потом предлагает похвастаться ---------- */
-  function showTrophy(places, bonus) {
-    var tr = TROPHIES[places];
-    if (!tr) return;
-    var wrap = el("div", "coin-cheer is-trophy",
-      '<div class="trophy-spin">' + trophySvg(places, 150) + "</div>" +
-      '<p class="coin-cheer-title">' + esc(tr.t) + "</p>" +
-      '<p class="coin-cheer-sub">' + esc(tr.s) + (bonus ? " · +" + bonus + " монет" : "") + "</p>" +
-      '<button type="button" class="btn btn-primary" id="share-trophy">Похвастаться</button>' +
-      '<button type="button" class="btn" id="close-trophy">Потом</button>');
-    document.body.appendChild(wrap);
-    haptic("success");
-    wrap.querySelector("#close-trophy").addEventListener("click", function () { wrap.remove(); });
-    wrap.querySelector("#share-trophy").addEventListener("click", function () { shareTrophy(places); });
-  }
 
   /* плитка для шеринга: рисуем на canvas, чтобы можно было кинуть картинкой в чат */
   function shareTrophy(places) {
@@ -471,6 +456,123 @@
       encodeURIComponent((BADGES["t" + places] || "").replace(' class="badge-svg"', ""));
   }
 
+
+  /* ---------- награды: одна точка входа, разное движение по типу ---------- */
+  function fx(parent, cls, styles, delay) {
+    var n = el("span", cls);
+    Object.keys(styles || {}).forEach(function (k) { n.style.setProperty(k, styles[k]); });
+    if (delay) n.style.animationDelay = delay + "ms";
+    parent.appendChild(n);
+    return n;
+  }
+  function hapt(kind, delay) {
+    setTimeout(function () {
+      if (!TG || !TG.HapticFeedback) return;
+      try {
+        if (kind === "success") TG.HapticFeedback.notificationOccurred("success");
+        else TG.HapticFeedback.impactOccurred(kind);
+      } catch (e) {}
+    }, delay || 0);
+  }
+
+  /* монета за подтверждённую цену */
+  function coinCelebration(n) {
+    var wrap = el("div", "coin-cheer");
+    var arc = el("div", "coin-arc");
+    var faceEl = el("div", "coin-face", '<span>' + (BADGES.zoloto || "") + "</span><span>" + (BADGES.zoloto || "") + "</span>");
+    arc.appendChild(faceEl);
+    wrap.appendChild(arc);
+    wrap.appendChild(el("span", "coin-shadow"));
+    wrap.appendChild(el("p", "coin-cheer-title", n > 1 ? "+" + n + " монеты" : "+1 монета"));
+    wrap.appendChild(el("p", "coin-cheer-sub", "Твою цену подтвердил район"));
+    document.body.appendChild(wrap);
+    hapt("light", 700);
+    hapt("success", 900);
+    setTimeout(function () { wrap.classList.add("is-out"); }, 1900);
+    setTimeout(function () { wrap.remove(); }, 2200);
+  }
+
+  /* трофей: бронза катится, серебро всплывает, золото прилетает с ударом */
+  function showTrophy(places, bonus) {
+    var tr = TROPHIES[places];
+    if (!tr) return;
+    var metal = tr.metal === "legend" ? "gold" : tr.metal;
+    var wrap = el("div", "coin-cheer is-trophy" + (metal === "gold" ? " is-gold" : ""));
+    var art = el("div", "rw rw--" + metal, "<span>" + (BADGES["t" + places] || "") + "</span>");
+    art.style.width = "150px"; art.style.height = "150px";
+    wrap.appendChild(art);
+
+    if (metal === "bronze") {
+      fx(wrap, "dust", { left: "42%", top: "56%" }, 340);
+      fx(wrap, "dust", { left: "56%", top: "57%" }, 520);
+      hapt("light", 340); hapt("light", 520);
+    } else if (metal === "silver") {
+      fx(wrap, "ring", { "border-color": "var(--silver-hi)" }, 780);
+      hapt("medium", 560);
+    } else {
+      // удар: кольца, ветер, пыль, вспышка — всё ровно в кадр касания
+      fx(wrap, "ring", {}, 460);
+      fx(wrap, "ring", { width: "150px", height: "150px" }, 540);
+      for (var i = 0; i < 6; i++) {
+        fx(wrap, "wind", { top: (42 + i * 3) + "%", width: (70 + i * 14) + "px", right: "8%" }, 460 + i * 45);
+      }
+      fx(wrap, "dust", { left: "40%", top: "58%" }, 470);
+      fx(wrap, "dust", { left: "58%", top: "59%" }, 500);
+      document.body.appendChild(el("span", "flash")).addEventListener("animationend", function () { this.remove(); });
+      hapt("heavy", 460);
+      if (tr.metal === "legend") { hapt("heavy", 540); fx(wrap, "ring", { width: "180px", height: "180px" }, 620); }
+    }
+
+    wrap.appendChild(el("p", "coin-cheer-title", esc(tr.t)));
+    wrap.appendChild(el("p", "coin-cheer-sub", esc(tr.s) + (bonus ? " · +" + bonus + " монет" : "")));
+    var share = el("button", "btn btn-primary", "Похвастаться");
+    var later = el("button", "btn", "Потом");
+    wrap.appendChild(share); wrap.appendChild(later);
+    document.body.appendChild(wrap);
+    later.addEventListener("click", function () { wrap.remove(); });
+    share.addEventListener("click", function () { shareTrophy(places); });
+  }
+
+  /* покупка аватара: сначала монеты улетают к балансу, потом подача */
+  function spendAnimation(fromEl, done) {
+    var to = document.getElementById("rank");
+    var a = fromEl && fromEl.getBoundingClientRect();
+    var b = to && to.getBoundingClientRect();
+    if (!a || !b) { done(); return; }
+    for (var i = 0; i < 3; i++) {
+      (function (i) {
+        var c = el("span", "coin-fly");
+        c.style.left = (a.left + a.width / 2) + "px";
+        c.style.top = (a.top + a.height / 2) + "px";
+        c.style.setProperty("--dx", (b.left + b.width / 2 - a.left - a.width / 2) + "px");
+        c.style.setProperty("--dy", (b.top + b.height / 2 - a.top - a.height / 2) + "px");
+        c.style.animationDelay = (i * 70) + "ms";
+        document.body.appendChild(c);
+        setTimeout(function () { c.remove(); }, 420 + i * 70);
+      })(i);
+    }
+    hapt("light", 0);
+    setTimeout(done, 320);
+  }
+  function revealAvatar(a) {
+    var wrap = el("div", "coin-cheer");
+    fx(wrap, "burst", {}, 0);
+    var art = el("div", "rw rw--reveal", "<span>" + avatarSvg(a.id, 160) + "</span>");
+    art.style.width = "160px"; art.style.height = "160px";
+    wrap.appendChild(art);
+    for (var i = 0; i < 5; i++) {
+      var ang = (i / 5) * 6.2832;
+      fx(wrap, "spark", { "--sx": Math.cos(ang) * 90 + "px", "--sy": Math.sin(ang) * 90 + "px" }, 560 + i * 40);
+    }
+    wrap.appendChild(el("p", "coin-cheer-title", esc(a.t)));
+    wrap.appendChild(el("p", "coin-cheer-sub", "Аватар твой. Носи с достоинством."));
+    document.body.appendChild(wrap);
+    hapt("rigid", 560);
+    hapt("success", 900);
+    setTimeout(function () { wrap.classList.add("is-out"); }, 2300);
+    setTimeout(function () { wrap.remove(); }, 2600);
+  }
+
   /* ---------- лавка аватаров ---------- */
   function openShop() {
     var modal = document.getElementById("shop-modal");
@@ -520,14 +622,8 @@
           if (!can) { toast("Не хватает " + (a.price - bal) + " монет. Сдавай цены — район подтвердит."); return; }
           if (buyAvatar(a.id)) {
             localStorage.setItem("nishemap.avatar", a.id);
-            haptic("success"); paintRank(); openShop();
-            var cheer = el("div", "coin-cheer",
-              '<div class="badge-flip">' + avatarSvg(a.id, 150) + "</div>" +
-              '<p class="coin-cheer-title">' + esc(a.t) + "</p>" +
-              '<p class="coin-cheer-sub">Аватар твой. Носи с достоинством.</p>');
-            document.body.appendChild(cheer);
-            setTimeout(function () { cheer.classList.add("is-out"); }, 2200);
-            setTimeout(function () { cheer.remove(); }, 2900);
+            paintRank(); openShop();
+            spendAnimation(card, function () { revealAvatar(a); });
           }
         });
         grid.appendChild(card);
