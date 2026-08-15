@@ -235,25 +235,25 @@
   }
 
   var AVATARS = [
-    // бесплатные: три характера в мужской и женской версии
-    { id: "student_m", t: "студент",    d: "живу на дошике до стипендии", price: 0 },
-    { id: "student_f", t: "студентка",  d: "живу на дошике до стипендии", price: 0 },
-    { id: "office_m",  t: "офисный",    d: "обед за свой счёт, увы",      price: 0 },
-    { id: "office_f",  t: "офисная",    d: "обед за свой счёт, увы",      price: 0 },
-    { id: "zapas_m",   t: "запасливый", d: "у меня всё с собой",          price: 0 },
-    { id: "zapas_f",   t: "запасливая", d: "у меня всё с собой",          price: 0 },
-    // за монеты
-    { id: "doshik_m",     t: "дошиковод",      d: "кипяток — мой шеф-повар",      price: 75 },
-    { id: "doshik_f",     t: "дошиководка",    d: "кипяток — мой шеф-повар",      price: 75 },
-    { id: "shaurmaster",  t: "шаурмастер",     d: "знает лучший лаваш в городе",  price: 150 },
-    { id: "shaurmaster_f",t: "шаурмастерица",  d: "знает лучший лаваш в городе",  price: 150 },
-    { id: "tsar",         t: "царь столовой",  d: "компот наливают без очереди",  price: 275 },
-    { id: "tsar_f",       t: "царица столовой",d: "компот наливают без очереди",  price: 275 },
-    { id: "kosmonavt",    t: "космонавт",      d: "ел борщ в невесомости",        price: 425 },
-    { id: "oligarkh",     t: "олигарх",        d: "берёт добавку не глядя",       price: 650 },
-    { id: "oligarkh_f",   t: "олигархиня",     d: "берёт добавку не глядя",       price: 650 },
-    { id: "legenda",      t: "легенда района", d: "его цены цитируют в чатах",    price: 900 },
-    { id: "zoloto",       t: "золотой нищеброд", d: "200 мест на карте. выше только звёзды", price: 1650 },
+    // бесплатные: три мужских, три женских
+    { id: "student",    t: "студент",    d: "живу на дошике до стипендии",   price: 0, sex: "м" },
+    { id: "rabotyaga",  t: "работяга",   d: "обед в термосе, добавка в душе", price: 0, sex: "м" },
+    { id: "kurier",     t: "курьер",     d: "знает все дворы наизусть",      price: 0, sex: "м" },
+    { id: "studentka",  t: "студентка",  d: "кофе с собой, еда по акции",    price: 0, sex: "ж" },
+    { id: "babushka",   t: "бабушка",    d: "с авоськой мимо всех наценок",  price: 0, sex: "ж" },
+    { id: "ofisnaya",   t: "офисная",    d: "обед за свой счёт, увы",        price: 0, sex: "ж" },
+    // за монеты — чем выше, тем дольше идти
+    { id: "doshikovod", t: "дошиковод",  d: "кипяток — мой шеф-повар",        price: 50 },
+    { id: "shaurmaster",t: "шаурмастер", d: "знает лучший лаваш в городе",    price: 100 },
+    { id: "gopnik",     t: "гопник",     d: "семки есть? а если найду",       price: 175 },
+    { id: "dvornik",    t: "дворник",    d: "встаёт раньше всей Москвы",      price: 250 },
+    { id: "hokkeist",   t: "хоккеист",   d: "после тренировки — в столовую",  price: 400 },
+    { id: "balerina",   t: "балерина",   d: "порция маленькая, зато красиво", price: 600, sex: "ж" },
+    { id: "kosmonavt",  t: "космонавт",  d: "ел борщ в невесомости",          price: 850 },
+    { id: "tsar",       t: "царь",       d: "компот наливают без очереди",    price: 1100 },
+    { id: "oligarh",    t: "олигарх",    d: "берёт добавку не глядя",         price: 1350 },
+    { id: "oligarhinya",t: "олигархиня", d: "берёт добавку не глядя",         price: 1350, sex: "ж" },
+    { id: "zolotoy",    t: "золотой нищеброд", d: "200 мест на карте. выше только звёзды", price: 1650 },
   ];
   var BADGES = window.NISHEMAP_BADGES || {};
   function badgeHtml(key, size) {
@@ -458,6 +458,55 @@
 
 
   /* ---------- награды: одна точка входа, разное движение по типу ---------- */
+  /* Настоящая монета, а не значок: гурт, кант, рельефный рубль. Две грани — середина оборота не пустая. */
+  var COIN_SVG = (function () {
+    var mill = "";
+    for (var i = 0; i < 60; i++) {
+      var a = i * 6 * Math.PI / 180;
+      mill += '<rect x="98.2" y="2" width="3.6" height="9" rx="1.4" fill="#8a6a1e"' +
+              ' transform="rotate(' + (i * 6) + ' 100 100)"/>';
+    }
+    var base =
+      '<defs>' +
+      '<radialGradient id="cg" cx="36%" cy="28%" r="78%">' +
+        '<stop offset="0" stop-color="#ffe9a8"/><stop offset="46%" stop-color="#e8b93c"/>' +
+        '<stop offset="100%" stop-color="#a97c16"/></radialGradient>' +
+      '<linearGradient id="cr" x1="0" y1="0" x2="0" y2="1">' +
+        '<stop offset="0" stop-color="#fff2c8"/><stop offset="100%" stop-color="#c9971f"/></linearGradient>' +
+      '</defs>' +
+      '<circle cx="100" cy="100" r="98" fill="#a97c16"/>' + mill +
+      '<circle cx="100" cy="100" r="91" fill="url(#cg)"/>' +
+      '<circle cx="100" cy="100" r="82" fill="none" stroke="url(#cr)" stroke-width="5"/>' +
+      '<circle cx="100" cy="100" r="74" fill="none" stroke="#b98d20" stroke-width="2" opacity=".7"/>' +
+      '<path d="M42 62 A76 76 0 0 1 118 34" fill="none" stroke="#fff6d8" stroke-width="7"' +
+      ' stroke-linecap="round" opacity=".65"/>';
+    var ruble =
+      '<g fill="#8a6a1e" opacity=".45" transform="translate(3,4)">' +
+      '<path d="M74 44h34a30 30 0 0 1 0 60H92v14h26v13H92v20H74v-20H58v-13h16v-14H58V90h16Zm18 47h16a17 17 0 0 0 0-34H92Z"/></g>' +
+      '<g fill="#7a5a12">' +
+      '<path d="M74 44h34a30 30 0 0 1 0 60H92v14h26v13H92v20H74v-20H58v-13h16v-14H58V90h16Zm18 47h16a17 17 0 0 0 0-34H92Z"/></g>';
+    var star = function (cx, cy, r) {
+      var d = "";
+      for (var i = 0; i < 10; i++) {
+        var an = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.42 : r;
+        d += (i ? "L" : "M") + (cx + Math.cos(an) * rr).toFixed(1) + " " + (cy + Math.sin(an) * rr).toFixed(1);
+      }
+      return '<path d="' + d + 'Z" fill="#7a5a12"/>';
+    };
+    var wrap = function (inner) {
+      return '<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+             base + inner + "</svg>";
+    };
+    return {
+      face: wrap(ruble + star(100, 172, 9)),
+      back: wrap('<text x="100" y="118" text-anchor="middle" font-family="Oswald,Impact,sans-serif"' +
+                 ' font-size="74" font-weight="700" fill="#7a5a12">1</text>' +
+                 '<text x="100" y="150" text-anchor="middle" font-family="Oswald,Impact,sans-serif"' +
+                 ' font-size="19" letter-spacing="3" fill="#8a6a1e">МОНЕТА</text>' +
+                 star(100, 54, 12)),
+    };
+  })();
+
   function fx(parent, cls, styles, delay) {
     var n = el("span", cls);
     Object.keys(styles || {}).forEach(function (k) { n.style.setProperty(k, styles[k]); });
@@ -474,53 +523,84 @@
       } catch (e) {}
     }, delay || 0);
   }
+  /* тень вешаем только после приземления: filter в движении = перерисовка каждого кадра */
+  function shadowAfter(node) {
+    node.addEventListener("animationend", function () { node.classList.add("is-done"); }, { once: true });
+  }
+  function autoClose(wrap, hold) {
+    setTimeout(function () { wrap.classList.add("is-out"); }, hold);
+    setTimeout(function () { wrap.remove(); }, hold + 300);
+  }
 
   /* монета за подтверждённую цену */
   function coinCelebration(n) {
     var wrap = el("div", "coin-cheer");
     var arc = el("div", "coin-arc");
-    var faceEl = el("div", "coin-face", '<span>' + (BADGES.zoloto || "") + "</span><span>" + (BADGES.zoloto || "") + "</span>");
-    arc.appendChild(faceEl);
+    arc.appendChild(el("div", "coin-face",
+      "<span>" + COIN_SVG.face + "</span><span>" + COIN_SVG.back + "</span>"));
     wrap.appendChild(arc);
     wrap.appendChild(el("span", "coin-shadow"));
     wrap.appendChild(el("p", "coin-cheer-title", n > 1 ? "+" + n + " монеты" : "+1 монета"));
     wrap.appendChild(el("p", "coin-cheer-sub", "Твою цену подтвердил район"));
     document.body.appendChild(wrap);
-    hapt("light", 700);
-    hapt("success", 900);
-    setTimeout(function () { wrap.classList.add("is-out"); }, 1900);
-    setTimeout(function () { wrap.remove(); }, 2200);
+    hapt("light", 0);          // бросок
+    hapt("light", 1120);       // касание
+    hapt("success", 1400);
+    autoClose(wrap, 2500);
   }
 
-  /* трофей: бронза катится, серебро всплывает, золото прилетает с ударом */
+  /* трофей: бронза катится, серебро всплывает с бликом, золото падает и бьёт */
   function showTrophy(places, bonus) {
     var tr = TROPHIES[places];
     if (!tr) return;
     var metal = tr.metal === "legend" ? "gold" : tr.metal;
     var wrap = el("div", "coin-cheer is-trophy" + (metal === "gold" ? " is-gold" : ""));
     var art = el("div", "rw rw--" + metal, "<span>" + (BADGES["t" + places] || "") + "</span>");
-    art.style.width = "150px"; art.style.height = "150px";
+    art.style.width = "160px"; art.style.height = "160px";
+    shadowAfter(art);
     wrap.appendChild(art);
 
     if (metal === "bronze") {
-      fx(wrap, "dust", { left: "42%", top: "56%" }, 340);
-      fx(wrap, "dust", { left: "56%", top: "57%" }, 520);
-      hapt("light", 340); hapt("light", 520);
+      fx(wrap, "dust", { left: "41%", top: "55%" }, 360);
+      fx(wrap, "dust", { left: "57%", top: "56%" }, 560);
+      hapt("light", 360); hapt("light", 560); hapt("success", 900);
     } else if (metal === "silver") {
-      fx(wrap, "ring", { "border-color": "var(--silver-hi)" }, 780);
-      hapt("medium", 560);
+      fx(art, "sweep", { "--swd": "460ms" });
+      fx(wrap, "ring", { "border-color": "var(--silver-hi)" }, 520);
+      fx(wrap, "ring", { "border-color": "var(--silver-hi)", width: "160px", height: "160px" }, 620);
+      hapt("medium", 520); hapt("success", 900);
     } else {
-      // удар: кольца, ветер, пыль, вспышка — всё ровно в кадр касания
-      fx(wrap, "ring", {}, 460);
-      fx(wrap, "ring", { width: "150px", height: "150px" }, 540);
-      for (var i = 0; i < 6; i++) {
-        fx(wrap, "wind", { top: (42 + i * 3) + "%", width: (70 + i * 14) + "px", right: "8%" }, 460 + i * 45);
+      /* всё событие приходится на кадр удара — 33% от 1300 мс */
+      var HIT = 430;
+      for (var w = 0; w < 14; w++) {
+        fx(wrap, "wind", {
+          top: (12 + w * 5.5) + "%",
+          "--ww": (38 + (w % 5) * 15) + "vw",
+          "--wh": (w % 3 === 0 ? 7 : 3) + "px",
+          "--wc": w % 2 ? "#fff" : "var(--gold-hi)",
+        }, HIT - 70 + w * 13);
       }
-      fx(wrap, "dust", { left: "40%", top: "58%" }, 470);
-      fx(wrap, "dust", { left: "58%", top: "59%" }, 500);
-      document.body.appendChild(el("span", "flash")).addEventListener("animationend", function () { this.remove(); });
-      hapt("heavy", 460);
-      if (tr.metal === "legend") { hapt("heavy", 540); fx(wrap, "ring", { width: "180px", height: "180px" }, 620); }
+      fx(wrap, "ring", {}, HIT);
+      fx(wrap, "ring", { width: "170px", height: "170px" }, HIT + 90);
+      fx(wrap, "dust", { left: "38%", top: "58%" }, HIT + 10);
+      fx(wrap, "dust", { left: "60%", top: "59%" }, HIT + 45);
+      for (var s2 = 0; s2 < 10; s2++) {
+        var ang = Math.PI + (s2 / 9) * Math.PI;                 // разлёт вбок и вниз
+        fx(wrap, "shard", {
+          left: "50%", top: "54%",
+          "--sx": (Math.cos(ang) * 200).toFixed(0) + "px",
+          "--sy": (Math.abs(Math.sin(ang)) * -150 + 90).toFixed(0) + "px",
+          "--sr": (180 + s2 * 47) + "deg",
+        }, HIT + 10 + s2 * 12);
+      }
+      var fl = el("span", "flash");
+      fl.style.animationDelay = HIT + "ms";
+      document.body.appendChild(fl);
+      setTimeout(function () { fl.remove(); }, HIT + 400);
+      hapt("heavy", HIT);
+      hapt("rigid", HIT + 90);
+      if (tr.metal === "legend") { hapt("heavy", HIT + 180); fx(wrap, "ring", { width: "200px", height: "200px" }, HIT + 180); }
+      hapt("success", 1100);
     }
 
     wrap.appendChild(el("p", "coin-cheer-title", esc(tr.t)));
@@ -533,44 +613,68 @@
     share.addEventListener("click", function () { shareTrophy(places); });
   }
 
-  /* покупка аватара: сначала монеты улетают к балансу, потом подача */
+  /* покупка: монеты по дуге улетают к балансу — видно, что заплатил */
   function spendAnimation(fromEl, done) {
     var to = document.getElementById("rank");
     var a = fromEl && fromEl.getBoundingClientRect();
     var b = to && to.getBoundingClientRect();
     if (!a || !b) { done(); return; }
-    for (var i = 0; i < 3; i++) {
+    var n = 6;
+    for (var i = 0; i < n; i++) {
       (function (i) {
         var c = el("span", "coin-fly");
-        c.style.left = (a.left + a.width / 2) + "px";
+        c.style.left = (a.left + a.width / 2 + (i - n / 2) * 9) + "px";
         c.style.top = (a.top + a.height / 2) + "px";
-        c.style.setProperty("--dx", (b.left + b.width / 2 - a.left - a.width / 2) + "px");
+        c.style.setProperty("--dx", (b.left + b.width / 2 - a.left - a.width / 2 - (i - n / 2) * 9) + "px");
         c.style.setProperty("--dy", (b.top + b.height / 2 - a.top - a.height / 2) + "px");
-        c.style.animationDelay = (i * 70) + "ms";
+        c.style.animationDelay = (i * 55) + "ms";
         document.body.appendChild(c);
-        setTimeout(function () { c.remove(); }, 420 + i * 70);
+        setTimeout(function () { c.remove(); }, 560 + i * 55);
+        hapt("light", i * 55);
       })(i);
     }
-    hapt("light", 0);
-    setTimeout(done, 320);
+    setTimeout(done, 420);
   }
+
+  /* выдача аватара: лучи, конфетти, подача с перелётом — за это отдали монеты */
+  var CONF = ["#f2cf5c", "#e8b93c", "#ffffff", "#c8492f", "#6d8299", "#e6c76a"];
   function revealAvatar(a) {
-    var wrap = el("div", "coin-cheer");
-    fx(wrap, "burst", {}, 0);
-    var art = el("div", "rw rw--reveal", "<span>" + avatarSvg(a.id, 160) + "</span>");
-    art.style.width = "160px"; art.style.height = "160px";
+    var wrap = el("div", "coin-cheer is-buy");
+    fx(wrap, "rays", {}, 0);
+    fx(wrap, "burst", {}, 180);
+    var art = el("div", "rw rw--reveal", "<span>" + avatarSvg(a.id, 180) + "</span>");
+    art.style.width = "180px"; art.style.height = "180px";
+    art.style.animationDelay = "140ms";
+    shadowAfter(art);
     wrap.appendChild(art);
-    for (var i = 0; i < 5; i++) {
-      var ang = (i / 5) * 6.2832;
-      fx(wrap, "spark", { "--sx": Math.cos(ang) * 90 + "px", "--sy": Math.sin(ang) * 90 + "px" }, 560 + i * 40);
+    fx(art, "sweep", { "--swd": "820ms" });
+
+    for (var i = 0; i < 30; i++) {
+      var ang = (i / 30) * 6.2832 + (i % 3) * 0.2;
+      var dist = 190 + (i % 5) * 60;
+      fx(wrap, "confetti", {
+        left: (48 + (i % 7) * 0.7) + "%",
+        "--cc": CONF[i % CONF.length],
+        "--cx": (Math.cos(ang) * dist).toFixed(0) + "px",
+        "--cy": (Math.sin(ang) * dist * 0.8 + 260).toFixed(0) + "px",
+        "--cr": (360 + i * 83) + "deg",
+        "--cd": (1250 + (i % 6) * 190) + "ms",
+      }, 300 + (i % 8) * 35);
+    }
+    for (var k = 0; k < 8; k++) {
+      var an = (k / 8) * 6.2832;
+      fx(wrap, "spark", { "--sx": Math.cos(an) * 120 + "px", "--sy": Math.sin(an) * 120 + "px" }, 620 + k * 35);
     }
     wrap.appendChild(el("p", "coin-cheer-title", esc(a.t)));
-    wrap.appendChild(el("p", "coin-cheer-sub", "Аватар твой. Носи с достоинством."));
+    wrap.appendChild(el("p", "coin-cheer-sub", "Твой. " + esc(a.d) + "."));
+    var ok = el("button", "btn btn-primary", "Надеть");
+    wrap.appendChild(ok);
     document.body.appendChild(wrap);
-    hapt("rigid", 560);
-    hapt("success", 900);
-    setTimeout(function () { wrap.classList.add("is-out"); }, 2300);
-    setTimeout(function () { wrap.remove(); }, 2600);
+    ok.addEventListener("click", function () { wrap.classList.add("is-out"); setTimeout(function () { wrap.remove(); }, 300); });
+    hapt("medium", 300);
+    hapt("rigid", 480);        // момент прилёта
+    hapt("success", 820);
+    autoClose(wrap, 4200);
   }
 
   /* ---------- лавка аватаров ---------- */
@@ -1511,17 +1615,6 @@
       }).catch(function () { done && done(); });
   }
 
-  /* ---------- монета за проверенную точку ---------- */
-  function coinCelebration(n) {
-    var wrap = el("div", "coin-cheer",
-      '<div class="coin-cheer-coin"></div>' +
-      '<p class="coin-cheer-title">' + (n > 1 ? "+" + n + " монеты" : "+1 монета") + "</p>" +
-      '<p class="coin-cheer-sub">Твою цену подтвердил район</p>');
-    document.body.appendChild(wrap);
-    haptic("success");
-    setTimeout(function () { wrap.classList.add("is-out"); }, 2200);
-    setTimeout(function () { wrap.remove(); }, 2900);
-  }
   var COIN_ITEMS_PER_VENUE = 3;   // больше трёх позиций в одном месте монет не приносят
   /* находим наши проверенные позиции и группируем по заведению */
   function myVerifiedByVenue() {
