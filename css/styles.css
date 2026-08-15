@@ -509,11 +509,14 @@ input[name="price"]{font-family:var(--font-mono); font-weight:700}
 }
 
 /* ============ мобильные тач-цели ============ */
-/* «?» был 23×21 — в него было не попасть пальцем. Минимум 44×44 по рекомендациям Apple/Google. */
+/* «?» рисуем компактным, а палец ловим невидимой зоной вокруг: кружок 28 px, тап 44 px. */
 .about-btn{
-  min-width:44px; min-height:44px; display:inline-flex; align-items:center; justify-content:center;
-  font-size:17px; line-height:1;
+  position:relative; width:28px; height:28px; padding:0;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:14px; line-height:1;
 }
+.about-btn::after{content:""; position:absolute; left:50%; top:50%;
+  width:44px; height:44px; transform:translate(-50%,-50%)}
 .about-btn[aria-expanded="true"]{background:var(--ink); color:var(--paper)}
 /* чипы фильтров: 30px мало для пальца */
 .chip{min-height:36px}
