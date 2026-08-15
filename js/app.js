@@ -558,12 +558,9 @@
     if (!tr) return;
     var metal = tr.metal === "legend" ? "gold" : tr.metal;
     var wrap = el("div", "coin-cheer is-trophy" + (metal === "gold" ? " is-gold" : ""));
-    var art = el("div", "rw rw--" + metal, "<span>" + (BADGES["t" + places] || "") + "</span>");
-    art.style.width = "142px"; art.style.height = "260px";
-    /* медаль вытянутая: блик и волны привязываем к диску, а не к прямоугольнику */
-    var DISC = { "--fx": "2%", "--fy": "40%", "--fw": "96%", "--fh": "53%",
-                 "--rx": "50%", "--ry": "67%", "--rs": "146px" };
-    Object.keys(DISC).forEach(function (k) { art.style.setProperty(k, DISC[k]); });
+    /* в анимации — только диск: ленту показываем в коллекции наград */
+    var art = el("div", "rw rw--" + metal, "<span>" + (BADGES["d" + places] || BADGES["t" + places] || "") + "</span>");
+    art.style.width = "190px"; art.style.height = "190px";   /* диск квадратный — эффекты ложатся ровно */
     shadowAfter(art);
     wrap.appendChild(art);
 
@@ -572,34 +569,42 @@
       fx(art, "dust", { left: "70%", top: "99%" }, 560);
       hapt("light", 360); hapt("light", 560); hapt("success", 900);
     } else if (metal === "silver") {
-      fx(art, "sweep", { "--swd": "500ms" });
-      fx(art, "ring", { "border-color": "var(--silver-hi)" }, 520);
-      fx(art, "ring", { "border-color": "var(--silver-hi)" }, 640);
-      hapt("medium", 520); hapt("success", 900);
+      fx(wrap, "rays", { "--ra": ".10", "--rd": "700ms", "--rs2": "40s" }, 260);
+      fx(art, "sweep", { "--swd": "760ms", "--rs": "210px" });
+      fx(art, "ring", { "border-color": "var(--silver-hi)", "--rs": "200px" }, 620);
+      fx(art, "ring", { "border-color": "var(--silver-hi)", "--rs": "200px" }, 780);
+      for (var sp = 0; sp < 6; sp++) {
+        var sa = -Math.PI / 2 + (sp - 2.5) * .42;
+        fx(art, "spark", { "--sx": (Math.cos(sa) * 140).toFixed(0) + "px",
+                           "--sy": (Math.sin(sa) * 140).toFixed(0) + "px" }, 700 + sp * 45);
+      }
+      hapt("light", 260); hapt("medium", 620); hapt("success", 1000);
     } else {
-      /* всё событие приходится на кадр удара — 33% от 1300 мс */
-      var HIT = 430;
-      /* ветер: шесть полос, все в узком окне вокруг удара — иначе каша */
+      /* удар — 66 % от 2200 мс. Всё событие собирается ровно в этот кадр. */
+      var HIT = 1452;
+      fx(wrap, "rays", { "--ra": ".26", "--rd": "900ms", "--rs2": "30s" }, 120);
+      /* ветер сбоку: шесть полос в узком окне вокруг удара */
       for (var w = 0; w < 6; w++) {
         fx(wrap, "wind", {
-          top: (30 + w * 8) + "%",
-          "--ww": (44 + (w % 3) * 18) + "vw",
-          "--wh": (w === 1 || w === 4 ? 7 : 4) + "px",
+          top: (28 + w * 8) + "%",
+          "--ww": (52 + (w % 3) * 20) + "vw",
+          "--wh": (w === 1 || w === 4 ? 8 : 4) + "px",
           "--wc": w % 2 ? "#fff" : "var(--gold-hi)",
-        }, HIT - 40 + w * 18);
+        }, HIT - 90 + w * 26);
       }
-      fx(art, "ring", {}, HIT);                       /* волна из самой награды */
-      fx(art, "ring", {}, HIT + 110);
-      fx(art, "dust", { left: "50%", top: "99%" }, HIT + 10);
-      fx(art, "dust", { left: "26%", top: "96%" }, HIT + 40);
-      fx(art, "dust", { left: "74%", top: "96%" }, HIT + 40);
+      fx(art, "ring", { "--rs": "210px" }, HIT);
+      fx(art, "ring", { "--rs": "210px" }, HIT + 150);
+      fx(art, "dust", { left: "50%", top: "96%" }, HIT + 10);
+      fx(art, "dust", { left: "24%", top: "92%" }, HIT + 50);
+      fx(art, "dust", { left: "76%", top: "92%" }, HIT + 50);
       var fl = el("span", "flash");
       fl.style.animationDelay = HIT + "ms";
       document.body.appendChild(fl);
-      setTimeout(function () { fl.remove(); }, HIT + 400);
+      setTimeout(function () { fl.remove(); }, HIT + 500);
+      hapt("light", 300);
       hapt("heavy", HIT);
-      hapt("rigid", HIT + 100);
-      hapt("success", 1100);
+      hapt("rigid", HIT + 110);
+      hapt("success", HIT + 420);
     }
 
     wrap.appendChild(el("p", "coin-cheer-title", esc(tr.t)));
@@ -650,9 +655,13 @@
 
     /* три источника: сверху дождём, слева и справа — залпом внутрь */
     var EMIT = [
-      { l: 50, t: -6,  ax: 0,   ay: 1,   n: 16, spread: 460 },   // сверху
-      { l: -4, t: 34,  ax: 1,   ay: .35, n: 11, spread: 240 },   // слева
-      { l: 104, t: 34, ax: -1,  ay: .35, n: 11, spread: 240 },   // справа
+      { l: 22,  t: -8,  ax: 0,  ay: 1,   n: 14, spread: 520 },   // сверху слева
+      { l: 50,  t: -8,  ax: 0,  ay: 1,   n: 16, spread: 560 },   // сверху по центру
+      { l: 78,  t: -8,  ax: 0,  ay: 1,   n: 14, spread: 520 },   // сверху справа
+      { l: -6,  t: 22,  ax: 1,  ay: .3,  n: 12, spread: 300 },   // слева сверху
+      { l: -6,  t: 58,  ax: 1,  ay: .1,  n: 10, spread: 300 },   // слева снизу
+      { l: 106, t: 22,  ax: -1, ay: .3,  n: 12, spread: 300 },   // справа сверху
+      { l: 106, t: 58,  ax: -1, ay: .1,  n: 10, spread: 300 },   // справа снизу
     ];
     var ci = 0;
     EMIT.forEach(function (e) {
