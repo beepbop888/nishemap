@@ -47,73 +47,30 @@ def b64(im):
     bio=io.BytesIO(); im.save(bio,"WEBP",quality=82,method=6)
     return base64.b64encode(bio.getvalue()).decode()
 
-# ---------- тематические фоны (координаты внутри щита 0..100 × 0..108) ----------
+# ---------- фоны: теперь сгенерированные сцены, а не векторные узоры ----------
+BGDIR = os.path.join(ROOT, "art", "bg")
+_bgcache = {}
 def BG(kind):
-    S=[]
-    if kind=="study":
-        S.append('<rect width="100" height="108" fill="#dfe6ee"/>')
-        S += [f'<line x1="8" y1="{y}" x2="92" y2="{y}" stroke="#b9c6d6" stroke-width="1.1"/>' for y in range(16,96,9)]
-        S.append('<line x1="24" y1="4" x2="24" y2="104" stroke="#e4a3a3" stroke-width="1.4"/>')
-    elif kind=="office":
-        S.append('<rect width="100" height="108" fill="#d8dfe6"/>')
-        S += [f'<rect x="{x}" y="10" width="16" height="70" fill="#c3ccd6"/>' for x in (6,30,54,78)]
-        S += [f'<line x1="0" y1="{y}" x2="100" y2="{y}" stroke="#aab6c2" stroke-width="1"/>' for y in range(14,84,10)]
-    elif kind=="dacha":
-        S.append('<rect width="100" height="108" fill="#dfe4cc"/>')
-        S += [f'<path d="M{x} 96 q6 -18 12 0 Z" fill="#9fae72"/>' for x in range(2,100,16)]
-        S += [f'<circle cx="{x}" cy="{y}" r="4" fill="#c56b52"/>' for x,y in [(16,58),(46,50),(76,60),(60,72),(30,74)]]
-    elif kind=="noodle":
-        S.append('<rect width="100" height="108" fill="#f0e2c4"/>')
-        S += [f'<path d="M{x} 12 q10 16 0 32 q-10 16 0 32 q10 16 0 30" fill="none" stroke="#dcc48c" stroke-width="3" stroke-linecap="round"/>' for x in range(8,100,14)]
-    elif kind=="coffee":
-        S.append('<rect width="100" height="108" fill="#e3d3c0"/>')
-        S += [f'<ellipse cx="{x}" cy="{y}" rx="5" ry="6.5" fill="#8a5c3b" transform="rotate({r} {x} {y})"/><path d="M{x} {y-5} q1.6 5 0 10" stroke="#e3d3c0" stroke-width="1.2" fill="none"/>'
-              for x,y,r in [(14,22,18),(44,14,-14),(76,26,26),(24,58,-8),(58,48,20),(86,62,-22),(20,90,12),(52,86,-18),(84,96,8)]]
-    elif kind=="speed":
-        S.append('<rect width="100" height="108" fill="#f2e2b0"/>')
-        S += [f'<rect x="-10" y="{y}" width="120" height="3" fill="#dcc474" transform="skewX(-18)"/>' for y in range(8,104,11)]
-    elif kind=="boxes":
-        S.append('<rect width="100" height="108" fill="#e6dcea"/>')
-        for gy,y in enumerate(range(8,100,22)):
-            S.append(f'<rect x="0" y="{y+18}" width="100" height="2.5" fill="#b9a3c6"/>')
-            S += [f'<rect x="{x}" y="{y}" width="16" height="18" rx="1.5" fill="#cbb6d6" stroke="#b09ac0" stroke-width="1"/>' for x in range(4+ (gy%2)*8, 96, 22)]
-    elif kind=="doner":   # вертикальный вертел с мясом — как просили
-        S.append('<rect width="100" height="108" fill="#eddcbe"/>')
-        for cx in (14,50,86):
-            S.append(f'<rect x="{cx-1.4}" y="6" width="2.8" height="96" fill="#9aa3aa"/>')
-            S.append(f'<path d="M{cx} 16 c-13 0 -18 14 -18 30 c0 20 7 38 18 38 c11 0 18 -18 18 -38 c0 -16 -5 -30 -18 -30 Z" fill="#c07a3a"/>')
-            S += [f'<path d="M{cx-16} {y} q16 5 32 0" stroke="#a05f26" stroke-width="2" fill="none"/>' for y in (34,48,62,74)]
-    elif kind=="code":
-        S.append('<rect width="100" height="108" fill="#1e2430"/>')
-        S += [f'<rect x="{6+(i*13)%60}" y="{8+i*7}" width="{18+(i*11)%40}" height="3" rx="1.5" fill="#3d5a80" opacity="{0.35+0.05*(i%5)}"/>' for i in range(14)]
-        S.append('<text x="50" y="66" font-family="monospace" font-size="30" fill="#2f4763" text-anchor="middle">{ }</text>')
-    elif kind=="palace":
-        S.append('<rect width="100" height="108" fill="#7b1f2b"/>')
-        S += [f'<path d="M{x} {y} l5 -8 l5 8 l-5 8 Z" fill="#9c3040"/>' for y in range(6,106,16) for x in range(2,100,16)]
-        S += [f'<circle cx="{x+5}" cy="{y}" r="2" fill="#c9a23f"/>' for y in range(14,106,16) for x in range(2,100,16)]
-    elif kind=="space":   # космос — как просили
-        S.append('<rect width="100" height="108" fill="#141a2e"/>')
-        S += [f'<circle cx="{(i*37)%100}" cy="{(i*23)%108}" r="{0.7+ (i%3)*0.5}" fill="#fff" opacity="{0.4+0.15*(i%4)}"/>' for i in range(46)]
-        S.append('<circle cx="76" cy="26" r="15" fill="#2f4c86"/><ellipse cx="76" cy="26" rx="23" ry="6" fill="none" stroke="#7d93c4" stroke-width="1.6" transform="rotate(-18 76 26)"/>')
-    elif kind=="money":
-        S.append('<rect width="100" height="108" fill="#2f2740"/>')
-        S += [f'<text x="{x}" y="{y}" font-family="Oswald,sans-serif" font-size="15" fill="#c9a23f" opacity=".5" text-anchor="middle">₽</text>'
-              for y in range(16,110,18) for x in range(10,100,20)]
-    elif kind=="yard":    # панельки во дворе
-        S.append('<rect width="100" height="108" fill="#b9c3cc"/>')
-        for i,(x,w,h) in enumerate([(0,26,46),(28,22,58),(52,26,40),(80,24,52)]):
-            S.append(f'<rect x="{x}" y="{100-h}" width="{w}" height="{h}" fill="{"#8d9aa6" if i%2 else "#7e8b98"}"/>')
-            S += [f'<rect x="{x+3+c*7}" y="{100-h+5+r*8}" width="4" height="5" fill="#dfe6ec" opacity=".8"/>'
-                  for r in range((h-8)//8) for c in range((w-4)//7)]
-        S.append('<rect x="0" y="98" width="100" height="10" fill="#6f7a85"/>')
-    elif kind=="gold":
-        S.append('<rect width="100" height="108" fill="#8a6512"/>')
-        S += [f'<path d="M50 54 L{50+70*__import__("math").cos(a)} {54+70*__import__("math").sin(a)} L{50+70*__import__("math").cos(a+0.13)} {54+70*__import__("math").sin(a+0.13)} Z" fill="#c9a23f" opacity=".55"/>'
-              for a in [i*0.393 for i in range(16)]]
-        S += [f'<circle cx="{x}" cy="{y}" r="5" fill="#e8c65c" stroke="#a8801f" stroke-width="1.2"/>' for x,y in [(14,88),(30,96),(72,92),(88,82)]]
-    else:
-        S.append('<rect width="100" height="108" fill="#e8e2d4"/>')
-    return "".join(S)
+    """Возвращает <image> со сценой + лёгкое затемнение, чтобы фигура читалась поверх."""
+    if kind not in _bgcache:
+        f = os.path.join(BGDIR, kind + ".webp")
+        if not os.path.exists(f):
+            _bgcache[kind] = '<rect width="100" height="108" fill="#e8e2d4"/>'
+        else:
+            data = base64.b64encode(open(f, "rb").read()).decode()
+            _bgcache[kind] = (f'<image x="0" y="0" width="100" height="108" '
+                              f'href="data:image/webp;base64,{data}" preserveAspectRatio="xMidYMid slice"/>'
+                              f'<rect width="100" height="108" fill="#000" opacity=".12"/>')
+    extra = ""
+    if kind == "doner":
+        # генератор упорно рисует бургер вместо вертела — шампуры дорисовываем вектором
+        for cx in (13, 87):
+            extra += (f'<rect x="{cx-1.3}" y="4" width="2.6" height="100" fill="#b8c0c6"/>'
+                      f'<path d="M{cx} 14 c-11 0 -15 12 -15 27 c0 19 6 34 15 34 c9 0 15 -15 15 -34 '
+                      f'c0 -15 -4 -27 -15 -27 Z" fill="#b06a2c" stroke="#7d4718" stroke-width="1.2"/>')
+            for y in (30, 42, 54, 66):
+                extra += f'<path d="M{cx-13} {y} q13 4 26 0" stroke="#8a4c1d" stroke-width="1.5" fill="none" opacity=".8"/>'
+    return _bgcache[kind] + extra
 
 SHIELD_OUT = "M50 2 L95 15 V56 Q95 92 50 108 Q5 92 5 56 V15 Z"
 SHIELD_IN  = "M50 7 L90 19 V56 Q90 88 50 102 Q10 88 10 56 V19 Z"
