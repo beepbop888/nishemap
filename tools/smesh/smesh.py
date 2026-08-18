@@ -62,6 +62,34 @@ def topper(kind, c2, cx=50, cy=50, R=30):
                                 f'<path d="M{cx-8} {T} q3 -9 -1 -14 M{cx+2} {T-2} q3 -10 -1 -15" fill="none" stroke="#c9c2ae" stroke-width="2.2" stroke-linecap="round"/>')
     return ""
 
+BODY = {
+ "shaurmaster":"apron","shaurmaster_f":"apron","barista_f":"apron","barista_m":"apron",
+ "zapas_m":"vest","zapas_f":"vest","office_m":"tieb","office_f":"tieb",
+ "pvz_f":"badge","pvz_m":"badge","tsar":"barmy","tsar_f":"barmy",
+ "kosmonavt":"suit","kosmonavt_f":"suit","oligarkh":"bowtie","oligarkh_f":"fur",
+ "legenda":"medals","legenda_f":"medals","zoloto":"barmy","zoloto_f":"barmy",
+ "samokat_m":"zip","samokat_f":"zip","itshnik_m":"zip","itshnik_f":"zip",
+ "student_m":"strings","student_f":"strings","doshik_m":"cup","doshik_f":"cup",
+}
+def bodymark(kind, cx=50, cy=50, R=30):
+    B = cy + 16
+    if kind=="apron":  return (f'<path d="M{cx-13} {B-2} q13 -5 26 0 l4 18 h-34 Z" fill="#f6f4ef" stroke="{INK}" stroke-width="2.2"/>')
+    if kind=="vest":   return (f'<path d="M{cx-17} {B-4} q6 8 17 8 q11 0 17 -8 l3 16 h-40 Z" fill="#f2f1ee" stroke="{INK}" stroke-width="2.2"/>')
+    if kind=="tieb":   return (f'<path d="M{cx-5} {B-4} l5 -5 l5 5 l-3 15 h-4 Z" fill="#3f4d63" stroke="{INK}" stroke-width="2"/>')
+    if kind=="badge":  return (f'<rect x="{cx+4}" y="{B-2}" width="12" height="9" rx="1.5" fill="#f6f4ef" stroke="{INK}" stroke-width="2"/>')
+    if kind=="barmy":  return (f'<path d="M{cx-19} {B-6} q19 12 38 0 q-4 14 -19 14 q-15 0 -19 -14 Z" fill="#e8b93c" stroke="{INK}" stroke-width="2.2"/>'
+                               f'<circle cx="{cx}" cy="{B+4}" r="3.2" fill="#c8322a" stroke="{INK}" stroke-width="1.6"/>')
+    if kind=="suit":   return (f'<rect x="{cx-16}" y="{B-4}" width="32" height="8" rx="3" fill="#c9c5bb" stroke="{INK}" stroke-width="2"/>')
+    if kind=="bowtie": return (f'<path d="M{cx-11} {B-3} l9 5 l-9 5 Z M{cx+11} {B-3} l-9 5 l9 5 Z" fill="#26262a" stroke="{INK}" stroke-width="1.8"/>')
+    if kind=="fur":    return (f'<path d="M{cx-20} {B-4} q20 14 40 0 q-3 16 -20 16 q-17 0 -20 -16 Z" fill="#f6f4ef" stroke="{INK}" stroke-width="2.2"/>')
+    if kind=="medals": return ("".join(f'<rect x="{cx-14+i*9}" y="{B-2}" width="7" height="6" rx="1" fill="{c}" stroke="{INK}" stroke-width="1.6"/>'
+                               for i,c in enumerate(["#c8322a","#e8b93c","#8b98a5"])))
+    if kind=="zip":    return (f'<path d="M{cx} {B-6} l0 20" stroke="{INK}" stroke-width="2.4"/>')
+    if kind=="strings":return (f'<path d="M{cx-6} {B-4} l-2 16 M{cx+6} {B-4} l2 16" stroke="#e8e2d4" stroke-width="2.6" stroke-linecap="round"/>')
+    if kind=="cup":    return (f'<path d="M{cx-8} {B-2} h16 l-2 14 h-12 Z" fill="#eceadf" stroke="{INK}" stroke-width="2"/>'
+                               f'<rect x="{cx-10}" y="{B-6}" width="20" height="5" rx="2" fill="#d4402e" stroke="{INK}" stroke-width="1.8"/>')
+    return ""
+
 def smesh(cid, name, price, theme):
     body, top, c2 = LOOK[cid]
     t = TIER(price); cx, cy, R = 50, 50, 30
@@ -71,13 +99,13 @@ def smesh(cid, name, price, theme):
         for p in [f"M{cx-26} {cy+14} l-11 12", f"M{cx+26} {cy+14} l11 12",
                   f"M{cx-11} {cy+29} l-4 13", f"M{cx+11} {cy+29} l4 13"])
     feet = "".join(f'<ellipse cx="{x}" cy="{cy+44}" rx="6" ry="3.4" fill="{INK}"/>' for x in (cx-16, cx+16))
-    eyes = (f'<circle cx="{cx-10}" cy="{cy-6}" r="11" fill="#fff" stroke="{INK}" stroke-width="2.4"/>'
-            f'<circle cx="{cx+10}" cy="{cy-6}" r="11" fill="#fff" stroke="{INK}" stroke-width="2.4"/>'
-            f'<circle cx="{cx-8}" cy="{cy-4}" r="4.6" fill="{INK}"/><circle cx="{cx+12}" cy="{cy-4}" r="4.6" fill="{INK}"/>'
-            f'<circle cx="{cx-10}" cy="{cy-7}" r="1.7" fill="#fff"/><circle cx="{cx+10}" cy="{cy-7}" r="1.7" fill="#fff"/>')
-    mouth = f'<path d="M{cx-8} {cy+12} q8 8 16 0" fill="none" stroke="{INK}" stroke-width="2.6" stroke-linecap="round"/>'
-    cheeks = (f'<circle cx="{cx-21}" cy="{cy+8}" r="5" fill="#e79aa0" opacity=".55"/>'
-              f'<circle cx="{cx+21}" cy="{cy+8}" r="5" fill="#e79aa0" opacity=".55"/>')
+    eyes = (f'<circle cx="{cx-10}" cy="{cy-10}" r="11" fill="#fff" stroke="{INK}" stroke-width="2.4"/>'
+            f'<circle cx="{cx+10}" cy="{cy-10}" r="11" fill="#fff" stroke="{INK}" stroke-width="2.4"/>'
+            f'<circle cx="{cx-8}" cy="{cy-8}" r="4.6" fill="{INK}"/><circle cx="{cx+12}" cy="{cy-8}" r="4.6" fill="{INK}"/>'
+            f'<circle cx="{cx-10}" cy="{cy-11}" r="1.7" fill="#fff"/><circle cx="{cx+10}" cy="{cy-11}" r="1.7" fill="#fff"/>')
+    mouth = f'<path d="M{cx-8} {cy+8} q8 8 16 0" fill="none" stroke="{INK}" stroke-width="2.6" stroke-linecap="round"/>'
+    cheeks = (f'<circle cx="{cx-21}" cy="{cy+4}" r="5" fill="#e79aa0" opacity=".55"/>'
+              f'<circle cx="{cx+21}" cy="{cy+4}" r="5" fill="#e79aa0" opacity=".55"/>')
     fs = 7.0 if len(name) > 15 else 8.4
     return f'''<svg viewBox="0 0 100 128" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="{name}">
 <defs><clipPath id="sm_{cid}"><path d="M50 7 L90 19 V56 Q90 88 50 102 Q10 88 10 56 V19 Z"/></clipPath>
@@ -91,6 +119,7 @@ def smesh(cid, name, price, theme):
   <circle cx="{cx}" cy="{cy}" r="{R}" fill="{body}" stroke="{INK}" stroke-width="3"/>
   <circle cx="{cx}" cy="{cy}" r="{R}" fill="url(#sg_{cid})"/>
   {cheeks}{eyes}{mouth}
+  {bodymark(BODY.get(cid,''))}
   {topper(top, c2)}
 </g>
 <path d="M50 7 L90 19 V56 Q90 88 50 102 Q10 88 10 56 V19 Z" fill="none" stroke="{RIM[t]}" stroke-width="2.6"/>
