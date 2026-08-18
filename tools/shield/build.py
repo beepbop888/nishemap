@@ -8,20 +8,20 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 ART = os.path.join(ROOT, "art")
 
 CHARS = [
- ("student_m","Студент",0,"study"),      ("student_f","Студентка",0,"study"),
- ("office_m","Офисный",0,"office"),      ("office_f","Офисная",0,"office"),
- ("zapas_m","Запасливый",0,"dacha"),     ("zapas_f","Запасливая",0,"dacha"),
- ("doshik_m","Дошиковод",50,"noodle"),   ("doshik_f","Дошиководка",50,"noodle"),
- ("barista_f","Бариста",75,"coffee"),    ("barista_m","Бариста",75,"coffee"),
- ("samokat_m","Самокатчик",100,"speed"), ("samokat_f","Самокатчица",100,"speed"),
- ("pvz_f","Пункт выдачи",125,"boxes"),   ("pvz_m","Пункт выдачи",125,"boxes"),
- ("shaurmaster","Шаурмастер",150,"doner"),("shaurmaster_f","Шаурмастерица",150,"doner"),
- ("itshnik_m","Айтишник",225,"code"),    ("itshnik_f","Айтишница",225,"code"),
- ("tsar","Царь столовой",275,"palace"),  ("tsar_f","Царица столовой",275,"palace"),
- ("kosmonavt","Космонавт",425,"space"),  ("kosmonavt_f","Космонавтка",425,"space"),
- ("oligarkh","Олигарх",650,"money"),     ("oligarkh_f","Олигархиня",650,"money"),
- ("legenda","Легенда района",900,"yard"),("legenda_f","Легенда района",900,"yard"),
- ("zoloto","Золотой нищеброд",1650,"gold"),("zoloto_f","Золотая нищебродка",1650,"gold"),
+ ("student_m","Студент",0,"study","м"),      ("student_f","Студентка",0,"study","м"),
+ ("office_m","Офисный",0,"office","м"),      ("office_f","Офисная",0,"office","м"),
+ ("zapas_m","Запасливый",0,"dacha","м"),     ("zapas_f","Запасливая",0,"dacha","м"),
+ ("doshik_m","Дошиковод",50,"noodle","м"),   ("doshik_f","Дошиководка",50,"noodle","м"),
+ ("barista_f","Бариста",75,"coffee","ж"),("barista_m","Бариста",75,"coffee","м"),
+ ("samokat_m","Самокатчик",100,"speed","м"), ("samokat_f","Самокатчица",100,"speed","м"),
+ ("pvz_f","Пункт выдачи",125,"boxes","ж"),   ("pvz_m","Пункт выдачи",125,"boxes","ж"),
+ ("shaurmaster","Шаурмастер",150,"doner","м"),("shaurmaster_f","Шаурмастерица",150,"doner","м"),
+ ("itshnik_m","Айтишник",225,"code","м"),    ("itshnik_f","Айтишница",225,"code","м"),
+ ("tsar","Царь столовой",275,"palace","м"),  ("tsar_f","Царица столовой",275,"palace","м"),
+ ("kosmonavt","Космонавт",425,"space","м"),  ("kosmonavt_f","Космонавтка",425,"space","м"),
+ ("oligarkh","Олигарх",650,"money","м"),     ("oligarkh_f","Олигархиня",650,"money","м"),
+ ("legenda","Легенда района",900,"yard","м"),("legenda_f","Легенда района",900,"yard","ж"),
+ ("zoloto","Золотой нищеброд",1650,"gold","м"),("zoloto_f","Золотая нищебродка",1650,"gold","м"),
 ]
 TIER  = lambda p: 0 if p==0 else 1 if p<200 else 2 if p<700 else 3
 RIM   = ['#b9b1a1','#b87d3e','#8b98a5','#c9a23f']
