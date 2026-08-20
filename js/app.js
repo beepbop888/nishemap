@@ -36,8 +36,17 @@
   };
 
   /* ---------- Telegram Mini App ---------- */
-  var TG = (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData !== undefined)
-    ? window.Telegram.WebApp : null;
+  /* SDK телеграма подключён на любой странице и в обычном браузере ставит initData = ""
+     — то есть !== undefined. Из-за этого сайт считал себя мини-аппом и прятал кнопку
+     «Открыть в Telegram». Признак настоящего мини-аппа: непустой initData ИЛИ известная платформа. */
+  var TG = (function () {
+    var w = window.Telegram && window.Telegram.WebApp;
+    if (!w) return null;
+    var real = (typeof w.initData === "string" && w.initData.length > 0) ||
+               (w.platform && w.platform !== "unknown");
+    return real ? w : null;
+  })();
+  if (TG) document.body.classList.add("in-tg");   /* внутри телеграма кнопка «открыть» не нужна */
   if (TG) {
     try {
       TG.ready(); TG.expand();
@@ -234,37 +243,28 @@
     return null;
   }
 
-  var AVATARS = [
-    // бесплатные: три мужских, три женских
-    { id: "student",    t: "студент",    d: "живу на дошике до стипендии",    price: 0, sex: "м" },
-    { id: "rabotyaga",  t: "работяга",   d: "обед в термосе, добавка в душе", price: 0, sex: "м" },
-    { id: "kurier",     t: "курьер",     d: "знает все дворы наизусть",       price: 0, sex: "м" },
-    { id: "studentka",  t: "студентка",  d: "кофе с собой, еда по акции",     price: 0, sex: "ж" },
-    { id: "babushka",   t: "бабушка",    d: "с авоськой мимо всех наценок",   price: 0, sex: "ж" },
-    { id: "ofisnaya",   t: "офисная",    d: "обед за свой счёт, увы",         price: 0, sex: "ж" },
-    // за монеты — парами, чтобы не выбирать между полом и персонажем
-    { id: "doshikovod",     t: "дошиковод",    d: "кипяток — мой шеф-повар",       price: 50,   sex: "м" },
-    { id: "doshikovodka",   t: "дошиководка",  d: "кипяток — мой шеф-повар",       price: 50,   sex: "ж" },
-    { id: "shaurmaster",    t: "шаурмастер",   d: "знает лучший лаваш в городе",   price: 100,  sex: "м" },
-    { id: "shaurmasterica", t: "шаурмастерица",d: "знает лучший лаваш в городе",   price: 100,  sex: "ж" },
-    { id: "gopnik",         t: "гопник",       d: "семки есть? а если найду",      price: 175 },
-    { id: "dvornik",        t: "дворник",      d: "встаёт раньше всей Москвы",     price: 250 },
-    { id: "hokkeist",       t: "хоккеист",     d: "после тренировки — в столовую", price: 400,  sex: "м" },
-    { id: "figuristka",     t: "фигуристка",   d: "прыжок в четыре оборота за 200 ₽", price: 400, sex: "ж" },
-    { id: "balerina",       t: "балерина",     d: "порция маленькая, зато красиво",price: 600,  sex: "ж" },
-    { id: "kosmonavt",      t: "космонавт",    d: "ел борщ в невесомости",         price: 850 },
-    { id: "tsar",           t: "царь",         d: "компот наливают без очереди",   price: 1100 },
-    { id: "oligarh",        t: "олигарх",      d: "берёт добавку не глядя",        price: 1350, sex: "м" },
-    { id: "oligarhinya",    t: "олигархиня",   d: "берёт добавку не глядя",        price: 1350, sex: "ж" },
-    { id: "zolotoy",        t: "золотой нищеброд", d: "200 мест на карте. выше только звёзды", price: 1650 },
-  ];
+  /* Состав берём из assets/avatars.js — он собирается из сгенерированной графики.
+     Гопник, дворник, хоккеист, фигуристка и балерина отложены до следующей партии. */
+  var AVMETA = window.NISHEMAP_AVMETA || [];
+  var AVIMG  = window.NISHEMAP_AVATARS || {};
+  var AVBG   = window.NISHEMAP_AVBG || {};
+  var AVATARS = AVMETA.map(function (m) {
+    return { id: m.id, t: m.t, price: m.p, bg: m.bg, sex: m.s, d: "" };
+  });
   var BADGES = window.NISHEMAP_BADGES || {};
   function badgeHtml(key, size) {
     var s = size || 28, svg = BADGES[key];
     if (!svg) return '<span class="badge-miss" style="width:' + s + 'px;height:' + s + 'px"></span>';
     return '<span class="badge-wrap" style="width:' + s + 'px;height:' + s + 'px">' + svg + "</span>";
   }
-  function avatarSvg(id, size) { return badgeHtml(id, size); }
+  /* Аватар = вырезанный персонаж на своём фоне, всё в круге. */
+  function avatarSvg(id, size) {
+    var s = size || 28, m = AVMETA.filter(function (x) { return x.id === id; })[0];
+    if (!m || !AVIMG[id]) return badgeHtml(id, s);
+    return '<span class="av" style="width:' + s + 'px;height:' + s + 'px' +
+      (AVBG[m.bg] ? ';background-image:url(' + AVBG[m.bg] + ')' : '') + '">' +
+      '<img src="' + AVIMG[id] + '" alt=""></span>';
+  }
   function myAvatar() { return localStorage.getItem("nishemap.avatar") || ""; }
   function ownedAvatars() {
     try { return JSON.parse(localStorage.getItem("nishemap.owned")) || []; } catch (e) { return []; }
@@ -314,12 +314,12 @@
   function paintRank() {
     var el0 = document.getElementById("rank");
     if (!el0) return;
-    var coins = myCoins(), sent = myCount();
-    if (!sent) { el0.hidden = true; return; }
-    el0.hidden = false;
-    el0.innerHTML = (myAvatar() ? avatarSvg(myAvatar(), 18) : "") +
-      "<span>" + esc(rankFor(coins).t) + " · " + coins + "</span>";
-    el0.title = "Монет: " + coins + " (за проверенные цены). Сдано всего: " + sent + ".";
+    var coins = coinsBalance(), me = myAvatar() || (AVATARS[0] && AVATARS[0].id);
+    el0.hidden = false;                       /* показываем всегда: это вход в лавку */
+    el0.innerHTML =
+      '<span class="rank-av">' + avatarSvg(me, 44) + '</span>' +
+      '<span class="rank-coins"><b>' + coins + '</b><i>монет</i></span>';
+    el0.title = "Твой аватар и монеты. Нажми, чтобы сменить аватар.";
   }
 
   function coordsFromLink(s) {

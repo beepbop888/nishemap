@@ -725,3 +725,44 @@ input[name="price"]{font-family:var(--font-mono); font-weight:700}
   @keyframes fade-in{to{opacity:1}}
   .flash{animation:flash-go 240ms ease-out both !important}
 }
+
+
+/* ============ аватар в шапке: крупный круг + монеты ============ */
+/* Круг — главная кнопка: по ней открывается лавка. На телефоне он крупный,
+   чтобы попадать пальцем и чтобы аватар было видно, а не угадывать. */
+.rank{
+  display:flex; align-items:center; gap:10px; margin-left:auto;
+  background:var(--paper-raised); border:1px solid var(--line); border-radius:var(--r-pill);
+  padding:4px 12px 4px 4px; cursor:pointer; min-height:52px;
+}
+.rank:hover{border-color:var(--ink)}
+.rank-av{display:block; line-height:0}
+.rank-coins{display:flex; flex-direction:column; line-height:1.05; text-align:left}
+.rank-coins b{font:700 17px/1 var(--font-mono); font-variant-numeric:tabular-nums; color:var(--gold-lo)}
+.rank-coins i{font:600 9px/1 var(--font-display); text-transform:uppercase;
+  letter-spacing:.08em; color:var(--ink-soft); font-style:normal; margin-top:2px}
+
+/* аватар: персонаж на своём фоне, обрезано кругом */
+.av{
+  display:inline-block; position:relative; border-radius:50%; overflow:hidden;
+  background:var(--paper) center/cover no-repeat; border:2px solid var(--ink);
+  box-shadow:0 1px 3px rgba(35,35,35,.3); flex:none;
+}
+.av img{position:absolute; left:50%; bottom:0; transform:translateX(-50%);
+  height:88%; width:auto; display:block}
+
+/* ссылка в телеграм — только вне телеграма, скрывается через .in-tg на body */
+.tg-open{
+  display:inline-flex; align-items:center; height:28px; padding:0 10px;
+  font:600 10px/1 var(--font-display); text-transform:uppercase; letter-spacing:.06em;
+  color:#fff; background:#2ea6da; border-radius:var(--r-pill); text-decoration:none; white-space:nowrap;
+}
+.tg-open:hover{background:#2593c4}
+body.in-tg .tg-open{display:none}
+
+@media (max-width:719px){
+  /* на телефоне круг ещё крупнее — это основной вход в лавку */
+  .rank{min-height:60px; padding:5px 14px 5px 5px}
+  .rank-coins b{font-size:19px}
+  .tg-open{font-size:9px; padding:0 8px; height:26px}
+}
