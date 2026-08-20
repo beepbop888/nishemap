@@ -766,3 +766,23 @@ body.in-tg .tg-open{display:none}
   .rank-coins b{font-size:19px}
   .tg-open{font-size:9px; padding:0 8px; height:26px}
 }
+
+
+/* ============ разбор монет внутри лавки ============ */
+/* Раньше это была отдельная панель без единого правила стиля — в телеграме
+   её выносило за правый край экрана. Теперь это обычная «гармошка» в модалке. */
+.coins-info{
+  margin:12px 0 4px; padding:10px 12px; background:var(--paper);
+  border:1px solid var(--line); border-radius:var(--r-sm); font-size:var(--fs-sm);
+}
+.coins-info summary{
+  cursor:pointer; font:600 11px/1.2 var(--font-display); text-transform:uppercase;
+  letter-spacing:.06em; color:var(--ink-soft); list-style:none;
+}
+.coins-info summary::-webkit-details-marker{display:none}
+.coins-info summary::after{content:" ▾"; opacity:.6}
+.coins-info[open] summary::after{content:" ▴"}
+.coins-info p{margin:8px 0}
+.coins-info ul{margin:0; padding-left:18px}
+.coins-info li{margin-bottom:4px}
+.coins-info span{opacity:.7}

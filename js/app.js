@@ -352,38 +352,25 @@
 
   /* объясняем, зачем монеты — прямо в интерфейсе */
   var rankBtn = document.getElementById("rank");
-  if (rankBtn) rankBtn.addEventListener("click", function () {
-    var old = document.querySelector(".coins-info");
-    if (old) { old.remove(); return; }
-    var coins = myCoins(), nx = nextRank(coins);
-    var box = el("div", "coins-info",
-      "<h4>Монеты</h4>" +
-      (function () {
-        var b = coinBreakdown(), st = streakState(), nx = nextMilestone(verifiedCount());
-        return "<p style='margin:0 0 8px'>Монета приходит, когда район подтвердит твою цену. " +
-          "Заработано: <b>" + myCoins() + "</b>, на руках: <b>" + coinsBalance() + "</b>.</p>" +
-          "<ul>" +
-          "<li>Позиции: <b>" + b.items + "</b> <span style='opacity:.7'>(до 3 с одного места)</span></li>" +
-          "<li>Новые заведения: <b>" + b.venues + "</b> <span style='opacity:.7'>(+2 за первую цену в месте)</span></li>" +
-          "<li>Фото меню: <b>" + b.photos + "</b> <span style='opacity:.7'>(+1 за место)</span></li>" +
-          "<li>Новые районы: <b>" + b.districts + "</b> <span style='opacity:.7'>(+10 за пустой район)</span></li>" +
-          "<li>Серия: <b>" + b.streak + "</b> · недель подряд: " + st.weeks +
-            " · на этой неделе " + st.thisWeek + " из " + STREAK_NEED + "</li>" +
-          (nx ? "<li>До вехи «" + nx.places + " позиций»: ещё <b>" + (nx.places - verifiedCount()) + "</b> (+" + nx.bonus + ")</li>" : "") +
-          "</ul>";
-      })());
-    box.appendChild(el("div", "", '<button type="button" class="btn btn-primary btn-wide" id="open-shop" style="margin-top:12px">Лавка аватаров</button>'));
-    box.querySelector("#open-shop").addEventListener("click", function (ev) {
-      ev.stopPropagation(); box.remove(); openShop();
-    });
-    document.querySelector(".brand").appendChild(box);
-    setTimeout(function () {
-      document.addEventListener("click", function h(e) {
-        if (!e.target.closest(".coins-info") && !e.target.closest("#rank")) { box.remove(); document.removeEventListener("click", h); }
-      });
-    }, 10);
-  });
+  /* Нажатие на круг с аватаром открывает ЛАВКУ — так и просили.
+     Разбор монет переехал внутрь лавки: раньше он вылезал отдельной панелью,
+     у которой не было стилей, и в телеграме её выносило за экран. */
+  if (rankBtn) rankBtn.addEventListener("click", function () { openShop(); });
 
+  function coinsBreakdownHtml() {
+    var b = coinBreakdown(), st = streakState(), nx = nextMilestone(verifiedCount());
+    return '<details class="coins-info"><summary>Откуда берутся монеты</summary>' +
+      "<p>Монета приходит, когда район подтвердит твою цену. Заработано: <b>" + myCoins() +
+      "</b>, на руках: <b>" + coinsBalance() + "</b>.</p><ul>" +
+      "<li>Позиции: <b>" + b.items + "</b> <span>(до 3 с одного места)</span></li>" +
+      "<li>Новые заведения: <b>" + b.venues + "</b> <span>(+2 за первую цену в месте)</span></li>" +
+      "<li>Фото меню: <b>" + b.photos + "</b> <span>(+1 за место)</span></li>" +
+      "<li>Новые районы: <b>" + b.districts + "</b> <span>(+10 за пустой район)</span></li>" +
+      "<li>Серия: <b>" + b.streak + "</b> · недель подряд: " + st.weeks +
+        " · на этой неделе " + st.thisWeek + " из " + STREAK_NEED + "</li>" +
+      (nx ? "<li>До вехи «" + nx.places + " позиций»: ещё <b>" + (nx.places - verifiedCount()) +
+        "</b> (+" + nx.bonus + ")</li>" : "") + "</ul></details>";
+  }
 
   /* плитка для шеринга: рисуем на canvas, чтобы можно было кинуть картинкой в чат */
   function shareTrophy(places) {
@@ -716,9 +703,9 @@
     var bal = coinsBalance(), earned = myCoins();
     document.getElementById("shop-balance").innerHTML =
       "<b>" + bal + "</b> монет на руках · заработано за всё время: " + earned;
-    body.innerHTML = bal === 0 && earned === 0
+    body.innerHTML = (bal === 0 && earned === 0
       ? '<p class="shop-hint">Монет пока нет. Самый быстрый способ: сдай точку <b>с фото меню</b> — такая цена считается проверенной сразу, без чужих подтверждений. Это +1 монета.</p>'
-      : '';
+      : '') + coinsBreakdownHtml();
     var earned = earnedTrophies(), allT = Object.keys(TROPHIES).map(Number).sort(function (a, b) { return a - b; });
     var tw = el("div", "");
     tw.innerHTML = '<h3 class="shop-group">Трофеи · ' + earned.length + " из " + allT.length + "</h3>";
