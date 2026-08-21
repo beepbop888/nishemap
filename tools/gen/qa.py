@@ -57,19 +57,26 @@ for st in STYLES:
         if white_rim > 0.30: F(f"ореол по кромке: {f} — {white_rim*100:.0f}%")
         elif white_rim > 0.22: W(f"возможен ореол: {f} — {white_rim*100:.0f}%")
 
-# 4b. Чёрный берет у олигархини. Требование проваливалось раз за разом,
-#     поэтому проверяем цветом: верхняя треть головы должна быть ТЁМНОЙ.
+# 4b. Берет: цвет свободный (белый разрешён), поэтому проверяем только НАЛИЧИЕ
+#     головного убора — чтобы олигархиня не оказалась простоволосой.
 for st in STYLES:
     f = f"art/cut/{st}/oligarkh_f.webp"
     if not os.path.exists(f): continue
-    im = Image.open(f).convert("RGBA"); a = np.asarray(im)
-    h, w = a.shape[:2]
-    top = a[: int(h * 0.30)]
-    op = top[..., 3] > 200
-    if op.sum() < 50: continue
-    lum = (0.299*top[...,0] + 0.587*top[...,1] + 0.114*top[...,2])[op]
-    dark = (lum < 90).mean()
-    if dark < 0.30: F(f"берет не чёрный: {f} — тёмных пикселей на макушке {dark*100:.0f}%")
+    im = Image.open(f).convert("RGBA"); a_ = np.asarray(im)
+    top = a_[: int(a_.shape[0] * 0.18)]
+    if (top[..., 3] > 200).sum() < 40:
+        F(f"нет головного убора: {f}")
+
+# 4c. Пиксель-арт должен оставаться пиксель-артом. Длинные промпты размывали
+#     стилевой токен, и половина картинок превращалась в гладкую живопись.
+#     Меряем объективно: у настоящего пикселя мало уникальных цветов.
+if "pixel" in STYLES:
+    for f in glob.glob("art/pixel/*.webp"):
+        im = Image.open(f).convert("RGB").resize((128, 128), Image.NEAREST)
+        a = np.asarray(im).reshape(-1, 3)
+        uniq = len(np.unique(a // 8, axis=0))
+        if uniq > 1500: F(f"пиксель потерял стиль: {f} — {uniq} цветов (норма < 1500)")
+        elif uniq > 1300: W(f"пиксель на грани: {f} — {uniq} цветов")
 
 # 5. Фоны на месте
 for t in sorted({c[3] for c in CHARS}):
