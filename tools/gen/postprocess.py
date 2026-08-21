@@ -5,7 +5,7 @@ import os, sys, glob
 from PIL import Image
 from rembg import remove, new_session
 SP = sys.argv[1]; sess = new_session("u2net")
-STYLES = ["disney","pixel","clay","book","toon"]
+STYLES = ["disney","pixel","clay","book","toon","sticker","ghibli"]
 def cut(im, hard):
     kw = dict(session=sess)
     if not hard:
@@ -27,7 +27,7 @@ for st in STYLES:
         if c.size[1] < im.size[1] * 0.65 and not (st == "pixel"):
             c = cut(im, hard=True); bb = c.getbbox()
             if bb: c = c.crop(bb)
-        c.thumbnail((208,208), Image.LANCZOS)
-        c.save(f"art/cut/{st}/{cid}.webp","WEBP",quality=82,method=6)
+        c.thumbnail((160,160), Image.LANCZOS)
+        c.save(f"art/cut/{st}/{cid}.webp","WEBP",quality=68,method=6)
     print("done", st, flush=True)
 print("POSTDONE")

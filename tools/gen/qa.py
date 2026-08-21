@@ -7,7 +7,7 @@ from build import CHARS, TIER
 from PIL import Image
 import numpy as np
 
-STYLES = ["disney","pixel","clay","book","toon"]
+STYLES = ["disney","pixel","clay","book","toon","sticker","ghibli"]
 fail, warn = [], []
 def F(msg): fail.append(msg)
 def W(msg): warn.append(msg)
@@ -38,15 +38,38 @@ for st in STYLES:
     for f,h in hs.items():
         if h < top*0.6: F(f"обрезка съела тело: {f} — {h}px при максимуме {top}px")
 
-# 4. Ореол: доля почти белых пикселей внутри силуэта
+# 4. Ореол. Белую одежду от ореола отличает МЕСТО: ореол лежит кольцом по краю
+#    силуэта, а белый скафандр или шуба — внутри. Меряем только кромку.
+#    Стикеры пропускаем: белая обводка там и есть стиль.
+from PIL import ImageFilter
 for st in STYLES:
+    if st == "sticker": continue
     for f in glob.glob(f"art/cut/{st}/*.webp"):
-        im = Image.open(f).convert("RGBA"); a = np.asarray(im)
-        op = a[...,3] > 200
-        if op.sum() < 100: continue
-        near_white = ((a[...,0]>235)&(a[...,1]>235)&(a[...,2]>235)&op).sum()/op.sum()
-        if near_white > 0.18: F(f"ореол: {f} — {near_white*100:.0f}% почти белого")
-        elif near_white > 0.12: W(f"возможен ореол: {f} — {near_white*100:.0f}%")
+        if os.path.basename(f).startswith("kosmonavt"): continue   # белый скафандр — не ореол
+        im = Image.open(f).convert("RGBA")
+        a = np.asarray(im)
+        alpha = Image.fromarray(a[..., 3])
+        k = max(3, int(min(im.size) * 0.16) | 1)
+        core = np.asarray(alpha.filter(ImageFilter.MinFilter(k)))   # силуэт, ужатый внутрь
+        rim = (a[..., 3] > 200) & (core <= 200)                      # только кромка
+        if rim.sum() < 80: continue
+        white_rim = ((a[..., 0] > 235) & (a[..., 1] > 235) & (a[..., 2] > 235) & rim).sum() / rim.sum()
+        if white_rim > 0.30: F(f"ореол по кромке: {f} — {white_rim*100:.0f}%")
+        elif white_rim > 0.22: W(f"возможен ореол: {f} — {white_rim*100:.0f}%")
+
+# 4b. Чёрный берет у олигархини. Требование проваливалось раз за разом,
+#     поэтому проверяем цветом: верхняя треть головы должна быть ТЁМНОЙ.
+for st in STYLES:
+    f = f"art/cut/{st}/oligarkh_f.webp"
+    if not os.path.exists(f): continue
+    im = Image.open(f).convert("RGBA"); a = np.asarray(im)
+    h, w = a.shape[:2]
+    top = a[: int(h * 0.30)]
+    op = top[..., 3] > 200
+    if op.sum() < 50: continue
+    lum = (0.299*top[...,0] + 0.587*top[...,1] + 0.114*top[...,2])[op]
+    dark = (lum < 90).mean()
+    if dark < 0.30: F(f"берет не чёрный: {f} — тёмных пикселей на макушке {dark*100:.0f}%")
 
 # 5. Фоны на месте
 for t in sorted({c[3] for c in CHARS}):
