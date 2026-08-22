@@ -45,7 +45,8 @@ from PIL import ImageFilter
 for st in STYLES:
     if st == "sticker": continue
     for f in glob.glob(f"art/cut/{st}/*.webp"):
-        if os.path.basename(f).startswith("kosmonavt"): continue   # белый скафандр — не ореол
+        # белый скафандр и белая шуба — это костюм по ТЗ, а не ореол
+        if os.path.basename(f).startswith(("kosmonavt", "oligarkh_f")): continue
         im = Image.open(f).convert("RGBA")
         a = np.asarray(im)
         alpha = Image.fromarray(a[..., 3])
