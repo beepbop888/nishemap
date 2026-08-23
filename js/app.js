@@ -1280,13 +1280,17 @@
     { enableHighAccuracy: true, timeout: 8000 });
   });
 
+  /* Клавиатуру прячем ТОЛЬКО по реальному жесту пальцем (touchmove).
+     Слушать scroll нельзя: браузер сам скроллит поле в зону видимости при фокусе,
+     обработчик тут же снимал фокус — и форма дёргалась «мини-перезагрузкой». */
+  var lastFocus = 0;
+  document.addEventListener("focusin", function () { lastFocus = Date.now(); }, true);
   document.querySelectorAll(".modal-card").forEach(function (card) {
-    var hide = function () {
+    card.addEventListener("touchmove", function () {
+      if (Date.now() - lastFocus < 400) return;   // авто-скролл к полю — не жест
       var a = document.activeElement;
       if (a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)) a.blur();
-    };
-    card.addEventListener("touchmove", hide, { passive: true });
-    card.addEventListener("scroll", hide, { passive: true });
+    }, { passive: true });
   });
 
   form.addEventListener("submit", function (e) {

@@ -11,7 +11,7 @@ CHARS = [
  ("student_m","Студент",0,"study","м"),      ("student_f","Студентка",0,"study","ж"),
  ("office_m","Офисный",0,"office","м"),      ("office_f","Офисная",0,"office","ж"),
  ("zapas_m","Запасливый",0,"dacha","м"),     ("zapas_f","Запасливая",0,"dacha","ж"),
- ("doshik_m","Дошиковод",50,"noodle","м"),   ("doshik_f","Дошиководка",50,"noodle","ж"),
+ ("doshik_m","Дошиковод",50,"noodle","м"),   ("doshik_f","Дошиковод",50,"noodle","ж"),
  ("barista_f","Бариста",75,"coffee","ж"),("barista_m","Бариста",75,"coffee","м"),
  ("samokat_m","Самокатчик",100,"speed","м"), ("samokat_f","Самокатчица",100,"speed","ж"),
  ("pvz_f","Пункт выдачи",125,"boxes","ж"),   ("pvz_m","Пункт выдачи",125,"boxes","м"),
