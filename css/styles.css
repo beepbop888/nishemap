@@ -786,3 +786,47 @@ body.in-tg .tg-open{display:none}
 .coins-info ul{margin:0; padding-left:18px}
 .coins-info li{margin-bottom:4px}
 .coins-info span{opacity:.7}
+
+
+/* ============ лавка аватаров: вкладки, уровни, карточки ============ */
+/* Шапка: твой аватар крупно, баланс — самым большим числом в окне */
+#shop-balance{display:flex; align-items:center; gap:12px; margin:2px 0 12px}
+.shop-me .av{border-width:2.5px}
+.shop-bal{display:flex; flex-direction:column; line-height:1.2}
+.shop-bal b{font:700 24px/1 var(--font-mono); font-variant-numeric:tabular-nums; color:var(--gold-lo)}
+.shop-bal i{font:600 9.5px/1 var(--font-display); text-transform:uppercase; letter-spacing:.08em;
+  color:var(--ink-soft); font-style:normal; margin-top:3px}
+.shop-bal u{font-size:10.5px; color:var(--ink-soft); text-decoration:none; margin-top:4px}
+
+.shop-tabs{display:flex; gap:0; margin-bottom:14px; border:1px solid var(--line);
+  border-radius:var(--r-pill); overflow:hidden; background:var(--paper)}
+.shop-tab{flex:1; height:36px; border:0; background:none; cursor:pointer;
+  font:600 11px/1 var(--font-display); text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft)}
+.shop-tab.is-on{background:var(--ink); color:var(--paper)}
+
+.shop-group{display:flex; align-items:center; gap:8px;
+  font:600 12px/1 var(--font-display); text-transform:uppercase; letter-spacing:.07em;
+  color:var(--ink-soft); margin:16px 0 8px}
+.tier-dot{width:22px; height:9px; border-radius:2px; display:inline-block}
+
+.shop-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(104px,1fr)); gap:9px}
+.shop-card{
+  display:flex; flex-direction:column; align-items:center; gap:5px;
+  padding:12px 6px 9px; background:var(--paper-raised);
+  border:1.5px solid var(--line); border-top:3px solid var(--tier, var(--line));
+  border-radius:var(--r-md); cursor:pointer; text-align:center;
+}
+.shop-card:hover{border-color:var(--ink); border-top-color:var(--tier); transform:translateY(-1px)}
+.shop-card.is-active{border-color:var(--ok); background:#e8f2e8}
+.shop-card.is-locked{opacity:1}                     /* не глушим карточку целиком… */
+.shop-card.is-locked .shop-av{filter:grayscale(1) opacity(.45)}   /* …только аватар */
+.shop-av{line-height:0}
+.shop-name em{font-style:normal; opacity:.55; font-size:9px}
+.shop-tag{
+  font:700 10px/1 var(--font-mono); color:var(--gold-lo); background:var(--gold-bg);
+  border:1px solid var(--gold); border-radius:var(--r-pill); padding:4px 8px;
+  display:inline-flex; align-items:center; gap:4px; margin-top:2px;
+}
+.shop-card.is-locked .shop-tag{background:var(--paper); border-color:var(--line);
+  color:var(--ink-soft); font:600 9px/1 var(--font-display); letter-spacing:.02em}
+.shop-card.is-active .shop-tag{background:#d6ead6; border-color:var(--ok); color:var(--ok)}

@@ -724,62 +724,106 @@
   }
 
   /* ---------- лавка аватаров ---------- */
+  /* ---------- лавка: вкладки, уровни цветом, честные состояния карточек ---------- */
+  var TIER_OF = function (p) { return p === 0 ? 0 : p < 200 ? 1 : p < 700 ? 2 : 3; };
+  var TIER_META = [
+    { t: "Бесплатные",      c: "#b9b1a1" },
+    { t: "Бронза · 50–150", c: "#b87d3e" },
+    { t: "Серебро · 225–650", c: "#8b98a5" },
+    { t: "Золото · 900–1650", c: "#c9a23f" },
+  ];
+  var shopTab = "av";   // av | tr | coin
+
   function openShop() {
     var modal = document.getElementById("shop-modal");
     var body = document.getElementById("shop-body");
-    var bal = coinsBalance(), earned = myCoins();
-    document.getElementById("shop-balance").innerHTML =
-      "<b>" + bal + "</b> монет на руках · заработано за всё время: " + earned;
-    body.innerHTML = (bal === 0 && earned === 0
-      ? '<p class="shop-hint">Монет пока нет. Самый быстрый способ: сдай точку <b>с фото меню</b> — такая цена считается проверенной сразу, без чужих подтверждений. Это +1 монета.</p>'
-      : '') + coinsBreakdownHtml();
-    var earned = earnedTrophies(), allT = Object.keys(TROPHIES).map(Number).sort(function (a, b) { return a - b; });
-    var tw = el("div", "");
-    tw.innerHTML = '<h3 class="shop-group">Трофеи · ' + earned.length + " из " + allT.length + "</h3>";
-    var trow = el("div", "trophy-row");
-    allT.forEach(function (p) {
-      var got = earned.indexOf(p) !== -1;
-      var b = el("button", "trophy-cell" + (got ? "" : " is-locked"));
-      b.type = "button";
-      b.innerHTML = trophySvg(p, 44) + '<span>' + esc(TROPHIES[p].t) + "</span>";
-      b.title = TROPHIES[p].s;
-      if (got) b.addEventListener("click", function () { shareTrophy(p); });
-      trow.appendChild(b);
-    });
-    tw.appendChild(trow);
-    body.appendChild(tw);
+    var bal = coinsBalance();
 
-    ["Бесплатные", "За монеты"].forEach(function (title, gi) {
-      var list = AVATARS.filter(function (a) { return gi === 0 ? !a.price : a.price; });
-      var h = el("h3", "shop-group", esc(title));
-      body.appendChild(h);
-      var grid = el("div", "shop-grid");
-      list.forEach(function (a) {
-        var owned = ownsAvatar(a.id), active = myAvatar() === a.id, can = bal >= a.price;
-        var card = el("button", "shop-card" + (active ? " is-active" : "") + (!owned && !can ? " is-locked" : ""));
-        card.type = "button";
-        card.innerHTML = avatarSvg(a.id, 48) +
-          '<span class="shop-name">' + esc(a.t) + "</span>" +
-          '<span class="shop-desc">' + esc(a.d) + "</span>" +
-          '<span class="shop-tag">' + (active ? "надет" : owned ? "выбрать" :
-            '<span class="coin coin--gold"></span>' + a.price) + "</span>";
-        card.addEventListener("click", function () {
-          if (owned) {
-            localStorage.setItem("nishemap.avatar", a.id);
-            paintRank(); openShop();
-            return;
-          }
-          if (!can) { toast("Не хватает " + (a.price - bal) + " монет. Сдавай цены — район подтвердит."); return; }
-          if (buyAvatar(a.id)) {
-            localStorage.setItem("nishemap.avatar", a.id);
-            paintRank(); openShop();
-            spendAnimation(card, function () { revealAvatar(a); });
-          }
-        });
-        grid.appendChild(card);
-      });
-      body.appendChild(grid);
+    /* шапка: твой аватар крупно + баланс + до следующей покупки */
+    var me = myAvatar() || (AVATARS[0] && AVATARS[0].id);
+    var next = AVATARS.filter(function (a) { return a.price > 0 && !ownsAvatar(a.id) && a.price > bal; })
+                      .sort(function (x, y) { return x.price - y.price; })[0];
+    document.getElementById("shop-balance").innerHTML =
+      '<span class="shop-me">' + avatarSvg(me, 56) + "</span>" +
+      '<span class="shop-bal"><b>' + bal + '</b><i>монет на руках</i>' +
+      (next ? '<u>до «' + esc(next.t) + '»: ещё ' + (next.price - bal) + "</u>" : "") + "</span>";
+
+    /* вкладки */
+    var tabs = el("div", "shop-tabs");
+    [["av", "Аватары"], ["tr", "Трофеи"], ["coin", "Монеты"]].forEach(function (t) {
+      var b2 = el("button", "shop-tab" + (shopTab === t[0] ? " is-on" : ""), t[1]);
+      b2.type = "button";
+      b2.addEventListener("click", function () { shopTab = t[0]; openShop(); });
+      tabs.appendChild(b2);
     });
+    body.innerHTML = "";
+    body.appendChild(tabs);
+
+    if (shopTab === "tr") {
+      var got = earnedTrophies(), allT = Object.keys(TROPHIES).map(Number).sort(function (x, y) { return x - y; });
+      var tw = el("div", "");
+      tw.innerHTML = '<p class="shop-hint">Собрано ' + got.length + " из " + allT.length +
+        ". Нажми на свой трофей, чтобы похвастаться.</p>";
+      var trow = el("div", "trophy-row");
+      allT.forEach(function (p) {
+        var has = got.indexOf(p) !== -1;
+        var b3 = el("button", "trophy-cell" + (has ? "" : " is-locked"));
+        b3.type = "button";
+        b3.innerHTML = trophySvg(p, 44) + "<span>" + esc(TROPHIES[p].t) + "</span>";
+        b3.title = TROPHIES[p].s;
+        if (has) b3.addEventListener("click", function () { shareTrophy(p); });
+        trow.appendChild(b3);
+      });
+      tw.appendChild(trow);
+      body.appendChild(tw);
+    } else if (shopTab === "coin") {
+      if (bal === 0 && myCoins() === 0)
+        body.appendChild(el("p", "shop-hint",
+          "Монет пока нет. Самый быстрый способ: сдай точку <b>с фото меню</b> — такая цена " +
+          "считается проверенной сразу. Это +1 монета."));
+      var ci = el("div", ""); ci.innerHTML = coinsBreakdownHtml();
+      var det = ci.querySelector("details"); if (det) det.open = true;
+      body.appendChild(ci);
+    } else {
+      /* аватары по уровням; пары м/ж стоят рядом сами (порядок AVMETA) */
+      TIER_META.forEach(function (tm, ti) {
+        var list = AVATARS.filter(function (a) { return TIER_OF(a.price) === ti; });
+        if (!list.length) return;
+        var h = el("h3", "shop-group");
+        h.innerHTML = '<span class="tier-dot" style="background:' + tm.c + '"></span>' + tm.t;
+        body.appendChild(h);
+        var grid = el("div", "shop-grid");
+        list.forEach(function (a) {
+          var owned = ownsAvatar(a.id), active = myAvatar() === a.id, can = bal >= a.price;
+          var card = el("button", "shop-card" +
+            (active ? " is-active" : "") + (!owned && !can ? " is-locked" : ""));
+          card.type = "button";
+          card.style.setProperty("--tier", tm.c);
+          card.innerHTML =
+            '<span class="shop-av">' + avatarSvg(a.id, 64) + "</span>" +
+            '<span class="shop-name">' + esc(a.t) + (a.sex ? ' <em>' + a.sex + "</em>" : "") + "</span>" +
+            '<span class="shop-tag">' +
+              (active ? "✓ надет" : owned ? "выбрать" :
+               can && a.price ? '<span class="coin coin--gold"></span>' + a.price :
+               a.price ? "ещё " + (a.price - bal) + " монет" : "выбрать") + "</span>";
+          card.addEventListener("click", function () {
+            if (owned || !a.price) {
+              localStorage.setItem("nishemap.avatar", a.id);
+              paintRank(); openShop();
+              return;
+            }
+            if (!can) { toast("Не хватает " + (a.price - bal) + " монет. Сдавай цены — район подтвердит."); return; }
+            if (buyAvatar(a.id)) {
+              localStorage.setItem("nishemap.avatar", a.id);
+              paintRank(); openShop();
+              spendAnimation(card, function () { revealAvatar(a); });
+            }
+          });
+          grid.appendChild(card);
+        });
+        body.appendChild(grid);
+      });
+    }
     modal.hidden = false; backdrop.hidden = false;
   }
   document.querySelectorAll("[data-close-shop]").forEach(function (b) {
