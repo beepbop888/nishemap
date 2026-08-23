@@ -243,7 +243,11 @@
     400: { t: "Ветеран копеек",   s: "400 подтверждённых цен", metal: "gold"   },
     550: { t: "Легенда НищеMap",  s: "550 подтверждённых цен", metal: "legend" },
   };
-  function trophySvg(places, size) { return badgeHtml("t" + places, size); }
+  function trophySvg(places, size) {
+    var img = (window.NISHEMAP_TROPHY_IMG || {})[String(places)];
+    if (img) return '<img class="trophy-img" src="' + img + '" style="width:' + (size||44) + 'px;height:' + (size||44) + 'px" alt="">';
+    return badgeHtml("t" + places, size);
+  }
   function earnedTrophies() {
     var v = verifiedCount();
     return Object.keys(TROPHIES).map(Number).sort(function (a, b) { return a - b; })
@@ -769,7 +773,7 @@
         var has = got.indexOf(p) !== -1;
         var b3 = el("button", "trophy-cell" + (has ? "" : " is-locked"));
         b3.type = "button";
-        b3.innerHTML = trophySvg(p, 44) + "<span>" + esc(TROPHIES[p].t) + "</span>";
+        b3.innerHTML = trophySvg(p, 76) + "<span>" + esc(TROPHIES[p].t) + "</span>";
         b3.title = TROPHIES[p].s;
         if (has) b3.addEventListener("click", function () { shareTrophy(p); });
         trow.appendChild(b3);

@@ -97,7 +97,7 @@ body{
 .badge-miss{display:inline-block; border-radius:50%; background:var(--line)}
 .rank .badge-wrap{filter:none}
 .trophy-row{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:6px}
-.trophy-cell{display:flex; flex-direction:column; align-items:center; gap:2px; width:74px; padding:8px 4px;
+.trophy-cell{display:flex; flex-direction:column; align-items:center; gap:4px; width:104px; padding:12px 6px;
   background:var(--paper); border:1px solid var(--line); border-radius:var(--r-sm); cursor:pointer;
   font:600 9px/1.15 var(--font-display); text-transform:uppercase; letter-spacing:.03em; color:var(--ink); text-align:center}
 .trophy-cell.is-locked{opacity:.32; cursor:default; filter:grayscale(1)}

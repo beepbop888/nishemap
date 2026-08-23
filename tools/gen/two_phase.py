@@ -14,7 +14,7 @@ PX, STEPS = 448, 18
 NEG = ("watermark, text, letters, logo, signature, blurry, low quality, deformed face, disfigured, "
        "asymmetric eyes, extra limbs, two people, crowd, cropped head, nsfw, mutated hands, "
        + os.environ.get("EXTRANEG", ""))
-FR = "portrait, single character, centered, looking at camera, plain neutral background"
+FR = os.environ.get("FRAME", "portrait, single character, centered, plain neutral background")
 CH = json.load(open(os.environ.get("ROSTER", "gen/roster.json")))
 os.makedirs(OUT, exist_ok=True); os.makedirs(f"{OUT}/_lat", exist_ok=True)
 
