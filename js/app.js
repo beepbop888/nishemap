@@ -4,6 +4,33 @@
 
   var CFG = window.NISHEMAP_CONFIG || {};
   var SEED = window.NISHEMAP_SEED || { venues: [] };
+  /* Потолки по категориям: кофе за 300 — не наша экосистема. */
+  var PRICE_CAP = { drink: 150 };
+  function overCap(item) {
+    var cap = PRICE_CAP[item.category];
+    return cap && item.price > cap;
+  }
+  var STATIONS = window.NISHEMAP_STATIONS || [];   // [имя, lat, lon] — 240 станций
+
+  /* Ближайшее метро в пределах 900 м. Дальше — «пешком не дойти», станции нет. */
+  function nearestStation(lat, lon) {
+    if (!lat || !lon) return "";
+    var best = "", bd = 900;
+    for (var i = 0; i < STATIONS.length; i++) {
+      var s = STATIONS[i];
+      var x = (s[2] - lon) * 63000, y = (s[1] - lat) * 111320;
+      var d = Math.sqrt(x * x + y * y);
+      if (d < bd) { bd = d; best = s[0]; }
+    }
+    return best;
+  }
+  /* Район в данных больше не используем: точка привязывается к станции. */
+  SEED.venues.forEach(function (v) { v.district = nearestStation(v.lat, v.lon); });
+  /* Позиции сверх потолка не показываем, откуда бы ни пришли. */
+  SEED.venues.forEach(function (v) {
+    if (v.items) v.items = v.items.filter(function (it) { return !overCap(it); });
+  });
+  SEED.venues = SEED.venues.filter(function (v) { return v.noPrice || (v.items && v.items.length); });
   var OSM = (function () {
     var r = (window.NISHEMAP_OSM_ROWS && window.NISHEMAP_OSM_ROWS.rows) || [];
     return r.map(function (a, i) {
@@ -365,7 +392,7 @@
       "<li>Позиции: <b>" + b.items + "</b> <span>(до 3 с одного места)</span></li>" +
       "<li>Новые заведения: <b>" + b.venues + "</b> <span>(+2 за первую цену в месте)</span></li>" +
       "<li>Фото меню: <b>" + b.photos + "</b> <span>(+1 за место)</span></li>" +
-      "<li>Новые районы: <b>" + b.districts + "</b> <span>(+10 за пустой район)</span></li>" +
+      "<li>Новые станции: <b>" + b.districts + "</b> <span>(+10 за станцию без цен)</span></li>" +
       "<li>Серия: <b>" + b.streak + "</b> · недель подряд: " + st.weeks +
         " · на этой неделе " + st.thisWeek + " из " + STREAK_NEED + "</li>" +
       (nx ? "<li>До вехи «" + nx.places + " позиций»: ещё <b>" + (nx.places - verifiedCount()) +
@@ -860,33 +887,16 @@
 
   function updateDistToggle() {
     var n = Object.keys(state.districts).filter(function (k) { return state.districts[k]; }).length;
-    distToggle.textContent = n ? "Районы · " + n : "Районы";
+    distToggle.textContent = n ? "Метро · " + n : "Метро";
   }
-
-  /* все 125 районов Москвы (по округам) — чтобы пустые районы были видны и звали добавить точку */
-  var MOSCOW_DISTRICTS = [
-    "Арбат","Басманный","Замоскворечье","Красносельский","Мещанский","Пресненский","Таганский","Тверской","Хамовники","Якиманка",
-    "Аэропорт","Беговой","Бескудниковский","Войковский","Восточное Дегунино","Головинский","Дмитровский","Западное Дегунино","Коптево","Левобережный","Молжаниновский","Савёловский","Сокол","Тимирязевский","Ховрино","Хорошёвский",
-    "Алексеевский","Алтуфьевский","Бабушкинский","Бибирево","Бутырский","Лианозово","Лосиноостровский","Марфино","Марьина Роща","Останкинский","Отрадное","Ростокино","Свиблово","Северный","Северное Медведково","Южное Медведково","Ярославский",
-    "Богородское","Вешняки","Восточный","Восточное Измайлово","Гольяново","Ивановское","Измайлово","Косино-Ухтомский","Метрогородок","Новогиреево","Новокосино","Перово","Преображенское","Северное Измайлово","Соколиная Гора","Сокольники",
-    "Выхино-Жулебино","Капотня","Кузьминки","Лефортово","Люблино","Марьино","Некрасовка","Нижегородский","Печатники","Рязанский","Текстильщики","Южнопортовый",
-    "Бирюлёво Восточное","Бирюлёво Западное","Братеево","Даниловский","Донской","Зябликово","Москворечье-Сабурово","Нагатино-Садовники","Нагатинский Затон","Нагорный","Орехово-Борисово Северное","Орехово-Борисово Южное","Царицыно","Чертаново Северное","Чертаново Центральное","Чертаново Южное",
-    "Академический","Гагаринский","Зюзино","Коньково","Котловка","Ломоносовский","Обручевский","Северное Бутово","Тёплый Стан","Черёмушки","Южное Бутово","Ясенево",
-    "Внуково","Дорогомилово","Крылатское","Кунцево","Можайский","Ново-Переделкино","Очаково-Матвеевское","Проспект Вернадского","Раменки","Солнцево","Тропарёво-Никулино","Филёвский Парк","Фили-Давыдково",
-    "Куркино","Митино","Покровское-Стрешнево","Северное Тушино","Строгино","Хорошёво-Мнёвники","Щукино","Южное Тушино",
-    "Матушкино","Савёлки","Силино","Старое Крюково","Крюково"
-  ];
 
   (function populateDistricts() {
     var counts = {};
     SEED.venues.forEach(function (v) {
       if (v.district) counts[v.district] = (counts[v.district] || 0) + v.items.length;
     });
-    var names = MOSCOW_DISTRICTS.slice();
-    // добавляем в конец то, чего нет в официальном списке (города области и т.п.)
-    Object.keys(counts).forEach(function (d) {
-      if (names.indexOf(d) === -1) names.push(d);
-    });
+    var names = STATIONS.map(function (s) { return s[0]; });
+    Object.keys(counts).forEach(function (d) { if (names.indexOf(d) === -1) names.push(d); });
     names.sort(function (a, b) { return (counts[b] || 0) - (counts[a] || 0) || a.localeCompare(b, "ru"); });
     names.forEach(function (name) {
       var n = counts[name] || 0;
@@ -901,8 +911,7 @@
       });
       lab.appendChild(cb);
       lab.appendChild(document.createTextNode(name));
-      var cnt = el("span", "district-count", n ? String(n) : "0");
-      lab.appendChild(cnt);
+      lab.appendChild(el("span", "district-count", n ? String(n) : "0"));
       distPanel.appendChild(lab);
     });
   })();
@@ -1115,17 +1124,10 @@
     state.activeVenue = v;
     document.getElementById("sheet-venue").textContent = v.name;
     document.getElementById("sheet-type").textContent = v.type + (v.district ? " · " + v.district : (v.noPrice ? " · цены нет" : ""));
-    if (v.noPrice && !v.district && v.lat) {
-      fetch("https://nominatim.openstreetmap.org/reverse?format=json&zoom=14&lat=" + v.lat + "&lon=" + v.lon)
-        .then(function (r) { return r.json(); })
-        .then(function (d) {
-          var a = d && d.address || {};
-          var dist = a.city_district || a.suburb || a.borough || "";
-          if (dist && state.activeVenue === v) {
-            v.district = dist.replace(/^район /i, "");
-            document.getElementById("sheet-type").textContent = v.type + " · " + v.district;
-          }
-        }).catch(function () {});
+    if (!v.district && v.lat) {
+      v.district = nearestStation(v.lat, v.lon);
+      if (v.district)
+        document.getElementById("sheet-type").textContent = v.type + " · м. " + v.district;
     }
     document.getElementById("sheet-address").textContent = v.address;
     var prices = (v.items || []).map(function (i) { return i.price; });
@@ -1278,6 +1280,15 @@
     { enableHighAccuracy: true, timeout: 8000 });
   });
 
+  document.querySelectorAll(".modal-card").forEach(function (card) {
+    var hide = function () {
+      var a = document.activeElement;
+      if (a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)) a.blur();
+    };
+    card.addEventListener("touchmove", hide, { passive: true });
+    card.addEventListener("scroll", hide, { passive: true });
+  });
+
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     var f = form.elements;
@@ -1285,6 +1296,12 @@
     var ok = f.dish.value.trim() && f.venue.value.trim() && f.address.value.trim() &&
       price >= 1 && price <= 500;
     if (!ok) { formError.hidden = false; formError.textContent = "Цена до 500 ₽ и все поля — иначе никак."; return; }
+    if (PRICE_CAP[f.category.value] && price > PRICE_CAP[f.category.value]) {
+      formError.hidden = false;
+      formError.textContent = "Напиток дороже " + PRICE_CAP[f.category.value] +
+        " ₽ — это уже не по-нищебродски. Кофе за 300 живёт в других приложениях.";
+      return;
+    }
     // антиспам: такое блюдо здесь уже сдавали?
     var normV = f.venue.value.trim().toLowerCase().replace(/[«»"'ё]/g, function (c) { return c === "ё" ? "е" : ""; });
     var normD = f.dish.value.trim().toLowerCase().replace(/ё/g, "е");
@@ -1363,6 +1380,7 @@
             category: record.category, venue: record.venue, address: record.address,
             submitted_at: new Date().toISOString(),
           }]);
+          mine.forEach(function (v) { v.district = v.district || nearestStation(v.lat, v.lon); });
           SEED.venues = SEED.venues.concat(mine);
           render();
           geocodeQueue(mine, render);
