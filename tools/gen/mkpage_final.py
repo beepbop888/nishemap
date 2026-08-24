@@ -41,8 +41,7 @@ p{{margin:0 0 9px;max-width:84ch}}.lede{{color:var(--soft)}}
 .inner::after{{content:"";position:absolute;inset:auto 0 0 0;height:46%;
  background:linear-gradient(to bottom,transparent,rgba(0,0,0,.5))}}
 /* ЕДИНЫЙ БОКС: фигура всегда в одной рамке, прижата к низу — лента у всех на груди */
-.inner img{{position:absolute;left:50%;bottom:0;transform:translateX(-50%);
- height:90%;max-width:96%;object-fit:contain;object-position:bottom center;z-index:1;
+.inner img{{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;z-index:1;
  filter:drop-shadow(0 2px 5px rgba(0,0,0,.45))}}
 /* имя: крупнее и жирнее, лента выше */
 .rib{{position:absolute;left:-4px;right:-4px;bottom:15%;padding:5px 8px;text-align:center;
