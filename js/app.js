@@ -409,10 +409,12 @@
   }
 
   /* плитка для шеринга: рисуем на canvas, чтобы можно было кинуть картинкой в чат */
-  /* Наградная лента, как её носят на шее: две тесьмы уходят от медали вверх и в
-     стороны. Была колодка-планка, которую прикалывают к пиджаку, — заказчик
-     попросил именно носимую ленту. Цвета набирают флаг снизу вверх: красная у
-     первой четвёрки, сине-красная у второй, полный триколор у последней. */
+  /* Наградная лента петлёй — та самая, что надевается через голову. Первый
+     заход был короткой «галочкой» из двух прямых полосок: коротко, угловато и
+     на ленту не похоже. Здесь лента идёт одной замкнутой петлёй от ушка медали
+     вверх, через закруглённую вершину и обратно вниз — как она лежит, когда
+     медаль положили на стол. Полосы считаются по нормали к осевой линии,
+     поэтому они честно изгибаются вместе с лентой, а не ломаются на углах. */
   var RIB_RED = "#d52b1e", RIB_WHITE = "#f4f2ec", RIB_BLUE = "#0039a6";
   function ribbonColors(places) {
     var i = Object.keys(TROPHIES).map(Number)
@@ -421,30 +423,75 @@
     if (i < 8)  return [RIB_BLUE, RIB_RED];
     return [RIB_WHITE, RIB_BLUE, RIB_RED];
   }
-  /* одна тесьма: рисуем в повёрнутой системе координат, поэтому полосы идут
-     ВДОЛЬ ленты сами собой, без пересчёта четырёхугольников */
-  function drawStrap(x, ax, ay, len, w, ang, cols) {
-    x.save();
-    x.translate(ax, ay);
-    x.rotate(ang);
-    for (var i = 0; i < cols.length; i++) {
-      x.fillStyle = cols[i];
-      x.fillRect(-w / 2 + (w / cols.length) * i - 0.5, -len, w / cols.length + 1, len);
-    }
-    var g = x.createLinearGradient(-w / 2, 0, w / 2, 0);   // складка ткани
-    g.addColorStop(0, "rgba(0,0,0,.40)");   g.addColorStop(.30, "rgba(255,255,255,.20)");
-    g.addColorStop(.62, "rgba(0,0,0,.04)"); g.addColorStop(1, "rgba(0,0,0,.42)");
-    x.fillStyle = g; x.fillRect(-w / 2, -len, w, len);
-    x.strokeStyle = "rgba(24,20,14,.55)"; x.lineWidth = 2;
-    x.strokeRect(-w / 2, -len, w, len);
-    x.restore();
+  function bezPt(p, t) {
+    var u = 1 - t, a = u*u*u, b = 3*u*u*t, c = 3*u*t*t, d = t*t*t;
+    return { x: a*p[0].x + b*p[1].x + c*p[2].x + d*p[3].x,
+             y: a*p[0].y + b*p[1].y + c*p[2].y + d*p[3].y };
   }
-  function drawRibbon(x, cx, attachY, cols) {
-    var LEN = 138, WID = 76, ANG = 0.42;      // ~24° от вертикали
-    drawStrap(x, cx, attachY, LEN, WID, -ANG, cols);
-    drawStrap(x, cx, attachY, LEN, WID, ANG, cols);
-    // ушко: колечко, за которое медаль держится на ленте
-    x.beginPath(); x.arc(cx, attachY + 2, 16, 0, 6.2832);
+  /* осевая линия петли: вверх слева, закругление сверху, вниз справа */
+  function ribbonSpine(cx, ay, topY, wide, N) {
+    var A = { x: cx, y: ay }, T = { x: cx, y: topY }, pts = [];
+    var left  = [A, { x: cx - wide,      y: ay - 90 },
+                    { x: cx - wide*0.94, y: topY + 44 }, T];
+    var right = [T, { x: cx + wide*0.94, y: topY + 44 },
+                    { x: cx + wide,      y: ay - 90 }, A];
+    for (var i = 0; i <= N; i++) pts.push(bezPt(left, i / N));
+    for (var j = 1; j <= N; j++) pts.push(bezPt(right, j / N));
+    return pts;
+  }
+  /* точка осевой, сдвинутая по нормали на off пикселей */
+  function offsetPt(pts, i, off) {
+    var p = pts[i], q = pts[i > 0 ? i - 1 : i + 1];
+    var dx = p.x - q.x, dy = p.y - q.y;
+    if (i === 0) { dx = -dx; dy = -dy; }
+    var l = Math.hypot(dx, dy) || 1;
+    return { x: p.x - (dy / l) * off, y: p.y + (dx / l) * off };
+  }
+  function bandPoly(x, pts, o1, o2) {
+    x.beginPath();
+    var i, q;
+    for (i = 0; i < pts.length; i++) {
+      q = offsetPt(pts, i, o1);
+      if (i === 0) x.moveTo(q.x, q.y); else x.lineTo(q.x, q.y);
+    }
+    for (i = pts.length - 1; i >= 0; i--) {
+      q = offsetPt(pts, i, o2);
+      x.lineTo(q.x, q.y);
+    }
+    x.closePath();
+  }
+  function shade(hex, k) {                       // k<1 темнее, k>1 светлее
+    var n = parseInt(hex.slice(1), 16);
+    var r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    var f = function (v) { return Math.max(0, Math.min(255, Math.round(v * k))); };
+    return "rgb(" + f(r) + "," + f(g) + "," + f(b) + ")";
+  }
+  function drawRibbon(x, cx, ay, topY, cols) {
+    var W_ = 56, N = 72, pts = ribbonSpine(cx, ay, topY, 196, N);
+    // тень под лентой — без неё петля висит в пустоте плоской наклейкой
+    x.save();
+    x.shadowColor = "rgba(0,0,0,.55)"; x.shadowBlur = 22; x.shadowOffsetY = 10;
+    bandPoly(x, pts, -W_ / 2, W_ / 2);
+    x.fillStyle = "#1a1614"; x.fill();
+    x.restore();
+    var SUB = 24;                                 // мелкий шаг: складка идёт плавно
+    for (var k = 0; k < SUB; k++) {
+      var t0 = k / SUB, t1 = (k + 1) / SUB, tm = (t0 + t1) / 2;
+      var col = cols[Math.min(cols.length - 1, Math.floor(tm * cols.length))];
+      /* Ткань не трубка: свет широкой полосой у трети от внешнего края, оба
+         края уходят в тень. Косинус даёт мягкий переход без ступенек. */
+      var lit = 0.62 + 0.52 * Math.cos((tm - 0.34) * 2.6);
+      bandPoly(x, pts, -W_ / 2 + W_ * t0, -W_ / 2 + W_ * t1 + 0.6);
+      x.fillStyle = shade(col, Math.max(0.46, Math.min(1.20, lit)));
+      x.fill();
+    }
+    // продольный глянец: узкая светлая нить вдоль сгиба
+    bandPoly(x, pts, -W_ * 0.20, -W_ * 0.10);
+    x.fillStyle = "rgba(255,255,255,.16)"; x.fill();
+    bandPoly(x, pts, -W_ / 2, W_ / 2);            // кант по обоим краям
+    x.strokeStyle = "rgba(24,20,14,.6)"; x.lineWidth = 2.5; x.stroke();
+    // ушко: колечко, за которое медаль держится
+    x.beginPath(); x.arc(cx, ay + 6, 17, 0, 6.2832);
     x.strokeStyle = "#d9a514"; x.lineWidth = 8; x.stroke();
     x.strokeStyle = "rgba(24,20,14,.45)"; x.lineWidth = 2; x.stroke();
   }
@@ -485,36 +532,35 @@
 
     x.textAlign = "center";
     x.fillStyle = "#b3b1aa"; x.font = '26px -apple-system, Arial, sans-serif';
-    /* строку поднимаем: концы тесьмы доходят до 188, на 186 они её задевали */
-    x.fillText("карта еды до 500 ₽ в Москве", W / 2, 170);
+    x.fillText("карта еды до 500 ₽ в Москве", W / 2, 168);
 
     var img = new Image();
     img.onload = function () {
       /* Медали теперь квадратные 512×512. Раньше здесь стояло 300×549 от старых
          щитовидных значков — круглый медальон растягивало в овал, и картинка
          не совпадала с тем, что человек видел в приложении. */
-      /* тесьмы уходят вверх от точки крепления, медаль накрывает её и висит */
-      var MD = 400, MY = 318;
-      drawRibbon(x, W / 2, 330, ribbonColors(places));
+      /* петля от вершины 206 до ушка 520; медаль накрывает ушко и висит на нём */
+      var MD = 330, MY = 502;
+      drawRibbon(x, W / 2, 520, 216, ribbonColors(places));
       x.drawImage(img, (W - MD) / 2, MY, MD, MD);
       // подпись трофея
       x.fillStyle = "#f2cf5c";
       x.font = '600 72px Oswald, "Arial Narrow", Impact, sans-serif';
-      x.fillText(tr.t.toUpperCase(), W / 2, 790);
+      x.fillText(tr.t.toUpperCase(), W / 2, 892);
       x.strokeStyle = "rgba(217,165,20,.5)"; x.lineWidth = 2;
-      x.beginPath(); x.moveTo(W / 2 - 150, 816); x.lineTo(W / 2 + 150, 816); x.stroke();
+      x.beginPath(); x.moveTo(W / 2 - 150, 918); x.lineTo(W / 2 + 150, 918); x.stroke();
       x.fillStyle = "#fdfdfb"; x.font = '36px -apple-system, Arial, sans-serif';
-      x.fillText(tr.s, W / 2, 868);
+      x.fillText(tr.s, W / 2, 958);
       // премия за веху: карточка должна говорить, что именно за неё дали
       var mb = MILESTONES.filter(function (m) { return m.places === places; })[0];
       if (mb) {
         x.fillStyle = "#f2cf5c"; x.font = '30px Menlo, monospace';
-        x.fillText("+" + mb.bonus + " монет", W / 2, 914);
+        x.fillText("+" + mb.bonus + " монет", W / 2, 998);
       }
-      x.fillStyle = "#8f8b84"; x.font = '26px -apple-system, Arial, sans-serif';
-      x.fillText("единственная карта еды, которая нужна в Москве", W / 2, 952);
-      x.fillStyle = "#d9a514"; x.font = '28px Menlo, monospace';
-      x.fillText("t.me/nishemap_bot/map", W / 2, 1010);
+      /* повтор «единственная карта еды…» убран: тот же тезис уже стоит вверху,
+         а место под лентой и подписями теперь на счету */
+      x.fillStyle = "#d9a514"; x.font = '26px Menlo, monospace';
+      x.fillText("t.me/nishemap_bot/map", W / 2, 1026);
 
       c.toBlob(function (blob) {
         if (!blob) return;
