@@ -233,15 +233,24 @@
     return total;
   }
 
+  /* Пороги совпадают с MILESTONES: медаль приходит ровно там, где начисляется премия.
+     Восемь утверждённых наград сохранены как были; добавлены четыре по номиналам
+     российских банкнот — они названы городом со своей купюры.
+     metal — тир АНИМАЦИИ (бронза катится, серебро всплывает, золото падает),
+     цвет самой медали задаётся отдельно в tools/gen/medals.py. */
   var TROPHIES = {
-    10:  { t: "Первый десяток",   s: "10 подтверждённых цен",  metal: "bronze" },
-    25:  { t: "Разведчик",        s: "25 подтверждённых цен",  metal: "bronze" },
-    50:  { t: "Полсотни",         s: "50 подтверждённых цен",  metal: "silver" },
-    100: { t: "Сотня",            s: "100 подтверждённых цен", metal: "silver" },
-    175: { t: "Знаток района",    s: "175 подтверждённых цен", metal: "gold"   },
-    275: { t: "Хранитель карты",  s: "275 подтверждённых цен", metal: "gold"   },
-    400: { t: "Ветеран копеек",   s: "400 подтверждённых цен", metal: "gold"   },
-    550: { t: "Легенда НищеMap",  s: "550 подтверждённых цен", metal: "legend" },
+    10:   { t: "Первый десяток",  s: "10 подтверждённых цен",   metal: "bronze" },
+    25:   { t: "Разведчик",       s: "25 подтверждённых цен",   metal: "bronze" },
+    50:   { t: "Полсотни",        s: "50 подтверждённых цен",   metal: "silver" },
+    100:  { t: "Сотня",           s: "100 подтверждённых цен",  metal: "silver" },
+    175:  { t: "Знаток района",   s: "175 подтверждённых цен",  metal: "gold"   },
+    200:  { t: "Севастополь",     s: "200 подтверждённых цен",  metal: "gold"   },
+    275:  { t: "Хранитель карты", s: "275 подтверждённых цен",  metal: "gold"   },
+    400:  { t: "Ветеран копеек",  s: "400 подтверждённых цен",  metal: "gold"   },
+    500:  { t: "Архангельск",     s: "500 подтверждённых цен",  metal: "gold"   },
+    1000: { t: "Ярославль",       s: "1000 подтверждённых цен", metal: "legend" },
+    2000: { t: "Владивосток",     s: "2000 подтверждённых цен", metal: "legend" },
+    2500: { t: "Легенда НищеMap", s: "2500 проверенных и исправленных цен", metal: "legend" },
   };
   function trophySvg(places, size) {
     var img = (window.NISHEMAP_TROPHY_IMG || {})[String(places)];
@@ -254,16 +263,9 @@
       .filter(function (p) { return v >= p; });
   }
 
-  var MILESTONES = [
-    { places: 10,  bonus: 5 },
-    { places: 25,  bonus: 10 },
-    { places: 50,  bonus: 15 },
-    { places: 100, bonus: 25 },
-    { places: 175, bonus: 40 },
-    { places: 275, bonus: 60 },
-    { places: 400, bonus: 90 },
-    { places: 550, bonus: 150 },
-  ];
+  /* Премия за веху одинаковая — 10 монет за любую медаль. Разные суммы заказчик снял. */
+  var MILESTONES = [10, 25, 50, 100, 175, 200, 275, 400, 500, 1000, 2000, 2500]
+    .map(function (p) { return { places: p, bonus: 10 }; });
   function bonusFor(verified) {
     var b = 0;
     MILESTONES.forEach(function (m) { if (verified >= m.places) b += m.bonus; });
@@ -591,9 +593,10 @@
     if (!tr) return;
     var metal = tr.metal === "legend" ? "gold" : tr.metal;
     var wrap = el("div", "coin-cheer is-trophy" + (metal === "gold" ? " is-gold" : ""));
-    /* в анимации — только диск: ленту показываем в коллекции наград */
-    var art = el("div", "rw rw--" + metal, "<span>" + (BADGES["d" + places] || BADGES["t" + places] || "") + "</span>");
-    art.style.width = "190px"; art.style.height = "190px";   /* диск квадратный — эффекты ложатся ровно */
+    /* берём настоящую медаль: рисованных дисков под новые номиналы нет,
+       а медальон и так квадратный — эффекты удара ложатся ровно */
+    var art = el("div", "rw rw--" + metal, "<span>" + trophySvg(places, 240) + "</span>");
+    art.style.width = "240px"; art.style.height = "240px";
     shadowAfter(art);
     wrap.appendChild(art);
 
@@ -773,7 +776,7 @@
         var has = got.indexOf(p) !== -1;
         var b3 = el("button", "trophy-cell" + (has ? "" : " is-locked"));
         b3.type = "button";
-        b3.innerHTML = trophySvg(p, 76) + "<span>" + esc(TROPHIES[p].t) + "</span>";
+        b3.innerHTML = trophySvg(p, 104) + "<span>" + esc(TROPHIES[p].t) + "</span>";
         b3.title = TROPHIES[p].s;
         if (has) b3.addEventListener("click", function () { shareTrophy(p); });
         trow.appendChild(b3);

@@ -11,8 +11,12 @@ from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler, Auto
 MODEL, STYLE, OUT = sys.argv[1], sys.argv[2], sys.argv[3]
 LORA = sys.argv[4] if len(sys.argv) > 4 and sys.argv[4] != '-' else None
 PX, STEPS = 448, 18
-NEG = ("watermark, text, letters, logo, signature, blurry, low quality, deformed face, disfigured, "
-       "asymmetric eyes, extra limbs, two people, crowd, cropped head, nsfw, mutated hands, "
+GUID = float(os.environ.get("GUID", "7.5"))
+PRE  = os.environ.get("PRE", "")      # идёт ПЕРВЫМ: CLIP режет всё после 77 токенов,
+                                      # поэтому то, что важнее всего, ставим в начало
+SEED0 = int(os.environ.get("SEED", "11"))
+# базовый негатив тоже держим коротким: у CLIP те же 77 токенов
+NEG = ("watermark, text, blurry, low quality, deformed face, extra limbs, two people, nsfw, "
        + os.environ.get("EXTRANEG", ""))
 FR = os.environ.get("FRAME", "portrait, single character, centered, plain neutral background")
 CH = json.load(open(os.environ.get("ROSTER", "gen/roster.json")))
@@ -37,9 +41,13 @@ if need:
     print("phase1", len(need), flush=True)
     for cid, who in need:
         t = time.time()
-        lat = pipe(f"{STYLE}, {who}, {FR}", negative_prompt=NEG, num_inference_steps=STEPS,
-                   guidance_scale=7.5, height=PX, width=PX,
-                   generator=torch.Generator("mps").manual_seed(11), output_type="latent").images
+        prompt = f"{PRE}{STYLE}, {who}, {FR}"
+        seed = SEED0 + (sum(ord(ch) for ch in cid) % 9973)   # свой сид у каждого персонажа
+        ntok = len(pipe.tokenizer(prompt).input_ids)
+        if ntok > 77: print(f"  ! {cid}: {ntok} токенов — хвост промпта отброшен", flush=True)
+        lat = pipe(prompt, negative_prompt=NEG, num_inference_steps=STEPS,
+                   guidance_scale=GUID, height=PX, width=PX,
+                   generator=torch.Generator("mps").manual_seed(seed), output_type="latent").images
         lat = lat[0].unsqueeze(0) if isinstance(lat, list) else lat
         torch.save(lat.detach().to("cpu", torch.float32), f"{OUT}/_lat/{cid}.pt")
         print(f"lat {cid} {time.time()-t:.0f}s", flush=True)
