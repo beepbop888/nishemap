@@ -1764,7 +1764,7 @@
     b.total = b.items + b.venues + b.photos + b.districts + b.streak;
     return b;
   }
-  function myCoins() { var b = coinBreakdown(); return b.total + bonusFor(verifiedCount()); }
+  function myCoins() { var b = coinBreakdown(); return b.total + bonusFor(verifiedCount()) + devCoins(); }
   function checkMilestone() {
     var v = verifiedCount();
     var reached = MILESTONES.filter(function (m) { return v >= m.places; });
@@ -1898,6 +1898,51 @@
     try { TG.BackButton.onClick(function () { closeSheet(); closeForm(); }); } catch (e) {}
   }
 
+  /* ---------- отладка анимаций ----------
+     Монеты числом нигде не лежат: они СЧИТАЮТСЯ из проверенных цен, поэтому
+     «выдать 10000» — это надбавка в localStorage, видимая только на этом
+     устройстве и только в интерфейсе. На сервер она не уходит.
+     Включение: адрес ?dev=1 или ссылка t.me/nishemap_bot/map?startapp=dev.
+     Дальше режим держится сам, выключение — ?dev=0. */
+  function devOn() {
+    try {
+      if (/[?&]dev=1/.test(location.search)) localStorage.setItem("nishemap.dev", "1");
+      if (/[?&]dev=0/.test(location.search)) localStorage.removeItem("nishemap.dev");
+      if (TG && TG.initDataUnsafe && String(TG.initDataUnsafe.start_param || "") === "dev")
+        localStorage.setItem("nishemap.dev", "1");
+      return localStorage.getItem("nishemap.dev") === "1";
+    } catch (e) { return false; }
+  }
+  function devCoins() {
+    try { return parseInt(localStorage.getItem("nishemap.dev.coins") || "0", 10) || 0; }
+    catch (e) { return 0; }
+  }
+  function devPanel() {
+    if (!devOn() || document.getElementById("devbar")) return;
+    var bar = el("div", "devbar"); bar.id = "devbar";
+    function btn(label, fn) {
+      var b = el("button", "", label); b.type = "button";
+      b.addEventListener("click", fn); bar.appendChild(b); return b;
+    }
+    bar.appendChild(el("b", "", "DEV"));
+    btn("+10000", function () {
+      localStorage.setItem("nishemap.dev.coins", String(devCoins() + 10000));
+      paintRank(); render();
+    });
+    btn("монеты 0", function () {
+      localStorage.removeItem("nishemap.dev.coins"); paintRank(); render();
+    });
+    btn("+монеты", function () { coinCelebration(3); });
+    // по кнопке на каждую медаль: анимация проигрывается сразу, порог не нужен
+    Object.keys(TROPHIES).map(Number).sort(function (a, b) { return a - b; })
+      .forEach(function (p) { btn(String(p), function () { showTrophy(p, 10); }); });
+    btn("×", function () {
+      localStorage.removeItem("nishemap.dev");
+      bar.parentNode && bar.parentNode.removeChild(bar);
+    });
+    document.body.appendChild(bar);
+  }
+
   initMap();
   render();
   loadSubmissions();
@@ -1906,5 +1951,6 @@
   loadTotals();
   flushInbox();
   paintRank();
+  devPanel();
   setTimeout(openDeepLink, 1200);
 })();

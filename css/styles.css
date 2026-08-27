@@ -96,10 +96,19 @@ body{
 .badge-wrap svg{width:100%; height:100%; display:block}
 .badge-miss{display:inline-block; border-radius:50%; background:var(--line)}
 .rank .badge-wrap{filter:none}
-.trophy-row{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:6px}
-.trophy-cell{display:flex; flex-direction:column; align-items:center; gap:5px; width:132px; padding:12px 8px;
+/* Витрина трофеев: ровно ЧЕТЫРЕ в ряд на любой ширине. Раньше стоял flex с
+   width:132px — на телефоне влезало две штуки, и двенадцать медалей уходили в
+   шесть рядов вниз за экран. Сетка из долей ширины держит четыре всегда. */
+.trophy-row{display:grid; grid-template-columns:repeat(4, minmax(0, 1fr));
+  gap:7px; margin-bottom:6px}
+.trophy-cell{display:flex; flex-direction:column; align-items:center; gap:4px; padding:9px 4px;
   background:var(--paper); border:1px solid var(--line); border-radius:var(--r-sm); cursor:pointer;
-  font:600 9px/1.15 var(--font-display); text-transform:uppercase; letter-spacing:.03em; color:var(--ink); text-align:center}
+  font:600 8px/1.15 var(--font-display); text-transform:uppercase; letter-spacing:.02em;
+  color:var(--ink); text-align:center; overflow:hidden}
+/* размер медали задан инлайном при отрисовке — здесь его перебиваем на долю ячейки */
+.trophy-cell img.trophy-img{width:100%!important; height:auto!important; aspect-ratio:1/1}
+.trophy-cell .badge-wrap{width:100%!important; height:auto!important; aspect-ratio:1/1}
+.trophy-cell span{display:block; width:100%; overflow-wrap:anywhere; hyphens:auto}
 .trophy-cell.is-locked{opacity:.32; cursor:default; filter:grayscale(1)}
 .trophy-cell:not(.is-locked):hover{border-color:var(--ink); transform:translateY(-1px)}
 .coin-cheer.is-trophy{gap:14px; pointer-events:auto; background:color-mix(in srgb, var(--ink) 88%, transparent)}
@@ -831,3 +840,15 @@ body.in-tg .tg-open{display:none}
 .shop-card.is-locked .shop-tag{background:var(--paper); border-color:var(--line);
   color:var(--ink-soft); font:600 9px/1 var(--font-display); letter-spacing:.02em}
 .shop-card.is-active .shop-tag{background:#d6ead6; border-color:var(--ok); color:var(--ok)}
+
+/* Панель отладки анимаций. Появляется только при ?dev=1 или startapp=dev,
+   в обычной работе её нет в DOM вовсе — см. devPanel() в js/app.js. */
+.devbar{position:fixed; left:6px; right:6px; bottom:6px; z-index:9999;
+  display:flex; flex-wrap:wrap; gap:4px; align-items:center; padding:6px;
+  background:color-mix(in srgb, var(--ink) 92%, transparent); border-radius:8px;
+  font:600 10px/1 var(--font-display); color:#fff}
+.devbar b{margin-right:2px; letter-spacing:.08em; opacity:.7}
+.devbar button{font:600 10px/1 var(--font-display); color:#fff; cursor:pointer;
+  background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.28);
+  border-radius:5px; padding:5px 7px}
+.devbar button:hover{background:rgba(255,255,255,.3)}
