@@ -409,52 +409,43 @@
   }
 
   /* плитка для шеринга: рисуем на canvas, чтобы можно было кинуть картинкой в чат */
-  /* Лента-колодка над медалью: как у настоящей награды, медаль висит на ней.
-     Цвета растут вместе с ярусом — красная у первой четвёрки, красно-белая у
-     второй, триколор у последней. */
+  /* Наградная лента, как её носят на шее: две тесьмы уходят от медали вверх и в
+     стороны. Была колодка-планка, которую прикалывают к пиджаку, — заказчик
+     попросил именно носимую ленту. Цвета набирают флаг снизу вверх: красная у
+     первой четвёрки, сине-красная у второй, полный триколор у последней. */
   var RIB_RED = "#d52b1e", RIB_WHITE = "#f4f2ec", RIB_BLUE = "#0039a6";
   function ribbonColors(places) {
     var i = Object.keys(TROPHIES).map(Number)
       .sort(function (a, b) { return a - b; }).indexOf(places);
     if (i < 4)  return [RIB_RED];
-    if (i < 8)  return [RIB_RED, RIB_WHITE];
-    return [RIB_RED, RIB_WHITE, RIB_BLUE];
+    if (i < 8)  return [RIB_BLUE, RIB_RED];
+    return [RIB_WHITE, RIB_BLUE, RIB_RED];
   }
-  function ribbonPath(x, cx, top, w, h) {
-    var bw = w * 0.78;                       // книзу колодка сужается к ушку медали
-    x.beginPath();
-    x.moveTo(cx - w / 2, top);
-    x.lineTo(cx + w / 2, top);
-    x.lineTo(cx + bw / 2, top + h);
-    x.lineTo(cx - bw / 2, top + h);
-    x.closePath();
-  }
-  function drawRibbon(x, cx, top, w, h, cols) {
+  /* одна тесьма: рисуем в повёрнутой системе координат, поэтому полосы идут
+     ВДОЛЬ ленты сами собой, без пересчёта четырёхугольников */
+  function drawStrap(x, ax, ay, len, w, ang, cols) {
     x.save();
-    ribbonPath(x, cx, top, w, h);
-    x.clip();
-    for (var i = 0; i < cols.length; i++) {          // вертикальные полосы
+    x.translate(ax, ay);
+    x.rotate(ang);
+    for (var i = 0; i < cols.length; i++) {
       x.fillStyle = cols[i];
-      x.fillRect(cx - w / 2 + (w / cols.length) * i - 1, top, w / cols.length + 2, h);
+      x.fillRect(-w / 2 + (w / cols.length) * i - 0.5, -len, w / cols.length + 1, len);
     }
-    // складка ткани: свет слева от центра, тень по краям
-    var g = x.createLinearGradient(cx - w / 2, 0, cx + w / 2, 0);
-    g.addColorStop(0, "rgba(0,0,0,.34)");   g.addColorStop(.26, "rgba(255,255,255,.22)");
-    g.addColorStop(.58, "rgba(0,0,0,.05)"); g.addColorStop(1, "rgba(0,0,0,.38)");
-    x.fillStyle = g; x.fillRect(cx - w / 2, top, w, h);
+    var g = x.createLinearGradient(-w / 2, 0, w / 2, 0);   // складка ткани
+    g.addColorStop(0, "rgba(0,0,0,.40)");   g.addColorStop(.30, "rgba(255,255,255,.20)");
+    g.addColorStop(.62, "rgba(0,0,0,.04)"); g.addColorStop(1, "rgba(0,0,0,.42)");
+    x.fillStyle = g; x.fillRect(-w / 2, -len, w, len);
+    x.strokeStyle = "rgba(24,20,14,.55)"; x.lineWidth = 2;
+    x.strokeRect(-w / 2, -len, w, len);
     x.restore();
-    ribbonPath(x, cx, top, w, h);                    // тёмный кант по краю
-    x.strokeStyle = "rgba(24,20,14,.62)"; x.lineWidth = 3; x.stroke();
-    // планка сверху, за неё колодку и носят
-    var bg = x.createLinearGradient(0, top - 16, 0, top + 6);
-    bg.addColorStop(0, "#f7e6b0"); bg.addColorStop(.5, "#d9a514"); bg.addColorStop(1, "#a37c0a");
-    x.fillStyle = bg;
-    x.fillRect(cx - w / 2 - 8, top - 16, w + 16, 22);
-    x.strokeStyle = "rgba(24,20,14,.5)"; x.lineWidth = 2;
-    x.strokeRect(cx - w / 2 - 8, top - 16, w + 16, 22);
-    // ушко: колечко, которым медаль цепляется за низ колодки
-    x.beginPath(); x.arc(cx, top + h + 4, 15, 0, 6.2832);
-    x.strokeStyle = "#d9a514"; x.lineWidth = 7; x.stroke();
+  }
+  function drawRibbon(x, cx, attachY, cols) {
+    var LEN = 138, WID = 76, ANG = 0.42;      // ~24° от вертикали
+    drawStrap(x, cx, attachY, LEN, WID, -ANG, cols);
+    drawStrap(x, cx, attachY, LEN, WID, ANG, cols);
+    // ушко: колечко, за которое медаль держится на ленте
+    x.beginPath(); x.arc(cx, attachY + 2, 16, 0, 6.2832);
+    x.strokeStyle = "#d9a514"; x.lineWidth = 8; x.stroke();
     x.strokeStyle = "rgba(24,20,14,.45)"; x.lineWidth = 2; x.stroke();
   }
 
@@ -494,17 +485,17 @@
 
     x.textAlign = "center";
     x.fillStyle = "#b3b1aa"; x.font = '26px -apple-system, Arial, sans-serif';
-    x.fillText("карта еды до 500 ₽ в Москве", W / 2, 186);
+    /* строку поднимаем: концы тесьмы доходят до 188, на 186 они её задевали */
+    x.fillText("карта еды до 500 ₽ в Москве", W / 2, 170);
 
     var img = new Image();
     img.onload = function () {
       /* Медали теперь квадратные 512×512. Раньше здесь стояло 300×549 от старых
          щитовидных значков — круглый медальон растягивало в овал, и картинка
          не совпадала с тем, что человек видел в приложении. */
-      /* колодка выше медали, медаль перекрывает её низ — так она «висит» на ленте;
-         206 наезжало планкой на строку с описанием карты */
-      var MD = 424, MY = 306;
-      drawRibbon(x, W / 2, 222, 232, 104, ribbonColors(places));
+      /* тесьмы уходят вверх от точки крепления, медаль накрывает её и висит */
+      var MD = 400, MY = 318;
+      drawRibbon(x, W / 2, 330, ribbonColors(places));
       x.drawImage(img, (W - MD) / 2, MY, MD, MD);
       // подпись трофея
       x.fillStyle = "#f2cf5c";
