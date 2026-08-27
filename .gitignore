@@ -4,3 +4,4 @@ tools/loras/
 .gen/
 __pycache__/
 *.pyc
+.telegram_token
