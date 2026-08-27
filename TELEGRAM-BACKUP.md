@@ -1,121 +1,121 @@
-# Резервная копия партии в Telegram — как это включить
+# Backing the batch up to Telegram — how to switch it on
 
-Эта страница написана для того, чтобы к ней можно было вернуться через месяц
-или в новой сессии и всё сделать за пять минут, ничего не вспоминая.
+Written so you can come back to it in a month, or in a fresh session, and be done
+in five minutes without remembering anything.
 
-**Что мы хотим:** чтобы утверждённая партия (28 аватаров, 12 медалей, страница
-приёмки) прилетела вам в личный чат Telegram двумя файлами. Это страховка: если
-пропадёт ноутбук или сессия, картинки останутся в переписке с ботом.
+**Goal:** get the approved batch (28 avatars, 12 medals, the review page) delivered
+to your private Telegram chat as two files. It's insurance — if the laptop or the
+session goes, the artwork still sits in your chat with the bot.
 
 ---
 
-## Короткая версия
+## Short version
 
 ```bash
 cd "~/Desktop/Claude Projects/Jaison"
-echo 'СЮДА_ТОКЕН' > .telegram_token
+echo 'PASTE_TOKEN_HERE' > .telegram_token
 python3 tools/send_telegram.py
 ```
 
-Если сработало — в чате с **@nishemap_bot** появятся `review.html` и `art_backup.zip`.
-Если нет — читайте подробную версию, там разобраны все три места, где обычно спотыкаются.
+Worked if `review.html` and `art_backup.zip` show up in your chat with **@nishemap_bot**.
+If not, read on — the long version covers all three places this usually trips.
 
 ---
 
-## Что такое «токен бота» простыми словами
+## What a "bot token" actually is
 
-У вас уже есть бот в Telegram — **@nishemap_bot**. Через него работает мини-апп с картой
-и пятничная рассылка. Бот — это не человек и не программа на вашем компьютере, это
-просто «учётная запись», которой управляют по интернету.
+You already have a bot: **@nishemap_bot**. It runs the map mini-app and the Friday
+digest. A bot isn't a person or a program on your machine — it's just an account
+that gets controlled over the internet.
 
-**Токен** — это пароль от этой учётной записи. Выглядит он так:
+The **token** is the password to that account. It looks like this:
 
 ```
 7123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw
 ```
 
-Слева номер бота, справа сам секрет. Кто знает токен — тот управляет ботом:
-может писать от его имени всем подписчикам. Поэтому токен не лежит в коде сайта
-и не попадает в git.
+Bot number on the left, the secret on the right. Anyone holding the token controls
+the bot and can message every subscriber as it. That's why it isn't in the site's
+code and never goes into git.
 
-## Почему я не могу взять токен сам
+## Why I can't fetch the token myself
 
-Токен у вас уже есть — он лежит в **секретах GitHub** (репозиторий `nishemap` →
-Settings → Secrets and variables → Actions), там его читает пятничная рассылка.
+You already have it — it lives in **GitHub Actions secrets** (repo `nishemap` →
+Settings → Secrets and variables → Actions), where the Friday digest reads it.
 
-Загвоздка в том, что секреты GitHub — **дорога в одну сторону**. Их можно положить
-и заменить, но нельзя прочитать обратно: ни через сайт, ни через `gh secret list`
-(он показывает только имена), ни через API. Так задумано — иначе любой, кто получил
-доступ к репозиторию, вытащил бы все пароли разом.
+The catch: GitHub secrets are **one-way**. You can put one in or replace it, but
+nothing can read it back — not the web UI, not `gh secret list` (names only), not
+the API. That's deliberate; otherwise anyone reaching the repo would walk off with
+every password at once.
 
-На самом компьютере токена тоже нет: я искал `.env`, конфиги и весь исходный код —
-`config.js` содержит только публичные ключи Яндекса и Supabase.
+It isn't on the machine either. I searched `.env` files, configs and the whole
+source tree — `config.js` holds only the public Yandex and Supabase keys.
 
-Отсюда простое следствие: **токен может дать только человек.** Либо из менеджера
-паролей, либо заново у @BotFather.
+So: **only a human can supply this token**, from a password manager or fresh from
+@BotFather.
 
-## Шаг 1. Найти или перевыпустить токен
+## Step 1. Find the token, or issue a new one
 
-**Если токен сохранён** (менеджер паролей, заметки) — берите его, идите к шагу 2.
+**If you saved it** (password manager, notes) — grab it and go to step 2.
 
-**Если потерялся:**
+**If it's lost:**
 
-1. Откройте Telegram, найдите **@BotFather** (это официальный бот Telegram для
-   управления ботами, с синей галочкой).
-2. Отправьте ему `/mybots`.
-3. В списке выберите **nishemap_bot**.
-4. Нажмите **API Token**. Токен придёт сообщением — скопируйте его.
+1. Open Telegram and find **@BotFather** — Telegram's official bot-management bot,
+   the one with the blue check.
+2. Send it `/mybots`.
+3. Pick **nishemap_bot** from the list.
+4. Tap **API Token**. It arrives as a message — copy it.
 
-Кнопка **Revoke current token** рядом выпускает новый токен и **немедленно ломает
-старый**. Нажимать её не нужно. Но если нажали — пятничная рассылка перестанет
-работать, пока вы не положите новый токен в секреты GitHub тем же путём
+The **Revoke current token** button next to it issues a new token and **kills the old
+one instantly**. You don't need it. If you do press it, the Friday digest stops
+working until you put the new token into GitHub secrets the same way
 (Settings → Secrets → Actions → `BOT_TOKEN` → Update).
 
-## Шаг 2. Написать боту, чтобы он вас увидел
+## Step 2. Message the bot so it can see you
 
-Это то место, где спотыкаются чаще всего.
+This is where people trip most often.
 
-Бот не может написать первым. Telegram разрешает боту отправить сообщение только
-тому, кто **сам с ним заговорил**. Поэтому:
+A bot can't message first. Telegram only lets a bot write to someone who **started
+the conversation**. So:
 
-1. Откройте чат с **@nishemap_bot**.
-2. Отправьте `/start` (или любое сообщение).
+1. Open the chat with **@nishemap_bot**.
+2. Send `/start` (any message works).
 
-Скрипт после этого узнает ваш `chat_id` сам — он спрашивает у Telegram список
-последних сообщений и берёт оттуда ваш личный чат.
+The script then finds your `chat_id` on its own — it asks Telegram for recent
+messages and picks your private chat out of them.
 
-⚠️ **Есть срок годности.** Telegram хранит непрочитанные ботом сообщения примерно
-сутки. Если вы написали `/start` неделю назад и с тех пор ничего не отправляли,
-скрипт вас не найдёт и честно скажет: «бот не видит ни одного личного чата».
-Лечится одним новым сообщением боту прямо перед запуском.
+⚠️ **This expires.** Telegram keeps messages a bot hasn't collected for roughly 24
+hours. If you sent `/start` last week and nothing since, the script won't find you
+and will say so: "бот не видит ни одного личного чата". One fresh message to the bot
+right before running fixes it.
 
-## Шаг 3. Положить токен в файл
+## Step 3. Put the token in a file
 
-В корне проекта создайте файл `.telegram_token` и вставьте туда токен одной строкой:
+Create `.telegram_token` in the project root with the token on a single line:
 
 ```bash
 cd "~/Desktop/Claude Projects/Jaison"
 echo '7123456789:AAHdqTcvCH1vGWJxfSeofSAs0K5PALDsaw' > .telegram_token
 ```
 
-Почему в файл, а не в команду: команды остаются в истории терминала и в переписке
-сессии. Файл `.telegram_token` уже вписан в `.gitignore`, поэтому в git он не уедет
-и на GitHub не попадёт.
+Why a file rather than the command line: commands linger in shell history and in the
+session transcript. `.telegram_token` is already in `.gitignore`, so it can't ride
+along into git or reach GitHub.
 
-Вариант без файла, если так привычнее:
+If you prefer no file:
 
 ```bash
 export BOT_TOKEN='7123456789:AAH...'
 python3 tools/send_telegram.py
 ```
 
-## Шаг 4. Запустить
+## Step 4. Run it
 
 ```bash
 python3 tools/send_telegram.py
 ```
 
-Ожидаемый вывод:
+Expected output:
 
 ```
 чат: yourname (123456789)
@@ -123,45 +123,45 @@ python3 tools/send_telegram.py
 отправлено: art_backup.zip (4200 КБ)
 ```
 
-В чате с ботом появятся два файла:
+Two files land in the chat:
 
-| Файл | Что внутри |
+| File | What's inside |
 |---|---|
-| `review.html` | Страница приёмки целиком. Все 40 картинок вшиты в неё base64 — файл открывается двойным кликом даже без интернета и без папки проекта. |
-| `art_backup.zip` | Папка `art/` как есть: исходники аватаров, вырезки под щиты, медали, фоны. Из этого пересобирается всё остальное. |
+| `review.html` | The whole review page. All 40 images are embedded as base64, so it opens on a double-click with no internet and no project folder. |
+| `art_backup.zip` | The `art/` folder as-is: avatar sources, shield cutouts, medals, backgrounds. Everything else can be rebuilt from this. |
 
-Можно передать конкретные файлы вместо этих двух:
+You can send specific files instead of those two:
 
 ```bash
 python3 tools/send_telegram.py art/trophies/t25.webp review.html
 ```
 
-## Если что-то пошло не так
+## When it doesn't work
 
-| Сообщение | Что случилось | Что делать |
+| Message | What happened | Fix |
 |---|---|---|
-| `нет токена: положи его в .telegram_token` | Файла нет или он пустой | Шаг 3. Проверьте: `cat .telegram_token` |
-| `бот не видит ни одного личного чата` | Вы боту не писали, или сообщение старше суток | Отправьте `/start` и запустите снова |
-| `getUpdates не ответил: ... 401 Unauthorized` | Токен неверный или отозван | Возьмите свежий у @BotFather, шаг 1 |
-| `getUpdates не ответил: ... 409 Conflict` | Тот же токен в это время слушает другой процесс (вебхук мини-аппа) | Подождите минуту и повторите |
-| Файл не дошёл, ошибок нет | Telegram режет файлы больше 50 МБ на бота | Отправьте частями, указав файлы явно |
+| `нет токена: положи его в .telegram_token` | File missing or empty | Step 3. Check with `cat .telegram_token` |
+| `бот не видит ни одного личного чата` | You never messaged the bot, or it was over 24h ago | Send `/start`, run again |
+| `getUpdates не ответил: ... 401 Unauthorized` | Token wrong or revoked | Get a fresh one from @BotFather, step 1 |
+| `getUpdates не ответил: ... 409 Conflict` | Another process is listening on the same token (the mini-app webhook) | Wait a minute, retry |
+| Nothing arrives, no error | Telegram caps bot uploads at 50 MB | Send in pieces by naming files explicitly |
 
-## Насколько это безопасно
+## How safe this is
 
-- Токен лежит только у вас на диске в `.telegram_token`, в `.gitignore`.
-- Скрипт ходит на `api.telegram.org` и никуда больше — ни аналитики, ни сторонних
-  сервисов. Весь код в `tools/send_telegram.py`, 90 строк, читается за минуту.
-- Файлы уходят **вам в личный чат**, не подписчикам. Рассылка живёт отдельно,
-  в `scripts/digest.mjs`, и запускается только по расписанию GitHub Actions.
-- Если токен всё-таки утёк: @BotFather → `/mybots` → nishemap_bot → **Revoke current
-  token**, затем положите новый в секреты GitHub, иначе встанет пятничный дайджест.
+- The token sits only on your disk in `.telegram_token`, which is gitignored.
+- The script talks to `api.telegram.org` and nowhere else — no analytics, no third
+  parties. All of it is in `tools/send_telegram.py`, 90 lines, a minute to read.
+- Files go to **your private chat**, not to subscribers. The broadcast is separate
+  (`scripts/digest.mjs`) and only runs on the GitHub Actions schedule.
+- If the token does leak: @BotFather → `/mybots` → nishemap_bot → **Revoke current
+  token**, then put the new one into GitHub secrets or the Friday digest stops.
 
-## Что уже сохранено помимо Telegram
+## What's already backed up, Telegram aside
 
-Даже если до Telegram руки не дойдут, партия не в одном экземпляре:
+Even if you never get to this, the batch isn't in one place:
 
-- **Коммит `29644b3`** в локальном git — вся партия и инструменты.
-- **Артефакт** https://claude.ai/code/artifact/559968d0-b9ba-47f2-8b03-a07f22394efc —
-  страница приёмки на серверах claude.ai, не зависит от вашей машины.
-- Резервные кадры отвергнутых дублей: `.gen/backup_dosh/`, `.gen/backup_gold/`
-  (в git не входят — папка `.gen/` в `.gitignore`).
+- **Commit `29644b3`** in local git — the whole batch plus the tools.
+- **Artifact** https://claude.ai/code/artifact/559968d0-b9ba-47f2-8b03-a07f22394efc —
+  the review page on claude.ai servers, independent of your machine.
+- Rejected takes kept at `.gen/backup_dosh/` and `.gen/backup_gold/` (not in git —
+  `.gen/` is gitignored).
