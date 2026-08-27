@@ -428,17 +428,6 @@
     return { x: a*p[0].x + b*p[1].x + c*p[2].x + d*p[3].x,
              y: a*p[0].y + b*p[1].y + c*p[2].y + d*p[3].y };
   }
-  /* осевая линия петли: вверх слева, закругление сверху, вниз справа */
-  function ribbonSpine(cx, ay, topY, wide, N) {
-    var A = { x: cx, y: ay }, T = { x: cx, y: topY }, pts = [];
-    var left  = [A, { x: cx - wide,      y: ay - 90 },
-                    { x: cx - wide*0.94, y: topY + 44 }, T];
-    var right = [T, { x: cx + wide*0.94, y: topY + 44 },
-                    { x: cx + wide,      y: ay - 90 }, A];
-    for (var i = 0; i <= N; i++) pts.push(bezPt(left, i / N));
-    for (var j = 1; j <= N; j++) pts.push(bezPt(right, j / N));
-    return pts;
-  }
   /* точка осевой, сдвинутая по нормали на off пикселей */
   function offsetPt(pts, i, off) {
     var p = pts[i], q = pts[i > 0 ? i - 1 : i + 1];
@@ -466,32 +455,45 @@
     var f = function (v) { return Math.max(0, Math.min(255, Math.round(v * k))); };
     return "rgb(" + f(r) + "," + f(g) + "," + f(b) + ")";
   }
-  function drawRibbon(x, cx, ay, topY, cols) {
-    var W_ = 56, N = 72, pts = ribbonSpine(cx, ay, topY, 196, N);
-    // тень под лентой — без неё петля висит в пустоте плоской наклейкой
+  /* Одна тесьма: полосы строятся по нормали к осевой линии, поэтому изгибаются
+     вместе с лентой. Складка — 24 продольные полоски с косинусной яркостью:
+     свет широкой полосой ближе к внешнему краю, оба края уходят в тень. */
+  function paintBand(x, pts, W_, cols, flip) {
     x.save();
-    x.shadowColor = "rgba(0,0,0,.55)"; x.shadowBlur = 22; x.shadowOffsetY = 10;
+    x.shadowColor = "rgba(0,0,0,.5)"; x.shadowBlur = 20; x.shadowOffsetY = 9;
     bandPoly(x, pts, -W_ / 2, W_ / 2);
     x.fillStyle = "#1a1614"; x.fill();
     x.restore();
-    var SUB = 24;                                 // мелкий шаг: складка идёт плавно
+    var SUB = 24;
     for (var k = 0; k < SUB; k++) {
       var t0 = k / SUB, t1 = (k + 1) / SUB, tm = (t0 + t1) / 2;
-      var col = cols[Math.min(cols.length - 1, Math.floor(tm * cols.length))];
-      /* Ткань не трубка: свет широкой полосой у трети от внешнего края, оба
-         края уходят в тень. Косинус даёт мягкий переход без ступенек. */
+      var ci = flip ? 1 - tm : tm;               // на правой тесьме порядок зеркалим
+      var col = cols[Math.min(cols.length - 1, Math.floor(ci * cols.length))];
       var lit = 0.62 + 0.52 * Math.cos((tm - 0.34) * 2.6);
       bandPoly(x, pts, -W_ / 2 + W_ * t0, -W_ / 2 + W_ * t1 + 0.6);
       x.fillStyle = shade(col, Math.max(0.46, Math.min(1.20, lit)));
       x.fill();
     }
-    // продольный глянец: узкая светлая нить вдоль сгиба
-    bandPoly(x, pts, -W_ * 0.20, -W_ * 0.10);
-    x.fillStyle = "rgba(255,255,255,.16)"; x.fill();
-    bandPoly(x, pts, -W_ / 2, W_ / 2);            // кант по обоим краям
+    bandPoly(x, pts, -W_ * 0.20, -W_ * 0.10);    // продольный глянец
+    x.fillStyle = "rgba(255,255,255,.15)"; x.fill();
+    bandPoly(x, pts, -W_ / 2, W_ / 2);
     x.strokeStyle = "rgba(24,20,14,.6)"; x.lineWidth = 2.5; x.stroke();
-    // ушко: колечко, за которое медаль держится
-    x.beginPath(); x.arc(cx, ay + 6, 17, 0, 6.2832);
+  }
+  /* Лента буквой V: две тесьмы уходят от ушка медали вверх и в стороны, концы
+     срезаны у верха карточки — дальше они ушли бы за шею. Петля-кольцо здесь
+     была ошибкой чтения задания: просили именно V. */
+  function drawRibbon(x, cx, ay, topY, cols) {
+    var W_ = 56, N = 48, HALF = 196;
+    [-1, 1].forEach(function (sgn) {
+      var A = { x: cx + sgn * 6, y: ay },
+          T = { x: cx + sgn * HALF, y: topY },
+          seg = [A, { x: cx + sgn * 38,  y: ay - 118 },
+                    { x: cx + sgn * HALF * 0.86, y: topY + 96 }, T];
+      var pts = [];
+      for (var i = 0; i <= N; i++) pts.push(bezPt(seg, i / N));
+      paintBand(x, pts, W_, cols, sgn > 0);
+    });
+    x.beginPath(); x.arc(cx, ay + 6, 17, 0, 6.2832);   // ушко под медалью
     x.strokeStyle = "#d9a514"; x.lineWidth = 8; x.stroke();
     x.strokeStyle = "rgba(24,20,14,.45)"; x.lineWidth = 2; x.stroke();
   }
@@ -541,7 +543,7 @@
          не совпадала с тем, что человек видел в приложении. */
       /* петля от вершины 206 до ушка 520; медаль накрывает ушко и висит на нём */
       var MD = 330, MY = 502;
-      drawRibbon(x, W / 2, 520, 216, ribbonColors(places));
+      drawRibbon(x, W / 2, 520, 214, ribbonColors(places));
       x.drawImage(img, (W - MD) / 2, MY, MD, MD);
       // подпись трофея
       x.fillStyle = "#f2cf5c";
