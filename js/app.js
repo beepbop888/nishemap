@@ -409,6 +409,55 @@
   }
 
   /* плитка для шеринга: рисуем на canvas, чтобы можно было кинуть картинкой в чат */
+  /* Лента-колодка над медалью: как у настоящей награды, медаль висит на ней.
+     Цвета растут вместе с ярусом — красная у первой четвёрки, красно-белая у
+     второй, триколор у последней. */
+  var RIB_RED = "#d52b1e", RIB_WHITE = "#f4f2ec", RIB_BLUE = "#0039a6";
+  function ribbonColors(places) {
+    var i = Object.keys(TROPHIES).map(Number)
+      .sort(function (a, b) { return a - b; }).indexOf(places);
+    if (i < 4)  return [RIB_RED];
+    if (i < 8)  return [RIB_RED, RIB_WHITE];
+    return [RIB_RED, RIB_WHITE, RIB_BLUE];
+  }
+  function ribbonPath(x, cx, top, w, h) {
+    var bw = w * 0.78;                       // книзу колодка сужается к ушку медали
+    x.beginPath();
+    x.moveTo(cx - w / 2, top);
+    x.lineTo(cx + w / 2, top);
+    x.lineTo(cx + bw / 2, top + h);
+    x.lineTo(cx - bw / 2, top + h);
+    x.closePath();
+  }
+  function drawRibbon(x, cx, top, w, h, cols) {
+    x.save();
+    ribbonPath(x, cx, top, w, h);
+    x.clip();
+    for (var i = 0; i < cols.length; i++) {          // вертикальные полосы
+      x.fillStyle = cols[i];
+      x.fillRect(cx - w / 2 + (w / cols.length) * i - 1, top, w / cols.length + 2, h);
+    }
+    // складка ткани: свет слева от центра, тень по краям
+    var g = x.createLinearGradient(cx - w / 2, 0, cx + w / 2, 0);
+    g.addColorStop(0, "rgba(0,0,0,.34)");   g.addColorStop(.26, "rgba(255,255,255,.22)");
+    g.addColorStop(.58, "rgba(0,0,0,.05)"); g.addColorStop(1, "rgba(0,0,0,.38)");
+    x.fillStyle = g; x.fillRect(cx - w / 2, top, w, h);
+    x.restore();
+    ribbonPath(x, cx, top, w, h);                    // тёмный кант по краю
+    x.strokeStyle = "rgba(24,20,14,.62)"; x.lineWidth = 3; x.stroke();
+    // планка сверху, за неё колодку и носят
+    var bg = x.createLinearGradient(0, top - 16, 0, top + 6);
+    bg.addColorStop(0, "#f7e6b0"); bg.addColorStop(.5, "#d9a514"); bg.addColorStop(1, "#a37c0a");
+    x.fillStyle = bg;
+    x.fillRect(cx - w / 2 - 8, top - 16, w + 16, 22);
+    x.strokeStyle = "rgba(24,20,14,.5)"; x.lineWidth = 2;
+    x.strokeRect(cx - w / 2 - 8, top - 16, w + 16, 22);
+    // ушко: колечко, которым медаль цепляется за низ колодки
+    x.beginPath(); x.arc(cx, top + h + 4, 15, 0, 6.2832);
+    x.strokeStyle = "#d9a514"; x.lineWidth = 7; x.stroke();
+    x.strokeStyle = "rgba(24,20,14,.45)"; x.lineWidth = 2; x.stroke();
+  }
+
   function shareTrophy(places) {
     var tr = TROPHIES[places];
     if (!tr) return;
@@ -452,21 +501,24 @@
       /* Медали теперь квадратные 512×512. Раньше здесь стояло 300×549 от старых
          щитовидных значков — круглый медальон растягивало в овал, и картинка
          не совпадала с тем, что человек видел в приложении. */
-      var MD = 470;
-      x.drawImage(img, (W - MD) / 2, 225, MD, MD);
+      /* колодка выше медали, медаль перекрывает её низ — так она «висит» на ленте;
+         206 наезжало планкой на строку с описанием карты */
+      var MD = 424, MY = 306;
+      drawRibbon(x, W / 2, 222, 232, 104, ribbonColors(places));
+      x.drawImage(img, (W - MD) / 2, MY, MD, MD);
       // подпись трофея
       x.fillStyle = "#f2cf5c";
       x.font = '600 72px Oswald, "Arial Narrow", Impact, sans-serif';
-      x.fillText(tr.t.toUpperCase(), W / 2, 782);
+      x.fillText(tr.t.toUpperCase(), W / 2, 790);
       x.strokeStyle = "rgba(217,165,20,.5)"; x.lineWidth = 2;
-      x.beginPath(); x.moveTo(W / 2 - 150, 808); x.lineTo(W / 2 + 150, 808); x.stroke();
+      x.beginPath(); x.moveTo(W / 2 - 150, 816); x.lineTo(W / 2 + 150, 816); x.stroke();
       x.fillStyle = "#fdfdfb"; x.font = '36px -apple-system, Arial, sans-serif';
-      x.fillText(tr.s, W / 2, 860);
+      x.fillText(tr.s, W / 2, 868);
       // премия за веху: карточка должна говорить, что именно за неё дали
       var mb = MILESTONES.filter(function (m) { return m.places === places; })[0];
       if (mb) {
         x.fillStyle = "#f2cf5c"; x.font = '30px Menlo, monospace';
-        x.fillText("+" + mb.bonus + " монет", W / 2, 906);
+        x.fillText("+" + mb.bonus + " монет", W / 2, 914);
       }
       x.fillStyle = "#8f8b84"; x.font = '26px -apple-system, Arial, sans-serif';
       x.fillText("единственная карта еды, которая нужна в Москве", W / 2, 952);
@@ -488,8 +540,16 @@
       }, "image/png");
     };
     img.onerror = function () { toast("Не получилось нарисовать плитку"); };
-    img.src = "data:image/svg+xml;charset=utf-8," +
-      encodeURIComponent((BADGES["t" + places] || "").replace(' class="badge-svg"', ""));
+    /* Берём ТУ ЖЕ медаль, что и всё приложение, — сгенерированную из
+       assets/trophies.js. Здесь стояли старые рисованные значки BADGES: в
+       анимации катилась одна медаль, а в сохранённой картинке оказывалась
+       совсем другая, а для новых номиналов ключа в BADGES нет вовсе. */
+    var real = (window.NISHEMAP_TROPHY_IMG || {})[String(places)];
+    if (real) { img.src = real; }
+    else {
+      img.src = "data:image/svg+xml;charset=utf-8," +
+        encodeURIComponent((BADGES["t" + places] || "").replace(' class="badge-svg"', ""));
+    }
   }
 
 
