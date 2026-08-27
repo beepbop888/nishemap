@@ -239,15 +239,18 @@
      metal — тир АНИМАЦИИ (бронза катится, серебро всплывает, золото падает),
      цвет самой медали задаётся отдельно в tools/gen/medals.py. */
   var TROPHIES = {
+    /* Двенадцать наград делятся на три ровные четвёрки — по одной анимации на
+       четвёрку. Раньше деление было случайным: бронза досталась двум нижним,
+       а золото сразу пяти, и «золотой» удар примелькался к середине пути. */
     10:   { t: "Первый десяток",  s: "10 подтверждённых цен",   metal: "bronze" },
     25:   { t: "Разведчик",       s: "25 подтверждённых цен",   metal: "bronze" },
-    50:   { t: "Полсотни",        s: "50 подтверждённых цен",   metal: "silver" },
-    100:  { t: "Сотня",           s: "100 подтверждённых цен",  metal: "silver" },
-    175:  { t: "Знаток района",   s: "175 подтверждённых цен",  metal: "gold"   },
-    200:  { t: "Севастополь",     s: "200 подтверждённых цен",  metal: "gold"   },
-    275:  { t: "Хранитель карты", s: "275 подтверждённых цен",  metal: "gold"   },
-    400:  { t: "Ветеран копеек",  s: "400 подтверждённых цен",  metal: "gold"   },
-    500:  { t: "Архангельск",     s: "500 подтверждённых цен",  metal: "gold"   },
+    50:   { t: "Полсотни",        s: "50 подтверждённых цен",   metal: "bronze" },
+    100:  { t: "Сотня",           s: "100 подтверждённых цен",  metal: "bronze" },
+    175:  { t: "Знаток района",   s: "175 подтверждённых цен",  metal: "silver" },
+    200:  { t: "Севастополь",     s: "200 подтверждённых цен",  metal: "silver" },
+    275:  { t: "Хранитель карты", s: "275 подтверждённых цен",  metal: "silver" },
+    400:  { t: "Ветеран копеек",  s: "400 подтверждённых цен",  metal: "silver" },
+    500:  { t: "Архангельск",     s: "500 подтверждённых цен",  metal: "legend" },
     1000: { t: "Ярославль",       s: "1000 подтверждённых цен", metal: "legend" },
     2000: { t: "Владивосток",     s: "2000 подтверждённых цен", metal: "legend" },
     2500: { t: "Легенда НищеMap", s: "2500 проверенных и исправленных цен", metal: "legend" },
@@ -446,19 +449,29 @@
 
     var img = new Image();
     img.onload = function () {
-      x.drawImage(img, (W - 300) / 2, 210, 300, 549);   // медаль 200×366, пропорция сохранена
+      /* Медали теперь квадратные 512×512. Раньше здесь стояло 300×549 от старых
+         щитовидных значков — круглый медальон растягивало в овал, и картинка
+         не совпадала с тем, что человек видел в приложении. */
+      var MD = 470;
+      x.drawImage(img, (W - MD) / 2, 225, MD, MD);
       // подпись трофея
       x.fillStyle = "#f2cf5c";
       x.font = '600 72px Oswald, "Arial Narrow", Impact, sans-serif';
-      x.fillText(tr.t.toUpperCase(), W / 2, 812);
+      x.fillText(tr.t.toUpperCase(), W / 2, 782);
       x.strokeStyle = "rgba(217,165,20,.5)"; x.lineWidth = 2;
-      x.beginPath(); x.moveTo(W / 2 - 150, 838); x.lineTo(W / 2 + 150, 838); x.stroke();
+      x.beginPath(); x.moveTo(W / 2 - 150, 808); x.lineTo(W / 2 + 150, 808); x.stroke();
       x.fillStyle = "#fdfdfb"; x.font = '36px -apple-system, Arial, sans-serif';
-      x.fillText(tr.s, W / 2, 890);
+      x.fillText(tr.s, W / 2, 860);
+      // премия за веху: карточка должна говорить, что именно за неё дали
+      var mb = MILESTONES.filter(function (m) { return m.places === places; })[0];
+      if (mb) {
+        x.fillStyle = "#f2cf5c"; x.font = '30px Menlo, monospace';
+        x.fillText("+" + mb.bonus + " монет", W / 2, 906);
+      }
       x.fillStyle = "#8f8b84"; x.font = '26px -apple-system, Arial, sans-serif';
-      x.fillText("единственная карта еды, которая нужна в Москве", W / 2, 936);
+      x.fillText("единственная карта еды, которая нужна в Москве", W / 2, 952);
       x.fillStyle = "#d9a514"; x.font = '28px Menlo, monospace';
-      x.fillText("t.me/nishemap_bot/map", W / 2, 1000);
+      x.fillText("t.me/nishemap_bot/map", W / 2, 1010);
 
       c.toBlob(function (blob) {
         if (!blob) return;
@@ -689,29 +702,29 @@
     wrap.appendChild(art);
     fx(art, "sweep", { "--swd": "820ms" });
 
-    /* три источника: сверху дождём, слева и справа — залпом внутрь */
+    /* Три хлопушки по низу кадра: залп вверх, удар о верх экрана, падение.
+       Прежние семь источников сыпали сверху и с боков — получался ровный
+       диагональный веер, который читался как узор, а не как салют. */
     var EMIT = [
-      { l: 22,  t: -8,  ax: 0,  ay: 1,   n: 14, spread: 520 },   // сверху слева
-      { l: 50,  t: -8,  ax: 0,  ay: 1,   n: 16, spread: 560 },   // сверху по центру
-      { l: 78,  t: -8,  ax: 0,  ay: 1,   n: 14, spread: 520 },   // сверху справа
-      { l: -6,  t: 22,  ax: 1,  ay: .3,  n: 12, spread: 300 },   // слева сверху
-      { l: -6,  t: 58,  ax: 1,  ay: .1,  n: 10, spread: 300 },   // слева снизу
-      { l: 106, t: 22,  ax: -1, ay: .3,  n: 12, spread: 300 },   // справа сверху
-      { l: 106, t: 58,  ax: -1, ay: .1,  n: 10, spread: 300 },   // справа снизу
+      { l: 18, ax: -.55, n: 16 },   // левая, отклон влево
+      { l: 50, ax: 0,    n: 20 },   // центральная, строго вверх
+      { l: 82, ax: .55,  n: 16 },   // правая, отклон вправо
     ];
     var ci = 0;
     EMIT.forEach(function (e) {
       for (var i = 0; i < e.n; i++, ci++) {
-        var sp = (i / e.n - .5) * 2;
+        var sp = (i / e.n - .5) * 2;                 // -1..1 поперёк ствола
+        var up = 430 + Math.abs(1 - Math.abs(sp)) * 200 + (ci % 5) * 26;  // середина летит выше краёв
         fx(wrap, "confetti", {
-          "--cl": (e.l + sp * 6) + "%",
-          "--ct": (e.t + Math.abs(sp) * 5) + "%",
+          "--cl": (e.l + sp * 9) + "%",
+          "--ct": "104%",                             // старт из-за нижнего края
           "--cc": CONF[ci % CONF.length],
-          "--cx": (e.ax * (140 + Math.abs(sp) * e.spread) + sp * 90).toFixed(0) + "px",
-          "--cy": (e.ay * (300 + Math.abs(sp) * 160) + 120).toFixed(0) + "px",
+          "--cx": (e.ax * 120 + sp * 130).toFixed(0) + "px",
+          "--cy": (-up).toFixed(0) + "px",            // вершина: вверх
+          "--cfall": (260 + (ci % 4) * 70) + "px",    // падение: ниже старта, за край
           "--cr": (300 + ci * 91) + "deg",
-          "--cd": (2400 + (ci % 6) * 380) + "ms",
-        }, 220 + (i % 7) * 70);
+          "--cd": (1500 + (ci % 6) * 220) + "ms",
+        }, 60 + (i % 5) * 45);
       }
     });
     for (var k = 0; k < 8; k++) {
@@ -776,7 +789,9 @@
         var has = got.indexOf(p) !== -1;
         var b3 = el("button", "trophy-cell" + (has ? "" : " is-locked"));
         b3.type = "button";
-        b3.innerHTML = trophySvg(p, 104) + "<span>" + esc(TROPHIES[p].t) + "</span>";
+        var mb2 = MILESTONES.filter(function (m) { return m.places === p; })[0];
+        b3.innerHTML = trophySvg(p, 168) + "<span>" + esc(TROPHIES[p].t) + "</span>" +
+          '<span class="tc-need">' + p + " цен" + (mb2 ? " · +" + mb2.bonus + " монет" : "") + "</span>";
         b3.title = TROPHIES[p].s;
         if (has) b3.addEventListener("click", function () { shareTrophy(p); });
         trow.appendChild(b3);

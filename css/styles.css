@@ -99,12 +99,16 @@ body{
 /* Витрина трофеев: ровно ЧЕТЫРЕ в ряд на любой ширине. Раньше стоял flex с
    width:132px — на телефоне влезало две штуки, и двенадцать медалей уходили в
    шесть рядов вниз за экран. Сетка из долей ширины держит четыре всегда. */
-.trophy-row{display:grid; grid-template-columns:repeat(4, minmax(0, 1fr));
-  gap:7px; margin-bottom:6px}
-.trophy-cell{display:flex; flex-direction:column; align-items:center; gap:4px; padding:9px 4px;
+.trophy-row{display:grid; grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:10px; margin-bottom:6px}
+.trophy-cell{display:flex; flex-direction:column; align-items:center; gap:7px; padding:14px 10px;
   background:var(--paper); border:1px solid var(--line); border-radius:var(--r-sm); cursor:pointer;
-  font:600 8px/1.15 var(--font-display); text-transform:uppercase; letter-spacing:.02em;
+  font:600 11px/1.2 var(--font-display); text-transform:uppercase; letter-spacing:.02em;
   color:var(--ink); text-align:center; overflow:hidden}
+/* порог и премия прямо в ячейке: витрина должна говорить, ЧТО ты зарабатываешь */
+.trophy-cell .tc-need{font:600 9px/1.2 var(--font-display); color:var(--ink-soft);
+  letter-spacing:.04em; text-transform:none}
+.trophy-cell:not(.is-locked) .tc-need{color:var(--gold, #a97c16)}
 /* размер медали задан инлайном при отрисовке — здесь его перебиваем на долю ячейки */
 .trophy-cell img.trophy-img{width:100%!important; height:auto!important; aspect-ratio:1/1}
 .trophy-cell .badge-wrap{width:100%!important; height:auto!important; aspect-ratio:1/1}
@@ -684,13 +688,20 @@ input[name="price"]{font-family:var(--font-mono); font-weight:700}
 .confetti{position:absolute; left:var(--cl,50%); top:var(--ct,46%);
   width:11px; height:16px; border-radius:2px; opacity:0;
   background:var(--cc,#f2cf5c); animation:conf-go var(--cd,1500ms) var(--ease-out) forwards}
+/* Выстрел вверх и падение. Прежняя кривая уводила частицы по диагонали с
+   линейной серединой — получался странный ровный веер, будто их тянут за нитку.
+   Теперь две фазы: взлёт с резким торможением к вершине (--cy, вверх) и падение
+   с разгоном до --cfall (вниз, за край) — как будто ударились в потолок. */
 @keyframes conf-go{
-  0%  {transform:translate3d(0,0,0) rotate(0) scale(.5); opacity:0; animation-timing-function:var(--ease-out)}
-  6%  {opacity:1}
-  45% {transform:translate3d(calc(var(--cx) * .62), calc(var(--cy) * .48),0)
-       rotate(calc(var(--cr,540deg) * .5)) scale(1); animation-timing-function:linear}
-  86% {opacity:1}
-  100%{transform:translate3d(var(--cx),var(--cy),0) rotate(var(--cr,540deg)) scale(1); opacity:0}
+  0%  {transform:translate3d(0,0,0) rotate(0) scale(.6); opacity:0;
+       animation-timing-function:cubic-bezier(.05,.75,.25,1)}
+  4%  {opacity:1}
+  32% {transform:translate3d(calc(var(--cx) * .35), var(--cy), 0)
+       rotate(calc(var(--cr,540deg) * .3)) scale(1);
+       animation-timing-function:cubic-bezier(.55,.02,.85,.5)}
+  90% {opacity:1}
+  100%{transform:translate3d(var(--cx), var(--cfall,420px), 0)
+       rotate(var(--cr,540deg)) scale(1); opacity:0}
 }
 .rw--reveal{animation:rw-reveal 760ms 1 both}
 @keyframes rw-reveal{
