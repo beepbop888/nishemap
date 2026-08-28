@@ -455,45 +455,91 @@
     var f = function (v) { return Math.max(0, Math.min(255, Math.round(v * k))); };
     return "rgb(" + f(r) + "," + f(g) + "," + f(b) + ")";
   }
-  /* Одна тесьма: полосы строятся по нормали к осевой линии, поэтому изгибаются
-     вместе с лентой. Складка — 24 продольные полоски с косинусной яркостью:
-     свет широкой полосой ближе к внешнему краю, оба края уходят в тень. */
-  function paintBand(x, pts, W_, cols, flip) {
+  /* Ткань, а не цветная изолента.
+
+     Прошлые заходы красили тесьму сплошными полосами с одной косинусной
+     растушёвкой поперёк — получался пластик. Здесь лента считается сеткой
+     четырёхугольников (поперёк × вдоль), и у каждого своя яркость:
+       • изгиб полотна — ламберт по положению поперёк ленты;
+       • блик атласа — узкая полоса, которая ПЛЫВЁТ поперёк по мере хода ленты,
+         потому что реальная тесьма слегка перекручивается;
+       • поперечные складки — несколько мягких затемнений вдоль длины;
+       • переплетение — мелкий детерминированный шум, иначе заливка мертва.
+     Края не обводятся чёрным: вместо канта дальняя кромка просто уходит в тень. */
+  function weave(i, j) {                          // дешёвый повторяемый шум
+    var n = Math.sin(i * 12.9898 + j * 78.233) * 43758.5453;
+    return (n - Math.floor(n)) - 0.5;
+  }
+  function paintBand(x, pts, W0, W1, cols, flip) {
+    var SUB = 26, SEG = Math.min(pts.length - 1, 40);
+    var step = (pts.length - 1) / SEG;
     x.save();
     x.shadowColor = "rgba(0,0,0,.5)"; x.shadowBlur = 20; x.shadowOffsetY = 9;
-    bandPoly(x, pts, -W_ / 2, W_ / 2);
-    x.fillStyle = "#1a1614"; x.fill();
+    bandPoly(x, pts, -W0 / 2, W0 / 2);
+    x.fillStyle = "#191512"; x.fill();
     x.restore();
-    var SUB = 24;
-    for (var k = 0; k < SUB; k++) {
-      var t0 = k / SUB, t1 = (k + 1) / SUB, tm = (t0 + t1) / 2;
-      var ci = flip ? 1 - tm : tm;               // на правой тесьме порядок зеркалим
-      var col = cols[Math.min(cols.length - 1, Math.floor(ci * cols.length))];
-      var lit = 0.62 + 0.52 * Math.cos((tm - 0.34) * 2.6);
-      bandPoly(x, pts, -W_ / 2 + W_ * t0, -W_ / 2 + W_ * t1 + 0.6);
-      x.fillStyle = shade(col, Math.max(0.46, Math.min(1.20, lit)));
-      x.fill();
+
+    /* Свет ОДИН на всю картинку, сверху-слева, как у медали. Поэтому блик
+       считается не от «своего» края тесьмы, а от настоящей нормали полотна в
+       координатах кадра: у левой и правой тесьмы он ложится по-разному, и V
+       перестаёт выглядеть отзеркаленной наклейкой. */
+    var LX = -0.45, LY = -0.55, LZ = 0.70;
+    var LN = Math.sqrt(LX*LX + LY*LY + LZ*LZ);
+    LX /= LN; LY /= LN; LZ /= LN;
+    for (var j = 0; j < SEG; j++) {
+      var i0 = Math.round(j * step), i1 = Math.round((j + 1) * step);
+      var tA = j / SEG, tB = (j + 1) / SEG;
+      var wA = W0 + (W1 - W0) * tA, wB = W0 + (W1 - W0) * tB;
+      var dxs = pts[i1].x - pts[i0].x, dys = pts[i1].y - pts[i0].y;
+      var ln = Math.hypot(dxs, dys) || 1;
+      var nx = -dys / ln, ny = dxs / ln;         // нормаль к осевой в плоскости кадра
+      var twist = 0.30 * Math.sin(tA * 2.3 + 0.5);   // лёгкий перекрут по длине
+      var fold = 1
+        - 0.13 * Math.exp(-Math.pow((tA - 0.26) / 0.07, 2))
+        - 0.10 * Math.exp(-Math.pow((tA - 0.58) / 0.06, 2))
+        - 0.08 * Math.exp(-Math.pow((tA - 0.82) / 0.05, 2));
+      for (var k = 0; k < SUB; k++) {
+        var u0 = k / SUB, u1 = (k + 1) / SUB, um = (u0 + u1) / 2;
+        var uc = um * 2 - 1;
+        var ci = flip ? 1 - um : um;
+        var col = cols[Math.min(cols.length - 1, Math.floor(ci * cols.length))];
+        var th = uc * 0.62 + twist;               // полотно слегка выгнуто
+        var sn = Math.sin(th), cs = Math.cos(th);
+        var lam = Math.max(0, nx * sn * LX + ny * sn * LY + cs * LZ);
+        var hl  = Math.pow(lam, 22) * 0.85;       // атласный блик
+        var lit = (0.30 + 0.80 * lam + hl) * fold + weave(k, j) * 0.03;
+        var a0 = offsetPt(pts, i0, -wA / 2 + wA * u0), b0 = offsetPt(pts, i0, -wA / 2 + wA * u1);
+        var a1 = offsetPt(pts, i1, -wB / 2 + wB * u0), b1 = offsetPt(pts, i1, -wB / 2 + wB * u1);
+        x.beginPath();
+        x.moveTo(a0.x, a0.y); x.lineTo(b0.x, b0.y);
+        x.lineTo(b1.x, b1.y); x.lineTo(a1.x, a1.y);
+        x.closePath();
+        x.fillStyle = shade(col, Math.max(0.30, Math.min(1.34, lit)));
+        x.fill();
+        x.strokeStyle = x.fillStyle; x.lineWidth = 0.7; x.stroke();
+      }
     }
-    bandPoly(x, pts, -W_ * 0.20, -W_ * 0.10);    // продольный глянец
-    x.fillStyle = "rgba(255,255,255,.15)"; x.fill();
-    bandPoly(x, pts, -W_ / 2, W_ / 2);
-    x.strokeStyle = "rgba(24,20,14,.6)"; x.lineWidth = 2.5; x.stroke();
+    /* срез на конце: торец ткани темнее лицевой стороны */
+    var last = pts.length - 1;
+    var e0 = offsetPt(pts, last, -W1 / 2), e1 = offsetPt(pts, last, W1 / 2);
+    x.beginPath(); x.moveTo(e0.x, e0.y); x.lineTo(e1.x, e1.y);
+    x.strokeStyle = "rgba(20,16,12,.55)"; x.lineWidth = 4; x.stroke();
   }
   /* Лента буквой V: две тесьмы уходят от ушка медали вверх и в стороны, концы
-     срезаны у верха карточки — дальше они ушли бы за шею. Петля-кольцо здесь
-     была ошибкой чтения задания: просили именно V. */
+     срезаны у верха карточки — дальше они ушли бы за шею. */
   function drawRibbon(x, cx, ay, topY, cols) {
-    var W_ = 56, N = 48, HALF = 196;
+    var N = 64, HALF = 196;
     [-1, 1].forEach(function (sgn) {
-      var A = { x: cx + sgn * 6, y: ay },
+      var A = { x: cx + sgn * 7, y: ay },
           T = { x: cx + sgn * HALF, y: topY },
-          seg = [A, { x: cx + sgn * 38,  y: ay - 118 },
-                    { x: cx + sgn * HALF * 0.86, y: topY + 96 }, T];
+          seg = [A, { x: cx + sgn * 40,  y: ay - 122 },
+                    { x: cx + sgn * HALF * 0.84, y: topY + 104 }, T];
       var pts = [];
       for (var i = 0; i <= N; i++) pts.push(bezPt(seg, i / N));
-      paintBand(x, pts, W_, cols, sgn > 0);
+      // книзу тесьма чуть шире: ближе к зрителю и собирается у ушка
+      paintBand(x, pts, 58, 50, cols, sgn > 0);
     });
-    x.beginPath(); x.arc(cx, ay + 6, 17, 0, 6.2832);   // ушко под медалью
+    x.beginPath(); x.arc(cx, ay + 6, 17, 0, 6.2832);
     x.strokeStyle = "#d9a514"; x.lineWidth = 8; x.stroke();
     x.strokeStyle = "rgba(24,20,14,.45)"; x.lineWidth = 2; x.stroke();
   }
