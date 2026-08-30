@@ -44,7 +44,7 @@ const tg = (token, method, body) =>
 async function remember(env, chat) {
   if (!env.SUPABASE_SERVICE_KEY || !env.SUPABASE_URL) return;
   try {
-    await fetch(`${env.SUPABASE_URL}/rest/v1/subscribers`, {
+    const r = await fetch(`${env.SUPABASE_URL}/rest/v1/subscribers`, {
       method: "POST",
       headers: {
         apikey: env.SUPABASE_SERVICE_KEY,
@@ -54,7 +54,10 @@ async function remember(env, chat) {
       },
       body: JSON.stringify({ chat_id: chat.id, first_name: chat.first_name || "" }),
     });
-  } catch (e) { /* сеть до базы — не повод молчать человеку */ }
+    // Тихая потеря подписчика — самая незаметная поломка здесь: человек получает
+    // приветствие, а в пятничную рассылку не попадает. Видно в `wrangler tail`.
+    if (!r.ok) console.log("subscribers insert", r.status, await r.text());
+  } catch (e) { console.log("subscribers insert failed", String(e)); }
 }
 
 export default {
