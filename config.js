@@ -8,4 +8,6 @@ window.NISHEMAP_CONFIG = {
   // Supabase (см. supabase/BACKEND.md): заполнить после создания проекта
   SUPABASE_URL: "https://svfnjfpawljkdcehzkgv.supabase.co",
   SUPABASE_ANON_KEY: "sb_publishable_tUkrLQj0a8Lgod0f5UP5ng_QKD4vQlu",
+  // Воркер-бот: принимает жалобы и будит владельца в Telegram (worker/src/index.js)
+  WORKER_URL: "https://nishemap-bot.leonardabramov888.workers.dev",
 };

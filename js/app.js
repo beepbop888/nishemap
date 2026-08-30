@@ -141,6 +141,26 @@
   /* ---------- helpers ---------- */
   function bandOf(price) { return price <= 100 ? 100 : price <= 200 ? 200 : price <= 300 ? 300 : 500; }
 
+  /* ---------- решения владельца: серая монета и скрытые позиции ----------
+     OVR приезжает из таблицы overrides. Серая монета — не «плохая точка», а
+     «цифре не верим»: место остаётся на карте и просит настоящую цену. */
+  var OVR = {};
+  function isHidden(id)   { return !!(OVR[id] && OVR[id].hidden); }
+  function isDisputed(id) { return !!(OVR[id] && OVR[id].disputed); }
+  function bandOfItem(it) { return isDisputed(it.id) ? "grey" : bandOf(it.price); }
+  function loadOverrides() {
+    if (!CFG.SUPABASE_URL) return;
+    fetch(CFG.SUPABASE_URL + "/rest/v1/overrides?select=item_id,disputed,hidden&limit=2000",
+          { headers: sbHeaders() })
+      .then(function (r) { return r.json(); })
+      .then(function (rows) {
+        if (!Array.isArray(rows)) return;
+        rows.forEach(function (o) { OVR[o.item_id] = { disputed: !!o.disputed, hidden: !!o.hidden }; });
+        if (state.activeVenue) openSheet(state.activeVenue);
+        render();
+      }).catch(function () {});
+  }
+
   function confirms() {
     try { return JSON.parse(localStorage.getItem(LS_CONFIRM)) || {}; } catch (e) { return {}; }
   }
@@ -180,6 +200,7 @@
   function venueItems(v) {
     var q = state.query.trim().toLowerCase();
     return v.items.filter(function (it) {
+      if (isHidden(it.id)) return false;                 // убрано владельцем
       if (!state.bands[bandOf(it.price)]) return false;
       if (state.category && it.category !== state.category) return false;
       if (state.onlyVerified && !isVerified(it.id)) return false;
@@ -1149,14 +1170,15 @@
     rows.forEach(function (row) {
       var v = row.v, it = row.it;
       (function () {
-        var b = bandOf(it.price);
+        var b = bandOfItem(it);
         var fb = freshBadge(it);
-        var li = el("li", "card");
+        var li = el("li", "card" + (b === "grey" ? " is-grey" : ""));
         li.tabIndex = 0;
         li.setAttribute("role", "button");
         li.innerHTML =
           '<div class="card-top"><span class="card-item">' + esc(it.item) + "</span>" +
           '<span class="price price--' + b + '">' + esc(it.price) + ' ₽</span></div>' +
+          (b === "grey" ? '<div class="grey-note">цена под вопросом — знаешь настоящую?</div>' : "") +
           '<div class="card-venue">' + (row.d !== undefined && row.d < 1e9 ? '<span class="dist">' + fmtDist(row.d) + "</span> · " : "") +
           esc(v.name) + " · " + esc(v.type) +
           (v.district ? " · " + esc(v.district) : "") + " · " + esc(v.address) + "</div>" +
@@ -1375,15 +1397,19 @@
         f.dish.focus();
       });
     }
-    v.items.forEach(function (it) {
-      var b = bandOf(it.price);
+    v.items.filter(function (it) { return !isHidden(it.id); }).forEach(function (it) {
+      var b = bandOfItem(it);
       var fb = freshBadge(it);
       var li = el("li", "sheet-item");
       li.innerHTML =
         '<div class="sheet-item-top"><span class="card-item">' + esc(it.item) + "</span>" +
         '<span class="price price--' + b + '">' + esc(it.price) + " ₽</span></div>" +
+        (b === "grey" ? '<div class="grey-note">Цене не верим: пожаловались или проверил владелец. ' +
+                        'Знаешь, сколько на самом деле?</div>' : "") +
         '<div class="fresh"><span class="badge ' + fb.cls + '">' + fb.text + "</span>" +
-        '<button class="reconfirm" data-item="' + esc(it.id) + '">Ещё по этой цене?</button>' +
+        (b === "grey"
+          ? '<button class="fix-price" data-item="' + esc(it.id) + '">Знаю настоящую цену</button>'
+          : '<button class="reconfirm" data-item="' + esc(it.id) + '">Ещё по этой цене?</button>') +
         '<button class="photo-add" data-item="' + esc(it.id) + '" title="Меню/вывеска с ценами — или сама еда">📷 фото</button>' +
         '<button class="flag" data-item="' + esc(it.id) + '" title="Цена неверна или это не еда">неверно</button></div>' +
         (it.avatar ? '<div class="by-who">' + avatarSvg(it.avatar, 20) + "сдал " + esc(avatarTitle(it.avatar)) + "</div>" : "") +
@@ -1420,6 +1446,21 @@
     } else { prompt("Ссылка:", url); }
   });
 
+  /* серая монета зовёт исправить цену: форма открывается с уже вписанным местом */
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest(".fix-price"); if (!btn) return;
+    var v = state.activeVenue; if (!v) return;
+    var it = (v.items || []).filter(function (x) { return x.id === btn.dataset.item; })[0];
+    closeSheet();
+    document.querySelector(".fab").click();
+    var f = document.getElementById("submit-form").elements;
+    f.venue.value = v.name;
+    f.address.value = v.address && v.address !== v.district ? v.address : "";
+    if (it) f.dish.value = it.item;
+    if (v.lat && v.lon) state.formPos = [v.lat, v.lon];
+    f.price.focus();
+  });
+
   /* жалоба на позицию: пишем в reports, если таблица есть; локально прячем в любом случае */
   document.addEventListener("click", function (e) {
     var btn = e.target.closest(".flag"); if (!btn) return;
@@ -1430,6 +1471,17 @@
         headers: { "Content-Type": "application/json", "apikey": CFG.SUPABASE_ANON_KEY,
                    "Authorization": "Bearer " + CFG.SUPABASE_ANON_KEY, "Prefer": "return=minimal" },
         body: JSON.stringify({ item_id: id, reason: "user_flag" }),
+      }).catch(function () {});
+    }
+    // Воркер сам достанет счётчик из базы и решит, будить ли владельца.
+    // Подпись места он берёт отсюда: в базе сидовых точек нет.
+    if (CFG.WORKER_URL) {
+      var v = state.activeVenue || {};
+      var it = (v.items || []).filter(function (x) { return x.id === id; })[0] || {};
+      fetch(CFG.WORKER_URL + "/report", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ item_id: id, dish: it.item, price: it.price,
+                               venue: v.name, address: v.address }),
       }).catch(function () {});
     }
     var hid; try { hid = JSON.parse(localStorage.getItem("nishemap.hidden")) || []; } catch (er) { hid = []; }
@@ -1723,14 +1775,17 @@
     state.markers = [];
     visibleVenues().forEach(function (v) {
       var items = venueItems(v);
-      var min = Math.min.apply(null, items.map(function (i) { return i.price; }));
-      var band = bandOf(min);
+      // Пин подписан самой дешёвой позицией — если именно ей не верят,
+      // врать «от 100» нельзя: монета сереет и цифра уходит.
+      var cheapest = items.reduce(function (a, b) { return b.price < a.price ? b : a; });
+      var min = cheapest.price;
+      var band = bandOfItem(cheapest);
       ensureCoords(v, function (coords) {
         if (gen !== state.renderGen) return; // фильтры сменились, пока геокодили
         var Layout = ymaps.templateLayoutFactory.createClass(
           '<div class="coinpin coinpin--' + band + '">' +
-          '<span class="coinpin-coin">₽</span>' +
-          '<span class="coinpin-price">от ' + min + "</span></div>"
+          '<span class="coinpin-coin">' + (band === "grey" ? "?" : "₽") + "</span>" +
+          '<span class="coinpin-price">' + (band === "grey" ? "цена?" : "от " + min) + "</span></div>"
         );
         var pm = new ymaps.Placemark(coords, {
           hintContent: esc(v.name),
@@ -2107,6 +2162,7 @@
   render();
   loadSubmissions();
   loadPhotos();
+  loadOverrides();
   loadConfirms(function () { render(); checkNewCoins(); });
   loadTotals();
   flushInbox();

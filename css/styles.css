@@ -253,6 +253,23 @@ body{
 .price--200{background:var(--silver-bg); color:var(--silver-ink)}
 .price--300{background:var(--bronze-bg); color:var(--bronze-ink)}
 .price--500{background:var(--bill-bg); color:var(--bill-ink)}
+/* ============ серая монета: цене не верим ============
+   Не «плохое место», а «цифра под вопросом». Поэтому не красное и не
+   зачёркнутое, а обесцвеченное: сумма ещё читается, но перестаёт быть обещанием. */
+.price--grey{background:#ececea; color:var(--ink-soft); box-shadow:inset 0 0 0 1px #d6d6d2}
+.grey-note{
+  margin-top:6px; font:400 11px/1.35 var(--font-body, inherit); color:var(--ink-soft);
+  border-left:2px solid #d6d6d2; padding-left:8px;
+}
+.card.is-grey{opacity:.86}
+.fix-price{
+  font:600 10px/1 var(--font-display); text-transform:uppercase; letter-spacing:.08em;
+  color:var(--ink); background:var(--paper-raised);
+  border:1px dashed var(--ink); border-radius:var(--r-sm); padding:5px 10px; cursor:pointer;
+  transition:transform .12s, background .12s;
+}
+.fix-price:hover{background:#f2f2ee}
+.fix-price:active{transform:scale(.96)}
 
 /* штампы свежести */
 .fresh{display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap}
@@ -309,6 +326,12 @@ input[type="file"]{height:auto; padding:10px 12px; font-size:var(--fs-sm)}
 .coinpin--100 .coinpin-coin{background:radial-gradient(circle at 35% 28%, var(--gold-hi), var(--gold) 62%, var(--gold-lo))}
 .coinpin--200 .coinpin-coin{background:radial-gradient(circle at 35% 28%, var(--silver-hi), var(--silver) 62%, var(--silver-lo))}
 .coinpin--300 .coinpin-coin{background:radial-gradient(circle at 35% 28%, var(--bronze-hi), var(--bronze) 62%, var(--bronze-lo))}
+/* Серый пин: цифры на нём нет, только знак вопроса — цену ещё предстоит узнать. */
+.coinpin--grey .coinpin-coin{
+  background:radial-gradient(circle at 35% 28%, #d8d8d4, #b6b6b1 62%, #8f8f8a);
+  color:rgba(255,255,255,.92);
+}
+.coinpin--grey .coinpin-price{color:var(--ink-soft); border-style:dashed}
 /* пин-купюра: 301–500 — уже не монета, а банкнота с тремя ₽ */
 .coinpin--500 .coinpin-coin{
   width:38px; height:23px; border-radius:2px; color:transparent; text-shadow:none;
