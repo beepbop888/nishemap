@@ -14,29 +14,51 @@
 | Список команд | `setMyCommands` | Меню «/» |
 | Меню-кнопка | `setChatMenuButton` | Слева от поля ввода, открывает карту в один тап |
 
-Меню-кнопка важнее, чем кажется: мгновенного ответа на `/start` у бота нет
-(отвечает `digest.mjs` из GitHub Actions раз в 6 часов), а кнопка работает
-всегда и без сервера.
+Меню-кнопка работает даже до нажатия «Запустить» — это единственная дорога к
+карте для человека, который ещё не написал боту ни слова.
 
 ### Два шага, которые делаются только руками в @BotFather
 
 API их не умеет — только сам BotFather:
 
-1. **Главное мини-приложение.** `/mybots` → nishemap_bot → Bot Settings →
-   Configure Mini App → Enable → URL `https://beepbop888.github.io/nishemap/`.
-   После этого в чате появляется большая кнопка запуска приложения, а ссылка
-   `t.me/nishemap_bot` открывает карту сразу. Проверка: в `getMe` поле
-   `has_main_web_app` станет `true`.
+1. **Главное мини-приложение** — сделано. `/mybots` → nishemap_bot → Bot Settings →
+   Configure Mini App. Проверка: в `getMe` поле `has_main_web_app` = `true`.
 2. **Картинка и имя.** Bot Settings → Botpic — квадратная аватарка;
    `/setname`, если захочется поменять отображаемое имя.
 
-### Что осталось: мгновенный ответ на «Запустить»
+### Мгновенный ответ на «Запустить» — Cloudflare Worker
 
-Сейчас человек жмёт «Запустить» и до шести часов не получает ничего. Лечится
-вебхуком на Cloudflare Worker (бесплатно): воркер отвечает приветствием с
-кнопкой карты и сам пишет подписчика в Supabase. После включения вебхука
-`getUpdates` перестаёт работать (409), поэтому `collectSubscribers()` в
-`digest.mjs` нужно будет убрать — рассылка останется только на отправке.
+Живёт в `worker/`, крутится на **https://nishemap-bot.leonardabramov888.workers.dev**.
+Telegram шлёт туда апдейты вебхуком, воркер отвечает за десятки миллисекунд:
+приветствие плюс кнопка, открывающая карту внутри Telegram. Он же пишет
+подписчика в Supabase — вебхук ломает `getUpdates` (409), поэтому `digest.mjs`
+теперь проверяет `getWebhookInfo` и сбор пропускает.
+
+`/start v_<id>` открывает сразу нужную точку, `/start dev` — панель разработчика.
+
+```bash
+npx wrangler deploy --config worker/wrangler.toml    # выкатить изменения
+npx wrangler tail   --config worker/wrangler.toml    # смотреть живые запросы
+```
+
+Секреты воркера (в файлах их нет):
+
+| Секрет | Откуда | Без него |
+|---|---|---|
+| `BOT_TOKEN` | @BotFather | воркер не сможет отвечать |
+| `WEBHOOK_SECRET` | `openssl rand -hex 24`, лежит в `.webhook_secret` | чужой сможет слать боту апдейты |
+| `SUPABASE_SERVICE_KEY` | Supabase → Settings → API → service_role | человек получит ответ, но в рассылку не попадёт |
+
+Ставятся по одному: `npx wrangler secret put ИМЯ --config worker/wrangler.toml`.
+
+Переключить вебхук на другой адрес или снять:
+
+```bash
+T=$(cat .telegram_token); S=$(cat .webhook_secret)
+curl -s -X POST "https://api.telegram.org/bot$T/setWebhook" -H 'Content-Type: application/json' \
+  -d "{\"url\":\"https://nishemap-bot.leonardabramov888.workers.dev/\",\"secret_token\":\"$S\",\"allowed_updates\":[\"message\"]}"
+curl -s "https://api.telegram.org/bot$T/deleteWebhook"   # обратно на GitHub Actions
+```
 
 ## Пятничная рассылка «Топ-5 мест недели»
 

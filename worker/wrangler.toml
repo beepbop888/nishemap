@@ -1,0 +1,12 @@
+name = "nishemap-bot"
+main = "src/index.js"
+compatibility_date = "2026-08-01"
+workers_dev = true
+
+# Секретов в файле нет и быть не может. Ставятся один раз руками:
+#   npx wrangler secret put BOT_TOKEN            --config worker/wrangler.toml
+#   npx wrangler secret put WEBHOOK_SECRET       --config worker/wrangler.toml
+#   npx wrangler secret put SUPABASE_SERVICE_KEY --config worker/wrangler.toml
+[vars]
+SITE = "https://beepbop888.github.io/nishemap/"
+SUPABASE_URL = "https://svfnjfpawljkdcehzkgv.supabase.co"

@@ -5,3 +5,4 @@ tools/loras/
 __pycache__/
 *.pyc
 .telegram_token
+.webhook_secret

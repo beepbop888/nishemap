@@ -55,10 +55,10 @@ async function collectSubscribers() {
       // поэтому текст не притворяется мгновенным.
       await tg("sendMessage", {
         chat_id: msg.chat.id,
-        text: "\uD83C\uDF5C <b>НищеMap</b> — карта дешёвой еды Москвы и Питера.\n\n"
+        text: "\uD83C\uDF5C <b>НищеMap</b> — карта дешёвой еды в Москве.\n\n"
             + "\uD83D\uDCCD Смотри, где поесть рядом и за сколько.\n"
             + "➕ Нашёл дешевле — добавь точку и забери монеты.\n"
-            + "\uD83C\uDFC5 На монеты открываются аватары и медали.\n\n"
+            + "\uD83C\uDFC5 На монеты открываются аватары, медали и другие сюрпризы впереди.\n\n"
             + "\uD83D\uDCE9 Каждую пятницу присылаю топ-5 мест недели.",
         parse_mode: "HTML",
         reply_markup: { inline_keyboard: [[
@@ -142,6 +142,15 @@ async function sendDigest() {
   console.log(`digest sent: ${ok}, deactivated: ${dead}`);
 }
 
-const added = await collectSubscribers();
-console.log("new subscribers:", added);
+/* Вебхук и getUpdates взаимно исключают друг друга: пока вебхук включён,
+   getUpdates отвечает 409, а подписчиков пишет воркер (worker/src/index.js).
+   Проверяем, а не выпиливаем: если вебхук снимут, сбор снова заработает сам. */
+const hook = await fetch(`https://api.telegram.org/bot${BOT}/getWebhookInfo`)
+  .then(r => r.json()).catch(() => null);
+if (hook?.result?.url) {
+  console.log("подписчиков собирает вебхук:", hook.result.url);
+} else {
+  const added = await collectSubscribers();
+  console.log("new subscribers:", added);
+}
 if (SEND) await sendDigest();
