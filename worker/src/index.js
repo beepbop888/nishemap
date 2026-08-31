@@ -79,7 +79,10 @@ async function setOverride(env, itemId, patch) {
     headers: { ...sbHeaders(env), Prefer: "resolution=merge-duplicates,return=minimal" },
     body: JSON.stringify({ item_id: itemId, updated_at: new Date().toISOString(), ...patch }),
   });
-  if (!r.ok) console.log("override failed", r.status, await r.text());
+  // Длина ключа в логе не случайна: пустой секрет выглядит точно так же,
+  // как неверный, и один раз уже стоил получаса поисков.
+  if (!r.ok) console.log("override failed", r.status, await r.text(),
+                         "| длина ключа:", (env.SUPABASE_SERVICE_KEY || "").length);
   return r.ok;
 }
 
