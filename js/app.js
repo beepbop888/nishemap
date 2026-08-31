@@ -932,6 +932,7 @@
     document.getElementById("shop-balance").innerHTML =
       '<span class="shop-me">' + avatarSvg(me, 56) + "</span>" +
       '<span class="shop-bal"><b>' + bal + '</b><i>монет на руках</i>' +
+      (pendingCoins() ? '<u>зреют: ещё ' + pendingCoins() + '</u>' : "") +
       (next ? '<u>до «' + esc(next.t) + '»: ещё ' + (next.price - bal) + "</u>" : "") + "</span>";
 
     /* вкладки */
@@ -1639,6 +1640,7 @@
       }).then(function (resp) {
         if (resp && resp.ok) {
           markSent(entry.at);
+          loadBalance();          // монета уже в журнале, но ещё зреет — покажем сколько
           resp.clone().json().then(function (rows) {
             if (rows && rows[0] && rows[0].id) addMyItem("ui-" + rows[0].id);
           }).catch(function () {});
@@ -1979,7 +1981,35 @@
     b.total = b.items + b.venues + b.photos + b.districts + b.streak;
     return b;
   }
-  function myCoins() { var b = coinBreakdown(); return b.total + bonusFor(verifiedCount()) + devCoins(); }
+  /* ---------- баланс: считает сервер ----------
+     Раньше монеты складывались прямо здесь из localStorage — и правка одного
+     числа в консоли была всем взломом. Теперь число приходит из coin_balance()
+     (журнал coin_ledger, писать в него может только сервер), а локальный счёт
+     остаётся ровно для одного случая: Supabase не настроен вовсе.
+     Врать своему экрану человек может всегда — важно, что сервер этого не видит
+     и ничего на этой цифре не строит. */
+  var SRV = null;                       // {balance, pending, next_at} или null
+  function loadBalance() {
+    if (!CFG.SUPABASE_URL) return;
+    fetch(CFG.SUPABASE_URL + "/rest/v1/rpc/coin_balance", {
+      method: "POST",
+      headers: Object.assign({ "Content-Type": "application/json" }, sbHeaders()),
+      body: JSON.stringify({ p_device: deviceId() }),
+    }).then(function (r) { return r.json(); })
+      .then(function (rows) {
+        var row = Array.isArray(rows) ? rows[0] : rows;
+        if (!row || typeof row.balance !== "number") return;
+        SRV = row;
+        paintRank(); render();
+      }).catch(function () {});
+  }
+  function pendingCoins() { return SRV ? (SRV.pending || 0) : 0; }
+  function myCoins() {
+    if (SRV) return SRV.balance + devCoins();
+    if (CFG.SUPABASE_URL) return devCoins();       // сервер ещё не ответил
+    var b = coinBreakdown();                       // офлайн-режим без бэкенда
+    return b.total + bonusFor(verifiedCount()) + devCoins();
+  }
   function checkMilestone() {
     var v = verifiedCount();
     var reached = MILESTONES.filter(function (m) { return v >= m.places; });
@@ -2117,16 +2147,39 @@
      Монеты числом нигде не лежат: они СЧИТАЮТСЯ из проверенных цен, поэтому
      «выдать 10000» — это надбавка в localStorage, видимая только на этом
      устройстве и только в интерфейсе. На сервер она не уходит.
-     Включение: адрес ?dev=1 или ссылка t.me/nishemap_bot/map?startapp=dev.
+     Включение: ?dev=<ключ> или t.me/nishemap_bot/map?startapp=<ключ>.
      Дальше режим держится сам, выключение — ?dev=0. */
+  /* Замок на панель. Раньше хватало ?dev=1 — то есть панель с кнопкой «+10000»
+     была открыта любому, кто её нашёл. Теперь нужен ключ, и в коде лежит только
+     его SHA-256: по исходнику подобрать нечего.
+     Это замок от любопытных, а не защита баланса. Защита баланса — в том, что
+     считает его сервер (coin_ledger), и надбавка отсюда туда не попадает. */
+  var DEV_HASH = "02a214cfcce5fc90d95fddd3c8506f64b04baa39bbb12437d95ca9af2c7cc89b";
+
   function devOn() {
-    try {
-      if (/[?&]dev=1/.test(location.search)) localStorage.setItem("nishemap.dev", "1");
-      if (/[?&]dev=0/.test(location.search)) localStorage.removeItem("nishemap.dev");
-      if (TG && TG.initDataUnsafe && String(TG.initDataUnsafe.start_param || "") === "dev")
-        localStorage.setItem("nishemap.dev", "1");
-      return localStorage.getItem("nishemap.dev") === "1";
-    } catch (e) { return false; }
+    try { return localStorage.getItem("nishemap.dev") === "1"; } catch (e) { return false; }
+  }
+  /* Проверка асинхронная (crypto.subtle), а devOn() зовут отовсюду синхронно —
+     поэтому ключ проверяется один раз на старте и оставляет флаг в localStorage. */
+  function devUnlock() {
+    var key = "";
+    var m = location.search.match(/[?&]dev=([^&]+)/);
+    if (m) key = decodeURIComponent(m[1]);
+    if (!key && TG && TG.initDataUnsafe) key = String(TG.initDataUnsafe.start_param || "");
+    if (!key) return;
+    if (key === "0" || key === "off") {
+      try { localStorage.removeItem("nishemap.dev"); } catch (e) {}
+      return;
+    }
+    if (!window.crypto || !crypto.subtle || !window.TextEncoder) return;
+    crypto.subtle.digest("SHA-256", new TextEncoder().encode(key)).then(function (buf) {
+      var hex = Array.prototype.map.call(new Uint8Array(buf), function (b) {
+        return ("0" + b.toString(16)).slice(-2);
+      }).join("");
+      if (hex !== DEV_HASH) return;
+      try { localStorage.setItem("nishemap.dev", "1"); } catch (e) {}
+      devPanel(); paintRank(); render();
+    }).catch(function () {});
   }
   function devCoins() {
     try { return parseInt(localStorage.getItem("nishemap.dev.coins") || "0", 10) || 0; }
@@ -2163,6 +2216,8 @@
   loadSubmissions();
   loadPhotos();
   loadOverrides();
+  loadBalance();
+  devUnlock();
   loadConfirms(function () { render(); checkNewCoins(); });
   loadTotals();
   flushInbox();

@@ -34,11 +34,12 @@ const esc = (s) => String(s == null ? "" : s)
  *  openDeepLink() в app.js читает ?v= из адреса. */
 function appUrl(site, payload) {
   if (!payload) return site;
-  if (payload === "dev") return site + "?dev=1";
   if (payload.startsWith("v_")) {
     return site + "?v=" + encodeURIComponent(payload.slice(2).replace(/_/g, "-"));
   }
-  return site;
+  // Остальное — ключ панели разработчика. Проверяет его сам сайт по хешу,
+  // воркер ключа не знает и знать не должен.
+  return site + "?dev=" + encodeURIComponent(payload);
 }
 
 const tg = (env, method, body) =>
