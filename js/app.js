@@ -282,7 +282,7 @@
     return badgeHtml("t" + places, size);
   }
   function earnedTrophies() {
-    var v = verifiedCount();
+    var v = scoredCount();
     return Object.keys(TROPHIES).map(Number).sort(function (a, b) { return a - b; })
       .filter(function (p) { return v >= p; });
   }
@@ -415,7 +415,7 @@
   if (rankBtn) rankBtn.addEventListener("click", function () { openShop(); });
 
   function coinsBreakdownHtml() {
-    var b = coinBreakdown(), st = streakState(), nx = nextMilestone(verifiedCount());
+    var b = coinBreakdown(), st = streakState(), nx = nextMilestone(scoredCount());
     return '<details class="coins-info"><summary>Откуда берутся монеты</summary>' +
       "<p>Монета приходит, когда район подтвердит твою цену. Заработано: <b>" + myCoins() +
       "</b>, на руках: <b>" + coinsBalance() + "</b>.</p><ul>" +
@@ -425,7 +425,7 @@
       "<li>Новые станции: <b>" + b.districts + "</b> <span>(+10 за станцию без цен)</span></li>" +
       "<li>Серия: <b>" + b.streak + "</b> · недель подряд: " + st.weeks +
         " · на этой неделе " + st.thisWeek + " из " + STREAK_NEED + "</li>" +
-      (nx ? "<li>До вехи «" + nx.places + " позиций»: ещё <b>" + (nx.places - verifiedCount()) +
+      (nx ? "<li>До вехи «" + nx.places + " позиций»: ещё <b>" + (nx.places - scoredCount()) +
         "</b> (+" + nx.bonus + ")</li>" : "") + "</ul></details>";
   }
 
@@ -1956,6 +1956,16 @@
     Object.keys(g).forEach(function (k) { n += g[k].items.length; });
     return n;
   }
+  /* Число, по которому выдаются медали. Раньше это был verifiedCount() из
+     localStorage — то есть дописать себе десяток выдуманных id и открыть все
+     двенадцать медалей мог кто угодно, а картинку «похвастаться» люди шлют
+     наружу. Теперь считает журнал; localStorage остаётся только там, где
+     бэкенда нет вовсе. */
+  function scoredCount() {
+    if (SRV && typeof SRV.items === "number") return SRV.items;
+    if (CFG.SUPABASE_URL) return 0;
+    return verifiedCount();
+  }
   /* сколько монет принесла работа: позиции (до 3 на место) + первопроходство + фото + районы */
   function coinBreakdown() {
     var g = myVerifiedByVenue(), b = { items: 0, venues: 0, photos: 0, districts: 0, streak: streakCoins() };
@@ -1991,7 +2001,7 @@
   var SRV = null;                       // {balance, pending, next_at} или null
   function loadBalance() {
     if (!CFG.SUPABASE_URL) return;
-    fetch(CFG.SUPABASE_URL + "/rest/v1/rpc/coin_balance", {
+    fetch(CFG.SUPABASE_URL + "/rest/v1/rpc/coin_stats", {
       method: "POST",
       headers: Object.assign({ "Content-Type": "application/json" }, sbHeaders()),
       body: JSON.stringify({ p_device: deviceId() }),
@@ -2011,7 +2021,7 @@
     return b.total + bonusFor(verifiedCount()) + devCoins();
   }
   function checkMilestone() {
-    var v = verifiedCount();
+    var v = scoredCount();
     var reached = MILESTONES.filter(function (m) { return v >= m.places; });
     if (!reached.length) return;
     var top = reached[reached.length - 1];
