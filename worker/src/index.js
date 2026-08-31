@@ -168,7 +168,6 @@ export default {
         language: user.language_code || null,
         is_premium: !!user.is_premium,
         device: String(b.device || "").slice(0, 64) || null,
-        last_seen: new Date().toISOString(),
       };
       ctx.waitUntil((async () => {
         // Первый заход создаёт строку, последующие двигают last_seen и счётчик.
