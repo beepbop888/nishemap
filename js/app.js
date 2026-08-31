@@ -1386,13 +1386,18 @@
         document.getElementById("sheet-type").textContent = v.type + " · м. " + v.district;
     }
     document.getElementById("sheet-address").textContent = v.address;
-    var prices = (v.items || []).map(function (i) { return i.price; });
+    var shown = (v.items || []).filter(function (i) { return !isHidden(i.id); });
+    var ok = shown.filter(function (i) { return !isDisputed(i.id); });
     var cheap = document.getElementById("sheet-cheapest");
     if (cheap) {
-      cheap.textContent = prices.length
-        ? "Самое дешёвое здесь: " + Math.min.apply(null, prices) + " ₽ · позиций: " + prices.length
-        : "";
-      cheap.hidden = !prices.length;
+      // Спорную цену в заголовок не выносим: «самое дешёвое здесь» — это
+      // обещание, а под вопросом стоит именно оно.
+      cheap.textContent = !shown.length ? ""
+        : ok.length
+          ? "Самое дешёвое здесь: " + Math.min.apply(null, ok.map(function (i) { return i.price; })) +
+            " ₽ · позиций: " + shown.length
+          : "Цены здесь под вопросом · позиций: " + shown.length;
+      cheap.hidden = !shown.length;
     }
     var link = document.getElementById("sheet-yandex");
     link.href = v.yandexUrl || "https://yandex.ru/maps/?text=" + encodeURIComponent(v.name + " " + v.address);
@@ -1799,11 +1804,13 @@
     state.markers = [];
     visibleVenues().forEach(function (v) {
       var items = venueItems(v);
-      // Пин подписан самой дешёвой позицией — если именно ей не верят,
-      // врать «от 100» нельзя: монета сереет и цифра уходит.
-      var cheapest = items.reduce(function (a, b) { return b.price < a.price ? b : a; });
-      var min = cheapest.price;
-      var band = bandOfItem(cheapest);
+      // Серым пин становится, только если под вопросом ВСЕ позиции места.
+      // Одна спорная цена не повод перекрашивать заведение, где есть ещё пять
+      // честных: пин просто показывает самую дешёвую из тех, которым верим.
+      var trusted = items.filter(function (i) { return !isDisputed(i.id); });
+      var pool = trusted.length ? trusted : items;
+      var min = pool.reduce(function (a, b) { return b.price < a.price ? b : a; }).price;
+      var band = trusted.length ? bandOf(min) : "grey";
       ensureCoords(v, function (coords) {
         if (gen !== state.renderGen) return; // фильтры сменились, пока геокодили
         var Layout = ymaps.templateLayoutFactory.createClass(
