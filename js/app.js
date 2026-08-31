@@ -323,7 +323,12 @@
       '<img src="' + AVIMG[id] + '" alt=""></span>';
   }
   function myAvatar() { return localStorage.getItem("nishemap.avatar") || ""; }
+  /* Что открыто — решает сервер (таблица purchases). Раньше список лежал в
+     localStorage, а аватар видно другим: он уходит вместе с ценой в
+     submissions.avatar. То есть это была не косметика, а подпись под работой. */
   function ownedAvatars() {
+    if (SRV && SRV.owned) return SRV.owned;
+    if (CFG.SUPABASE_URL) return [];
     try { return JSON.parse(localStorage.getItem("nishemap.owned")) || []; } catch (e) { return []; }
   }
   function ownsAvatar(id) {
@@ -331,6 +336,7 @@
     return !a || !a.price || ownedAvatars().indexOf(id) !== -1;
   }
   function coinsSpent() {
+    if (SRV && typeof SRV.spent === "number") return SRV.spent;
     return ownedAvatars().reduce(function (s, id) {
       var a = AVATARS.filter(function (x) { return x.id === id; })[0];
       return s + (a ? a.price : 0);
@@ -338,13 +344,28 @@
   }
   /* звание считаем по ЗАРАБОТАННЫМ за всё время, покупки его не сбивают */
   function coinsBalance() { return Math.max(0, myCoins() - coinsSpent()); }
-  function buyAvatar(id) {
+  /* Покупку решает сервер: buy_avatar сам берёт цену из avatar_prices и
+     сверяет её с балансом из журнала. Здешняя проверка — только чтобы не
+     дёргать сеть заведомо зря; поверить ей нельзя, и сервер ей не верит. */
+  function buyAvatar(id, done) {
     var a = AVATARS.filter(function (x) { return x.id === id; })[0];
-    if (!a || !a.price || ownsAvatar(id)) return false;
-    if (coinsBalance() < a.price) return false;
-    var own = ownedAvatars(); own.push(id);
-    localStorage.setItem("nishemap.owned", JSON.stringify(own));
-    return true;
+    if (!a || !a.price || ownsAvatar(id)) return;
+    if (!CFG.SUPABASE_URL) {                       // офлайн-сборка без бэкенда
+      var own = ownedAvatars(); own.push(id);
+      localStorage.setItem("nishemap.owned", JSON.stringify(own));
+      done(true); return;
+    }
+    fetch(CFG.SUPABASE_URL + "/rest/v1/rpc/buy_avatar", {
+      method: "POST",
+      headers: Object.assign({ "Content-Type": "application/json" }, sbHeaders()),
+      body: JSON.stringify({ p_device: deviceId(), p_avatar: id }),
+    }).then(function (r) { return r.json(); })
+      .then(function (rows) {
+        var res = Array.isArray(rows) ? rows[0] : rows;
+        if (!res || !res.ok) { toast((res && res.reason) || "Покупка не прошла"); done(false); return; }
+        loadBalance();                              // список открытого приедет оттуда же
+        done(true);
+      }).catch(function () { toast("Сеть не отвечает"); done(false); });
   }
   function avatarTitle(id) {
     var a = AVATARS.filter(function (x) { return x.id === id; })[0];
@@ -1002,11 +1023,12 @@
               return;
             }
             if (!can) { toast("Не хватает " + (a.price - bal) + " монет. Сдавай цены — район подтвердит."); return; }
-            if (buyAvatar(a.id)) {
+            buyAvatar(a.id, function (ok) {
+              if (!ok) return;
               localStorage.setItem("nishemap.avatar", a.id);
               paintRank(); openShop();
               spendAnimation(card, function () { revealAvatar(a); });
-            }
+            });
           });
           grid.appendChild(card);
         });
@@ -1471,7 +1493,7 @@
         method: "POST",
         headers: { "Content-Type": "application/json", "apikey": CFG.SUPABASE_ANON_KEY,
                    "Authorization": "Bearer " + CFG.SUPABASE_ANON_KEY, "Prefer": "return=minimal" },
-        body: JSON.stringify({ item_id: id, reason: "user_flag" }),
+        body: JSON.stringify({ item_id: id, reason: "user_flag", device: deviceId() }),
       }).catch(function () {});
     }
     // Воркер сам достанет счётчик из базы и решит, будить ли владельца.
@@ -2014,6 +2036,17 @@
       }).catch(function () {});
   }
   function pendingCoins() { return SRV ? (SRV.pending || 0) : 0; }
+
+  /* initData подписан ключом бота. Сами проверить подпись мы не можем — ключа
+     здесь нет и быть не должно, — поэтому строку целиком отдаём воркеру: он
+     сверяет её и только после этого записывает человека. */
+  function sendIdentity() {
+    if (!CFG.WORKER_URL || !TG || !TG.initData) return;
+    fetch(CFG.WORKER_URL + "/auth", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ init_data: TG.initData, device: deviceId() }),
+    }).catch(function () {});
+  }
   function myCoins() {
     if (SRV) return SRV.balance + devCoins();
     if (CFG.SUPABASE_URL) return devCoins();       // сервер ещё не ответил
@@ -2228,6 +2261,7 @@
   loadOverrides();
   loadBalance();
   devUnlock();
+  sendIdentity();
   loadConfirms(function () { render(); checkNewCoins(); });
   loadTotals();
   flushInbox();

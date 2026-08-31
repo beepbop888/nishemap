@@ -111,6 +111,38 @@ function json(body) {
   });
 }
 
+
+/* ---------- личность из Telegram ---------- */
+
+const enc = new TextEncoder();
+async function hmac(keyBytes, msg) {
+  const k = await crypto.subtle.importKey("raw", keyBytes, { name: "HMAC", hash: "SHA-256" },
+                                          false, ["sign"]);
+  return new Uint8Array(await crypto.subtle.sign("HMAC", k, enc.encode(msg)));
+}
+const hex = (buf) => Array.from(buf).map(b => b.toString(16).padStart(2, "0")).join("");
+
+/** Проверка подписи initData по алгоритму Telegram.
+ *  Смысл: сайт лежит на GitHub Pages, туда кто угодно может прийти с любым
+ *  «я такой-то». Подпись считается ключом бота, которого нет ни у кого, кроме
+ *  Telegram и этого воркера, — значит имя и id можно записывать как факт. */
+async function checkInitData(env, initData) {
+  const q = new URLSearchParams(initData);
+  const got = q.get("hash");
+  if (!got) return null;
+  q.delete("hash");
+  const check = [...q.entries()].sort((a, b) => a[0] < b[0] ? -1 : 1)
+    .map(([k, v]) => `${k}=${v}`).join("\n");
+  const secret = await hmac(enc.encode("WebAppData"), env.BOT_TOKEN);
+  const mine = hex(await hmac(secret, check));
+  if (mine !== got) return null;
+  // Старую подпись переигрывать незачем: если её кто-то перехватил, срок жизни
+  // должен быть коротким. Сутки — запас на спящую вкладку.
+  const age = Math.floor(Date.now() / 1000) - parseInt(q.get("auth_date") || "0", 10);
+  if (!(age >= 0 && age < 86400)) return null;
+  try { return JSON.parse(q.get("user") || "null"); } catch { return null; }
+}
+
 export default {
   async fetch(request, env, ctx) {
     const path = new URL(request.url).pathname;
@@ -123,6 +155,37 @@ export default {
     }
     if (request.method !== "POST") return new Response("nishemap bot ok");
 
+    /* ---- личность из мини-аппа ---- */
+    if (path === "/auth") {
+      let b; try { b = await request.json(); } catch { return json({ ok: false }); }
+      const user = await checkInitData(env, String(b.init_data || ""));
+      if (!user || !user.id) return json({ ok: false });
+      const row = {
+        tg_id: user.id,
+        username: user.username || null,
+        first_name: user.first_name || null,
+        last_name: user.last_name || null,
+        language: user.language_code || null,
+        is_premium: !!user.is_premium,
+        device: String(b.device || "").slice(0, 64) || null,
+        last_seen: new Date().toISOString(),
+      };
+      ctx.waitUntil((async () => {
+        // Первый заход создаёт строку, последующие двигают last_seen и счётчик.
+        const r = await fetch(`${env.SUPABASE_URL}/rest/v1/tg_users?on_conflict=tg_id`, {
+          method: "POST",
+          headers: { ...sbHeaders(env), Prefer: "resolution=merge-duplicates,return=minimal" },
+          body: JSON.stringify(row),
+        });
+        if (!r.ok) { console.log("tg_users upsert", r.status, await r.text()); return; }
+        await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/bump_opens`, {
+          method: "POST", headers: sbHeaders(env),
+          body: JSON.stringify({ p_tg_id: user.id }),
+        });
+      })());
+      return json({ ok: true, id: user.id, username: user.username || null });
+    }
+
     /* ---- жалоба с сайта ---- */
     if (path === "/report") {
       let b; try { b = await request.json(); } catch { return json({ ok: false }); }
@@ -130,9 +193,8 @@ export default {
       if (!id) return json({ ok: false });
       ctx.waitUntil((async () => {
         const n = await reportCount(env, id);
-        // Не каждая жалоба стоит сообщения: тролль с кнопкой «неверно» иначе
-        // засыплет чат. Шумим на первой, третьей и дальше всё реже.
-        if (![1, 3, 10, 30, 100].includes(n)) return;
+        // Пока жалоб мало — владелец хочет видеть каждую. Когда поток вырастет,
+        // вернуть прореживание: if (![1,3,10,30,100].includes(n)) return;
         await tg(env, "sendMessage", {
           chat_id: env.OWNER_CHAT_ID,
           text: (n >= 3 ? "⚠️" : "\u{1F4E5}") + ` Жалоба #${n} на позицию\n\n` +
@@ -170,9 +232,11 @@ export default {
       const cut = String(cb.data || "").indexOf(":");
       const act = cut > 0 ? cb.data.slice(0, cut) : "";
       const id = cut > 0 ? cb.data.slice(cut + 1) : "";
-      const plan = { h: { hidden: true, disputed: false, note: "скрыто владельцем" },
-                     g: { disputed: true, hidden: false, note: "цена под вопросом" },
-                     o: { disputed: false, hidden: false, note: "проверено владельцем" } }[act];
+      // by_owner = решение человека, а не автоматики по трём жалобам. От этого
+      // зависит, платить ли монету пожаловавшимся (триггер pay_reporters).
+      const plan = { h: { hidden: true, disputed: false, by_owner: true, note: "скрыто владельцем" },
+                     g: { disputed: true, hidden: false, by_owner: true, note: "цена под вопросом" },
+                     o: { disputed: false, hidden: false, by_owner: true, note: "проверено владельцем" } }[act];
       const done = { h: "\u{1F6AB} Скрыто",
                      g: "⚪ Серая монета — ждём настоящую цену",
                      o: "✅ Оставлено как есть" }[act];
