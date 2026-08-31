@@ -260,6 +260,31 @@ export default {
     const text = (msg.text || "").trim();
     // Нужен один раз при настройке: OWNER_CHAT_ID неоткуда взять, пока вебхук
     // включён — getUpdates при нём отвечает 409.
+    /* Тестовые монеты владельцу: /coins 500, /coins 0 — снять.
+       Кладёт их СЕРВЕР, поэтому проверяются настоящие пути — покупка аватара,
+       медали, витрина. Надбавка в localStorage ничего этого больше не двигает. */
+    if (text.split(/\s+/)[0] === "/coins") {
+      if (String(msg.chat.id) !== String(env.OWNER_CHAT_ID)) return new Response("ok");
+      const n = Math.max(0, Math.min(100000, parseInt(text.split(/\s+/)[1] || "0", 10) || 0));
+      const u = await fetch(
+        `${env.SUPABASE_URL}/rest/v1/tg_users?tg_id=eq.${msg.chat.id}&select=device`,
+        { headers: sbHeaders(env) }).then(r => r.json()).catch(() => []);
+      const dev = u && u[0] && u[0].device;
+      if (!dev) {
+        await tg(env, "sendMessage", { chat_id: msg.chat.id,
+          text: "Сначала открой карту в Telegram — иначе не за кем закрепить монеты." });
+        return new Response("ok");
+      }
+      const r = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/dev_grant`, {
+        method: "POST", headers: sbHeaders(env),
+        body: JSON.stringify({ p_device: dev, p_amount: n }),
+      });
+      const total = r.ok ? await r.json() : null;
+      await tg(env, "sendMessage", { chat_id: msg.chat.id,
+        text: total === null ? "Не вышло — смотри логи"
+             : `\u{1FA99} Тестовых монет: ${n}. Всего на балансе: ${total}.\nПерезагрузи карту.` });
+      return new Response("ok");
+    }
     if (text === "/id") {
       await tg(env, "sendMessage", { chat_id: msg.chat.id, text: "chat_id: " + msg.chat.id });
       return new Response("ok");

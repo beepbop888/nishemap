@@ -2055,10 +2055,10 @@
     }).catch(function () {});
   }
   function myCoins() {
-    if (SRV) return SRV.balance + devCoins();
-    if (CFG.SUPABASE_URL) return devCoins();       // сервер ещё не ответил
+    if (SRV) return SRV.balance;
+    if (CFG.SUPABASE_URL) return 0;                // сервер ещё не ответил
     var b = coinBreakdown();                       // офлайн-режим без бэкенда
-    return b.total + bonusFor(verifiedCount()) + devCoins();
+    return b.total + bonusFor(verifiedCount());
   }
   function checkMilestone() {
     var v = scoredCount();
@@ -2231,10 +2231,7 @@
       devPanel(); paintRank(); render();
     }).catch(function () {});
   }
-  function devCoins() {
-    try { return parseInt(localStorage.getItem("nishemap.dev.coins") || "0", 10) || 0; }
-    catch (e) { return 0; }
-  }
+
   function devPanel() {
     if (!devOn() || document.getElementById("devbar")) return;
     var bar = el("div", "devbar"); bar.id = "devbar";
@@ -2243,13 +2240,11 @@
       b.addEventListener("click", fn); bar.appendChild(b); return b;
     }
     bar.appendChild(el("b", "", "DEV"));
-    btn("+10000", function () {
-      localStorage.setItem("nishemap.dev.coins", String(devCoins() + 10000));
-      paintRank(); render();
-    });
-    btn("монеты 0", function () {
-      localStorage.removeItem("nishemap.dev.coins"); paintRank(); render();
-    });
+    // Монеты выдаёт бот: /coins 500 в чате с @nishemap_bot. Отсюда их выдать
+    // нельзя и не нужно — здесь нет ключа, которым пишут в журнал, и в этом
+    // весь смысл переезда баланса на сервер.
+    btn("обновить баланс", function () { loadBalance(); toast("Спросили сервер"); });
+    btn("монеты: /coins", function () { toast("Выдаёт бот: напиши ему /coins 500"); });
     btn("+монеты", function () { coinCelebration(3); });
     // по кнопке на каждую медаль: анимация проигрывается сразу, порог не нужен
     Object.keys(TROPHIES).map(Number).sort(function (a, b) { return a - b; })
