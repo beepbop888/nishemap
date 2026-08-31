@@ -343,7 +343,14 @@
     }, 0);
   }
   /* звание считаем по ЗАРАБОТАННЫМ за всё время, покупки его не сбивают */
-  function coinsBalance() { return Math.max(0, myCoins() - coinsSpent()); }
+  function coinsEarned() { return SRV && typeof SRV.earned === "number" ? SRV.earned : myCoins(); }
+  /* coin_stats отдаёт balance УЖЕ за вычетом покупок. Вычитать coinsSpent()
+     ещё раз — значит показать earned − 2×spent: после первой же покупки витрина
+     обнулялась и отказывалась продавать то, что сервер продал бы. */
+  function coinsBalance() {
+    if (SRV && typeof SRV.balance === "number") return Math.max(0, SRV.balance);
+    return Math.max(0, myCoins() - coinsSpent());
+  }
   /* Покупку решает сервер: buy_avatar сам берёт цену из avatar_prices и
      сверяет её с балансом из журнала. Здешняя проверка — только чтобы не
      дёргать сеть заведомо зря; поверить ей нельзя, и сервер ей не верит. */
@@ -1662,9 +1669,21 @@
             formError.hidden = false; formError.textContent = msg;
             throw new Error("rejected");
           }
-          return post(record);   // скорее всего колонки ещё нет — шлём без необязательных полей
+          // Без device строку отобьёт rl_submissions — повтор обязан его нести.
+          return post(Object.assign({ device: deviceId() }, record));
         });
       }).then(function (resp) {
+        // Раньше здесь не было ветки «не ок»: любой отказ сервера прятался за
+        // экраном «Принято», и цена исчезала молча.
+        if (resp && !resp.ok) {
+          return resp.clone().json().catch(function () { return {}; }).then(function (err) {
+            formDone.hidden = true; form.hidden = false;
+            formError.hidden = false;
+            formError.textContent = (err && (err.message || err.hint)) ||
+              "Сервер не принял точку. Попробуй ещё раз.";
+            throw new Error("rejected");
+          });
+        }
         if (resp && resp.ok) {
           markSent(entry.at);
           loadBalance();          // монета уже в журнале, но ещё зреет — покажем сколько
@@ -1693,11 +1712,17 @@
       address: f.address.value.trim(),
       at: new Date().toISOString(),
       sent: false,
-      body: state.formPos ? Object.assign({}, record, { lat: state.formPos[0], lon: state.formPos[1] }) : record,
+      // В тело очереди кладём ровно то, что уйдёт на сервер: без device строку
+      // отобьёт rl_submissions, и досылка окажется такой же пустой, как раньше.
+      body: Object.assign({ device: deviceId() }, record,
+                          state.formPos ? { lat: state.formPos[0], lon: state.formPos[1] } : {}),
     };
     inbox.push(entry);
     localStorage.setItem(LS_INBOX, JSON.stringify(inbox));
-    markSent(entry.at); // если POST уже прошёл — пометит; иначе останется в очереди
+    // markSent() здесь НЕ зовём. Он ставил sent=true всем подряд в тот же миг,
+    // поэтому flushInbox не находил ни одной неотправленной точки и очередь,
+    // написанная ради метро и подвалов, не досылала ничего никогда.
+    // Помечает теперь только успешный ответ сервера — выше по коду.
     state.lastVenue = { venue: record.venue, address: record.address, pos: state.formPos };
     localStorage.setItem("nishemap.mine", String(myCount() + 1));
     paintRank();

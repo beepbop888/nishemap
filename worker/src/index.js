@@ -195,16 +195,33 @@ export default {
       if (!id) return json({ ok: false });
       ctx.waitUntil((async () => {
         const n = await reportCount(env, id);
-        // Пока жалоб мало — владелец хочет видеть каждую. Когда поток вырастет,
-        // вернуть прореживание: if (![1,3,10,30,100].includes(n)) return;
+        if (!n) return;                       // строку отбил лимит — будить незачем
+        // Подпись места раньше приходила из тела запроса и печаталась как факт:
+        // текст карточки можно было написать любой, а кнопки под ним действовали
+        // на совсем другую позицию. Для пользовательских точек берём правду из
+        // базы; для наших посевных — честно помечаем, что подпись со стороны.
+        let head = "", trusted = false;
+        const m = id.match(/^ui-([0-9a-f-]{36})$/i);
+        if (m) {
+          const row = await fetch(
+            `${env.SUPABASE_URL}/rest/v1/submissions?id=eq.${m[1]}&select=dish,price,venue,address`,
+            { headers: sbHeaders(env) }).then(r => r.json()).catch(() => []);
+          if (row && row[0]) {
+            trusted = true;
+            head = `<b>${esc(row[0].dish)}</b> — ${esc(row[0].price)} ₽\n` +
+                   esc(row[0].venue) + "\n" + esc(row[0].address) + "\n";
+          }
+        }
+        if (!head) {
+          head = `<b>${esc(b.dish) || "позиция"}</b>` + (b.price ? ` — ${esc(b.price)} ₽` : "") + "\n" +
+                 (b.venue ? esc(b.venue) + "\n" : "") + (b.address ? esc(b.address) + "\n" : "");
+        }
         await tg(env, "sendMessage", {
           chat_id: env.OWNER_CHAT_ID,
-          text: (n >= 3 ? "⚠️" : "\u{1F4E5}") + ` Жалоба #${n} на позицию\n\n` +
-                `<b>${esc(b.dish) || id}</b>` + (b.price ? ` — ${esc(b.price)} ₽` : "") + "\n" +
-                (b.venue ? esc(b.venue) + "\n" : "") +
-                (b.address ? esc(b.address) + "\n" : "") +
-                `\nПожаловались: ${n} раз` +
-                (n >= 3 ? "\n<i>Монета уже посерела автоматически.</i>" : ""),
+          text: `\u{1F4E5} Жалоба #${n} на позицию\n\n` + head +
+                `\n<code>${esc(id)}</code>` +        // на что именно подействуют кнопки
+                `\nПожаловались: ${n}` +
+                (trusted ? "" : "\n<i>Подпись прислал сайт, в базе этой позиции нет.</i>"),
           parse_mode: "HTML",
           reply_markup: modKeyboard(id),
         });
