@@ -182,7 +182,10 @@ export default {
           body: JSON.stringify({ p_tg_id: user.id }),
         });
       })());
-      return json({ ok: true, id: user.id, username: user.username || null });
+      // Признак владельца выдаёт сервер после проверки подписи. Сайт сам решить
+      // это не может: он лежит на публичном GitHub Pages и верит чему угодно.
+      return json({ ok: true, id: user.id, username: user.username || null,
+                    owner: String(user.id) === String(env.OWNER_CHAT_ID) });
     }
 
     /* ---- жалоба с сайта ---- */
@@ -260,12 +263,14 @@ export default {
     const text = (msg.text || "").trim();
     // Нужен один раз при настройке: OWNER_CHAT_ID неоткуда взять, пока вебхук
     // включён — getUpdates при нём отвечает 409.
-    /* Тестовые монеты владельцу: /coins 500, /coins 0 — снять.
-       Кладёт их СЕРВЕР, поэтому проверяются настоящие пути — покупка аватара,
-       медали, витрина. Надбавка в localStorage ничего этого больше не двигает. */
+    /* Тестовые монеты владельцу: /coins 500 прибавляет, /coins reset обнуляет
+       вместе с покупками. Кладёт их СЕРВЕР, поэтому проверяются настоящие пути —
+       покупка аватара, медали, витрина. */
     if (text.split(/\s+/)[0] === "/coins") {
       if (String(msg.chat.id) !== String(env.OWNER_CHAT_ID)) return new Response("ok");
-      const n = Math.max(0, Math.min(100000, parseInt(text.split(/\s+/)[1] || "0", 10) || 0));
+      const arg = (text.split(/\s+/)[1] || "").toLowerCase();
+      const reset = arg === "reset" || arg === "0";
+      const n = reset ? 0 : Math.max(0, Math.min(100000, parseInt(arg, 10) || 0));
       const u = await fetch(
         `${env.SUPABASE_URL}/rest/v1/tg_users?tg_id=eq.${msg.chat.id}&select=device`,
         { headers: sbHeaders(env) }).then(r => r.json()).catch(() => []);
@@ -277,12 +282,17 @@ export default {
       }
       const r = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/dev_grant`, {
         method: "POST", headers: sbHeaders(env),
-        body: JSON.stringify({ p_device: dev, p_amount: n }),
+        body: JSON.stringify({ p_device: dev, p_amount: n, p_reset: reset }),
       });
-      const total = r.ok ? await r.json() : null;
+      const rows = r.ok ? await r.json() : null;
+      const res = Array.isArray(rows) ? rows[0] : rows;
       await tg(env, "sendMessage", { chat_id: msg.chat.id,
-        text: total === null ? "Не вышло — смотри логи"
-             : `\u{1FA99} Тестовых монет: ${n}. Всего на балансе: ${total}.\nПерезагрузи карту.` });
+        text: !res ? "Не вышло — смотри логи"
+             : reset
+               ? "\u{1F9F9} Сброшено: тестовые монеты и покупки. Баланс: 0.\nПерезагрузи карту."
+               : `\u{1FA99} Добавлено ${res.granted}. Баланс: ${res.total}` +
+                 (res.spent ? ` (потрачено на аватары: ${res.spent})` : "") +
+                 ".\nПерезагрузи карту." });
       return new Response("ok");
     }
     if (text === "/id") {

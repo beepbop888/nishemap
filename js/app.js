@@ -2048,11 +2048,16 @@
      здесь нет и быть не должно, — поэтому строку целиком отдаём воркеру: он
      сверяет её и только после этого записывает человека. */
   function sendIdentity() {
+    setDev(false);                       // до ответа сервера прав нет ни у кого
     if (!CFG.WORKER_URL || !TG || !TG.initData) return;
     fetch(CFG.WORKER_URL + "/auth", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ init_data: TG.initData, device: deviceId() }),
-    }).catch(function () {});
+    }).then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (!res || !res.ok || !res.owner) return;
+        setDev(true); devPanel();
+      }).catch(function () {});
   }
   function myCoins() {
     if (SRV) return SRV.balance;
@@ -2199,37 +2204,26 @@
      устройстве и только в интерфейсе. На сервер она не уходит.
      Включение: ?dev=<ключ> или t.me/nishemap_bot/map?startapp=<ключ>.
      Дальше режим держится сам, выключение — ?dev=0. */
-  /* Замок на панель. Раньше хватало ?dev=1 — то есть панель с кнопкой «+10000»
-     была открыта любому, кто её нашёл. Теперь нужен ключ, и в коде лежит только
-     его SHA-256: по исходнику подобрать нечего.
-     Это замок от любопытных, а не защита баланса. Защита баланса — в том, что
-     считает его сервер (coin_ledger), и надбавка отсюда туда не попадает. */
-  var DEV_HASH = "02a214cfcce5fc90d95fddd3c8506f64b04baa39bbb12437d95ca9af2c7cc89b";
+  /* Кто такой «dev».
+     Раньше панель открывал адрес: сначала ?dev=1, потом ?dev=<ключ> с проверкой
+     по SHA-256. И то и другое — решение на стороне клиента, то есть подделывается
+     тем, кто откроет исходник. Теперь решает сервер: воркер проверяет подпись
+     initData ключом бота и отвечает owner:true только для OWNER_CHAT_ID.
+     Подделать это, не имея ключа бота, нельзя.
 
+     Панель по-прежнему живёт в браузере, и упорный человек нарисует её себе
+     сам, — но делать ей будет нечего: монеты выдаёт /coins из чата владельца,
+     покупки решает buy_avatar, медали считает coin_stats. */
   function devOn() {
-    try { return localStorage.getItem("nishemap.dev") === "1"; } catch (e) { return false; }
+    try { return sessionStorage.getItem("nishemap.dev") === "1"; } catch (e) { return false; }
   }
-  /* Проверка асинхронная (crypto.subtle), а devOn() зовут отовсюду синхронно —
-     поэтому ключ проверяется один раз на старте и оставляет флаг в localStorage. */
-  function devUnlock() {
-    var key = "";
-    var m = location.search.match(/[?&]dev=([^&]+)/);
-    if (m) key = decodeURIComponent(m[1]);
-    if (!key && TG && TG.initDataUnsafe) key = String(TG.initDataUnsafe.start_param || "");
-    if (!key) return;
-    if (key === "0" || key === "off") {
-      try { localStorage.removeItem("nishemap.dev"); } catch (e) {}
-      return;
-    }
-    if (!window.crypto || !crypto.subtle || !window.TextEncoder) return;
-    crypto.subtle.digest("SHA-256", new TextEncoder().encode(key)).then(function (buf) {
-      var hex = Array.prototype.map.call(new Uint8Array(buf), function (b) {
-        return ("0" + b.toString(16)).slice(-2);
-      }).join("");
-      if (hex !== DEV_HASH) return;
-      try { localStorage.setItem("nishemap.dev", "1"); } catch (e) {}
-      devPanel(); paintRank(); render();
-    }).catch(function () {});
+  function setDev(on) {
+    try {
+      if (on) sessionStorage.setItem("nishemap.dev", "1");
+      else sessionStorage.removeItem("nishemap.dev");
+    } catch (e) {}
+    try { localStorage.removeItem("nishemap.dev"); } catch (e) {}   // хвост старой схемы
+    try { localStorage.removeItem("nishemap.dev.coins"); } catch (e) {}
   }
 
   function devPanel() {
@@ -2262,7 +2256,6 @@
   loadPhotos();
   loadOverrides();
   loadBalance();
-  devUnlock();
   sendIdentity();
   loadConfirms(function () { render(); checkNewCoins(); });
   loadTotals();
