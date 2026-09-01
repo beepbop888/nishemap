@@ -185,6 +185,17 @@ export default {
           body: JSON.stringify(row),
         });
         if (!r.ok) { console.log("tg_users upsert", r.status, await r.text()); return; }
+        // Привязка устройства к человеку: первая побеждает и не переписывается.
+        // На ней стоит защита от самоподтверждения и от колец сговора — три
+        // вкладки одного аккаунта перестают быть тремя разными людьми.
+        if (dev) {
+          const b2 = await fetch(`${env.SUPABASE_URL}/rest/v1/tg_devices?on_conflict=device`, {
+            method: "POST",
+            headers: { ...sbHeaders(env), Prefer: "resolution=ignore-duplicates,return=minimal" },
+            body: JSON.stringify({ device: dev, tg_id: user.id }),
+          });
+          if (!b2.ok) console.log("tg_devices bind", b2.status, await b2.text());
+        }
         await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/bump_opens`, {
           method: "POST", headers: sbHeaders(env),
           body: JSON.stringify({ p_tg_id: user.id }),
