@@ -103,8 +103,15 @@
   function deviceKey() {
     var k = localStorage.getItem("nishemap.dkey");
     if (!k) {
-      k = (Math.random().toString(36) + Math.random().toString(36) +
-           Math.random().toString(36)).replace(/0\./g, "").slice(0, 32);
+      // Math.random() здесь не годится: это не криптогенератор, его поток
+      // предсказуем по нескольким выданным значениям — а угадавший ключ
+      // получает чужие монеты. crypto.getRandomValues есть везде, где есть
+      // https, а без https мини-апп и не открывается.
+      var buf = new Uint8Array(16);                 // 128 бит
+      crypto.getRandomValues(buf);
+      k = Array.prototype.map.call(buf, function (b) {
+        return (b + 0x100).toString(16).slice(1);
+      }).join("");
       localStorage.setItem("nishemap.dkey", k);
     }
     return k;
