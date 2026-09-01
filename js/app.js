@@ -96,6 +96,20 @@
   }
 
   /* ---------- личность устройства и вклад ---------- */
+  /* device — публичное имя: он лежит в submissions и views, которые аноним
+     читает. Право действовать от его имени даёт этот секрет: он не уходит
+     никуда, кроме двух вызовов баланса и покупки, и заводится на сервере
+     только через воркер, под проверенной подписью Telegram. */
+  function deviceKey() {
+    var k = localStorage.getItem("nishemap.dkey");
+    if (!k) {
+      k = (Math.random().toString(36) + Math.random().toString(36) +
+           Math.random().toString(36)).replace(/0\./g, "").slice(0, 32);
+      localStorage.setItem("nishemap.dkey", k);
+    }
+    return k;
+  }
+
   function deviceId() {
     var d = localStorage.getItem("nishemap.device");
     if (!d) {
@@ -407,7 +421,7 @@
     fetch(CFG.SUPABASE_URL + "/rest/v1/rpc/buy_avatar", {
       method: "POST",
       headers: Object.assign({ "Content-Type": "application/json" }, sbHeaders()),
-      body: JSON.stringify({ p_device: deviceId(), p_avatar: id }),
+      body: JSON.stringify({ p_device: deviceId(), p_key: deviceKey(), p_avatar: id }),
     }).then(function (r) { return r.json(); })
       .then(function (rows) {
         var res = Array.isArray(rows) ? rows[0] : rows;
@@ -447,7 +461,7 @@
       '<span class="rank-av">' + avatarSvg(me, 44) + '</span>' +
       (rewardsAvailable()
         ? '<span class="rank-coins"><b>' + coins + '</b><i>монет</i></span>'
-        : '<span class="rank-coins rank-coins--off"><i>монеты<br>в Telegram</i></span>');
+        : "");     // рядом уже висит синяя кнопка «Открыть в Telegram»
     el0.title = rewardsAvailable()
       ? "Твой аватар и монеты. Нажми, чтобы сменить аватар."
       : "Монеты и аватары — в приложении Telegram. Нажми, чтобы открыть.";
@@ -2212,7 +2226,7 @@
     fetch(CFG.SUPABASE_URL + "/rest/v1/rpc/coin_stats", {
       method: "POST",
       headers: Object.assign({ "Content-Type": "application/json" }, sbHeaders()),
-      body: JSON.stringify({ p_device: deviceId() }),
+      body: JSON.stringify({ p_device: deviceId(), p_key: deviceKey() }),
     }).then(function (r) { return r.json(); })
       .then(function (rows) {
         var row = Array.isArray(rows) ? rows[0] : rows;
@@ -2241,10 +2255,13 @@
     if (!CFG.WORKER_URL || !TG || !TG.initData) return;
     fetch(CFG.WORKER_URL + "/auth", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ init_data: TG.initData, device: deviceId() }),
+      body: JSON.stringify({ init_data: TG.initData, device: deviceId(),
+                             device_key: deviceKey() }),
     }).then(function (r) { return r.json(); })
       .then(function (res) {
-        if (!res || !res.ok || !res.owner) return;
+        if (!res || !res.ok) return;
+        loadBalance();                       // ключ заведён — теперь можно спрашивать
+        if (!res.owner) return;
         setDev(true); devPanel();
       }).catch(function () {});
   }
@@ -2477,8 +2494,7 @@
   loadSubmissions();
   loadPhotos();
   loadOverrides();
-  loadBalance();
-  sendIdentity();
+  sendIdentity();          // сначала подпись и ключ, потом баланс
   loadConfirms(function () { render(); checkNewCoins(); });
   loadTotals();
   flushInbox();

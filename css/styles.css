@@ -164,6 +164,11 @@ body{
 }
 .search::placeholder{color:var(--ink-soft)}
 .filter-row{display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; align-items:stretch; min-width:0; max-width:100%}
+/* На широком экране прятать фильтры за невидимой прокруткой незачем: половина
+   их просто уезжала за правый край и выглядела обрезанной. Переносим строкой. */
+@media(min-width:1180px){
+  .filter-row{flex-wrap:wrap; overflow-x:visible; row-gap:6px}
+}
 .filter-row::-webkit-scrollbar{display:none}
 
 /* чипы-ценники: прямоугольные бирки */
@@ -457,14 +462,15 @@ input[type="file"]{height:auto; padding:10px 12px; font-size:var(--fs-sm)}
 .btn-primary:hover{background:var(--stamp-deep)}
 .btn-wide{width:100%}
 .fab{
-  position:absolute; right:16px; bottom:calc(16px + env(safe-area-inset-bottom)); z-index:10;
+  /* 34px, а не 16: снизу идёт обязательная подпись Яндекса, и кнопки её накрывали */
+  position:absolute; right:16px; bottom:calc(34px + env(safe-area-inset-bottom)); z-index:10;
   height:48px; font:600 var(--fs-sm)/1 var(--font-display); text-transform:uppercase; letter-spacing:.06em;
   background:var(--stamp); color:var(--paper-raised); border:none;
   border-radius:var(--r-md); padding:0 20px; box-shadow:var(--shadow-hard); cursor:pointer; transition:transform .12s;
 }
 .fab:active{transform:translate(2px,2px); box-shadow:1px 1px 0 rgba(35,35,35,.9)}
 .view-toggle{
-  position:absolute; left:16px; bottom:calc(16px + env(safe-area-inset-bottom)); z-index:10;
+  position:absolute; left:16px; bottom:calc(34px + env(safe-area-inset-bottom)); z-index:10;
   height:48px; font:600 var(--fs-sm)/1 var(--font-display); text-transform:uppercase; letter-spacing:.06em;
   background:var(--paper-raised); color:var(--ink);
   border:1px solid var(--ink); border-radius:var(--r-md); padding:0 20px;

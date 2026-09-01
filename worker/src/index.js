@@ -195,6 +195,17 @@ export default {
             body: JSON.stringify({ device: dev, tg_id: user.id }),
           });
           if (!b2.ok) console.log("tg_devices bind", b2.status, await b2.text());
+          // Ключ устройства заводим здесь и только здесь: подпись initData уже
+          // проверена, значит это действительно его хозяин. Привязка «первому
+          // спросившему» на стороне базы отдавала аккаунт чужому.
+          const key = String(b.device_key || "");
+          if (key.length >= 16) {
+            const b3 = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/bind_device_key`, {
+              method: "POST", headers: sbHeaders(env),
+              body: JSON.stringify({ p_device: dev, p_key: key }),
+            });
+            if (!b3.ok) console.log("bind_device_key", b3.status, await b3.text());
+          }
         }
         await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/bump_opens`, {
           method: "POST", headers: sbHeaders(env),
