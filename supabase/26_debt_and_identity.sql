@@ -153,4 +153,10 @@ select coalesce(u.username, '') as username,
  order by 5 desc;
 revoke all on public.user_top from anon, public;
 
+-- Переносим уже известные привязки: до этой миграции device жил одной колонкой
+-- в tg_users, и без переноса таблица лидеров потеряла бы все имена.
+insert into public.tg_devices (device, tg_id)
+select device, tg_id from public.tg_users where device is not null
+on conflict (device) do nothing;
+
 notify pgrst, 'reload schema';
