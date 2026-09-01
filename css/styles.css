@@ -445,7 +445,10 @@ input[type="file"]{height:auto; padding:10px 12px; font-size:var(--fs-sm)}
 
 /* ============ кнопки ============ */
 .btn{
-  height:44px; font:600 var(--fs-sm)/1 var(--font-display); text-transform:uppercase; letter-spacing:.05em;
+  /* inline-flex, а не просто height: у <button> текст центрируется сам, у <a>
+     с тем же классом — нет, и надпись садилась выше середины. */
+  display:inline-flex; align-items:center; justify-content:center; text-align:center;
+  min-height:44px; font:600 var(--fs-sm)/1 var(--font-display); text-transform:uppercase; letter-spacing:.05em;
   border:1px solid var(--ink); background:var(--paper-raised);
   color:var(--ink); border-radius:var(--r-md); padding:0 16px; cursor:pointer; transition:transform .12s;
 }
@@ -908,4 +911,10 @@ body.in-tg .tg-open{display:none}
 .shop-locked{padding:8px 2px 4px; color:var(--ink)}
 .shop-locked p{margin:0 0 10px; font-size:var(--fs-sm); line-height:1.45}
 .shop-locked p:first-child{font-size:var(--fs-md)}
-.shop-locked .btn{display:inline-block; margin-top:4px; text-decoration:none}
+.shop-locked .btn{margin-top:4px; text-decoration:none}
+/* вне Telegram в поле баланса не число, а фраза — крупный моноширинный
+   золотой шрифт от цифры ей не идёт */
+.shop-bal--off b{font:700 var(--fs-md)/1.25 var(--font-display); color:var(--ink);
+  text-transform:none; letter-spacing:0}
+.rank-coins--off i{font:600 8.5px/1.25 var(--font-display); text-transform:uppercase;
+  letter-spacing:.06em; color:var(--ink-soft); font-style:normal; text-align:right; display:block}

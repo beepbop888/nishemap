@@ -351,7 +351,20 @@
       (AVBG[m.bg] ? ';background-image:url(' + AVBG[m.bg] + ')' : '') + '">' +
       '<img src="' + AVIMG[id] + '" alt=""></span>';
   }
-  function myAvatar() { return localStorage.getItem("nishemap.avatar") || ""; }
+  function freeAvatar() {
+    var f = AVATARS.filter(function (a) { return !a.price; })[0];
+    return f ? f.id : (AVATARS[0] && AVATARS[0].id);
+  }
+  function myAvatar() {
+    var a = localStorage.getItem("nishemap.avatar") || "";
+    // Вне Telegram платных аватаров не бывает: показывать надетого «Олигарха»,
+    // которого сервер сотрёт с первой же цены, — врать человеку.
+    if (a && !TG) {
+      var meta = AVATARS.filter(function (x) { return x.id === a; })[0];
+      if (meta && meta.price) return freeAvatar();
+    }
+    return a;
+  }
   /* Что открыто — решает сервер (таблица purchases). Раньше список лежал в
      localStorage, а аватар видно другим: он уходит вместе с ценой в
      submissions.avatar. То есть это была не косметика, а подпись под работой. */
@@ -434,7 +447,7 @@
       '<span class="rank-av">' + avatarSvg(me, 44) + '</span>' +
       (rewardsAvailable()
         ? '<span class="rank-coins"><b>' + coins + '</b><i>монет</i></span>'
-        : '<span class="rank-coins"><b>\u{1F5FA}</b><i>в Telegram</i></span>');
+        : '<span class="rank-coins rank-coins--off"><i>монеты<br>в Telegram</i></span>');
     el0.title = rewardsAvailable()
       ? "Твой аватар и монеты. Нажми, чтобы сменить аватар."
       : "Монеты и аватары — в приложении Telegram. Нажми, чтобы открыть.";
@@ -482,8 +495,9 @@
   function coinsBreakdownHtml() {
     if (!SRV) {
       return '<details class="coins-info"><summary>Откуда берутся монеты</summary>' +
-        "<p>" + (SRV_STATE === "fail" ? "Сервер не ответил — попробуй обновить страницу."
-                                      : "Считаем…") + "</p></details>";
+        "<p>" + (!rewardsAvailable() ? "Монеты начисляются в приложении Telegram."
+                 : SRV_STATE === "fail" ? "Сервер не ответил — попробуй обновить страницу."
+                 : "Считаем…") + "</p></details>";
     }
     var nx = nextMilestone(scoredCount());
     return '<details class="coins-info"><summary>Откуда берутся монеты</summary>' +
@@ -1000,8 +1014,9 @@
     var body = document.getElementById("shop-body");
     if (!rewardsAvailable()) {
       document.getElementById("shop-balance").innerHTML =
-        '<span class="shop-me">' + avatarSvg(AVATARS[0] && AVATARS[0].id, 56) + "</span>" +
-        '<span class="shop-bal"><b>\u{1F5FA}</b><i>монеты — в Telegram</i></span>';
+        '<span class="shop-me">' + avatarSvg(freeAvatar(), 56) + "</span>" +
+        '<span class="shop-bal shop-bal--off"><b>Монеты — в Telegram</b>' +
+        "<i>на сайте карта работает целиком</i></span>";
       body.innerHTML =
         '<div class="shop-locked">' +
         "<p><b>Монеты, аватары и медали живут в приложении Telegram.</b></p>" +
