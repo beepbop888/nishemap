@@ -16,6 +16,21 @@ const SKEY = process.env.SUPABASE_SERVICE_KEY;
 const SEND = process.env.SEND_DIGEST === "true";
 const SITE = "https://beepbop888.github.io/nishemap/";
 const MINIAPP = "https://t.me/nishemap_bot/map";
+/** Устойчивый id народной точки — ТА ЖЕ формула, что в js/app.js (venueKeyId).
+ *  Раньше здесь стоял id первой строки submissions, а приложение с коммита
+ *  8fb7b05 ищет точку по хешу «заведение|адрес» — и все ссылки в рассылке вели
+ *  в никуда: openDeepLink молча ничего не находил. Формулы обязаны совпадать
+ *  символ в символ; менять её можно только в обоих местах сразу. */
+function venueKeyId(key) {
+  let h1 = 0x811c9dc5, h2 = 0x01000193;
+  for (let i = 0; i < key.length; i++) {
+    const c = key.charCodeAt(i);
+    h1 = ((h1 ^ c) * 16777619) >>> 0;
+    h2 = ((h2 + c * (i + 1)) * 2654435761) >>> 0;
+  }
+  return h1.toString(36) + h2.toString(36);
+}
+
 /** id → ссылка, открывающая ровно эту точку в мини-аппе Telegram */
 const spotLink = (id) => `${MINIAPP}?startapp=v_${String(id).replace(/-/g, "_").replace(/[^A-Za-z0-9_]/g, "")}`;
 
@@ -97,8 +112,10 @@ async function topFive() {
   try { // названия из пользовательских точек тоже считаем известными
     const subs = await fetch(`${SB}/rest/v1/submissions?select=id,venue,address&limit=5000`, { headers: sbHeaders })
       .then(r => r.ok ? r.json() : []);
-    subs.forEach(s2 => trusted.set(((s2.venue || "") + "|" + (s2.address || "")).toLowerCase(),
-      { name: s2.venue, id: "u-" + s2.id }));
+    subs.forEach(s2 => {
+      const key = ((s2.venue || "") + "|" + (s2.address || "")).toLowerCase();
+      trusted.set(key, { name: s2.venue, id: "u-" + venueKeyId(key) });
+    });
   } catch {}
   const since = new Date(Date.now() - 7 * 864e5).toISOString();
   const rows = await fetch(`${SB}/rest/v1/views?select=venue_key,venue_name&created_at=gte.${since}&limit=10000`,

@@ -1822,6 +1822,7 @@
           if (/Слишком|перегружена|подтверждать нельзя|устройства/i.test(msg)) {
             formDone.hidden = true; form.hidden = false;
             formError.hidden = false; formError.textContent = msg;
+            markSent(entry.at);                 // сервер отказал — досылать нечего
             throw new Error("rejected");
           }
           // Без device строку отобьёт rl_submissions — повтор обязан его нести.
@@ -1836,6 +1837,9 @@
             formError.hidden = false;
             formError.textContent = (err && (err.message || err.hint)) ||
               "Сервер не принял точку. Попробуй ещё раз.";
+            // Отказ — это ответ, а не потеря связи. Не пометив запись, мы бы
+            // досылали отвергнутую цену при каждом запуске и каждом «online».
+            markSent(entry.at);
             throw new Error("rejected");
           });
         }
@@ -1847,7 +1851,19 @@
           resp.clone().json().then(function (rows) {
             if (rows && rows[0] && rows[0].id) {
               addMyItem("ui-" + rows[0].id);
-              if (formPhoto) uploadFormPhoto(formPhoto, "ui-" + rows[0].id);
+              if (formPhoto) {
+                // Те же ворота, что у кнопки «📷 фото»: вчерашний снимок меню
+                // ничего не подтверждает, а на сервере фото сразу оплачивается.
+                var itemId = "ui-" + rows[0].id;
+                exifShotTime(formPhoto).then(function (shot) {
+                  if (shot && (Date.now() - shot.getTime()) > 24 * 3600 * 1000) {
+                    toast("Фото снято " + shot.toLocaleDateString("ru-RU") +
+                          " — нужно сегодняшнее. Цена ушла, фото нет.");
+                    return;
+                  }
+                  uploadFormPhoto(formPhoto, itemId);
+                });
+              }
             }
           }).catch(function () {});
           var mine = submissionToVenues([{
@@ -2353,6 +2369,10 @@
   }
 
   function checkNewCoins() {
+    // Вне Telegram сервер не начисляет ничего (award_coins возвращает null для
+    // непривязанного устройства). Показывать «+1 монета» там — обещать то,
+    // чего не будет, да ещё рядом с надписью «монеты в Telegram».
+    if (!rewardsAvailable()) { paintRank(); return; }
     var known;
     try { known = JSON.parse(localStorage.getItem("nishemap.coins.known")) || []; } catch (e) { known = []; }
     var nowVerified = myItems().filter(isVerified);
@@ -2392,7 +2412,11 @@
           // id заведения выводим из самого ключа, а не из id первой строки:
           // порядок у выборки «свежие сверху», поэтому новая цена в том же месте
           // меняла id, и все разосланные ссылки ?v= переставали открываться.
-          id: "u-" + venueKeyId(key), name: s.venue, type: "от народа", district: "",
+          // Без станции точка выпадает из фильтра метро целиком: visibleVenues
+          // отбрасывает всё, чей district не выбран. Ставим сразу, как только
+          // есть координаты; для остальных доставит geocodeQueue.
+          id: "u-" + venueKeyId(key), name: s.venue, type: "от народа",
+          district: (s.lat && s.lon) ? nearestStation(s.lat, s.lon) : "",
           address: s.address, lat: s.lat || null, lon: s.lon || null, source: "user",
           yandexUrl: "https://yandex.ru/maps/?text=" + encodeURIComponent(s.venue + " " + s.address),
           items: [],
@@ -2429,6 +2453,7 @@
       function save(lat, lon) {
         v.lat = lat; v.lon = lon;
         userGeoCache[v.address] = [lat, lon];
+        v.district = v.district || nearestStation(lat, lon);   // теперь точка видна фильтру метро
         localStorage.setItem("nishemap.geo.user", JSON.stringify(userGeoCache));
       }
       function fallbackYandex() { setTimeout(next, 300); } // ключ Яндекса геокодер не даёт
