@@ -253,11 +253,19 @@ export default {
           head = `<b>${esc(b.dish) || "позиция"}</b>` + (b.price ? ` — ${esc(b.price)} ₽` : "") + "\n" +
                  (b.venue ? esc(b.venue) + "\n" : "") + (b.address ? esc(b.address) + "\n" : "");
         }
+        // Кто жалуется и с каким послужным списком. Без этого «пожаловались 3
+        // раза» — это может быть и три человека, и один настойчивый сосед.
+        const note = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/reporter_note`, {
+          method: "POST", headers: sbHeaders(env),
+          body: JSON.stringify({ p_item: id }),
+        }).then(r => r.ok ? r.json() : null).catch(() => null);
+
         const sent = await tg(env, "sendMessage", {
           chat_id: env.OWNER_CHAT_ID,
           text: `\u{1F4E5} Жалоба #${n} на позицию\n\n` + head +
                 `\n<code>${esc(id)}</code>` +        // на что именно подействуют кнопки
                 `\nПожаловались: ${n}` +
+                (note ? `\n\u{1F464} ${esc(String(note))}` : "") +
                 (trusted ? "" : "\n<i>Подпись прислал сайт, в базе этой позиции нет.</i>"),
           parse_mode: "HTML",
           reply_markup: modKeyboard(id),
