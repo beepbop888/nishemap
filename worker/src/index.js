@@ -204,6 +204,18 @@ export default {
       ctx.waitUntil((async () => {
         const n = await reportCount(env, id);
         if (!n) return;                       // строку отбил лимит — будить незачем
+        // /report открыт всем, и повторный вызов с тем же item_id слал новую
+        // карточку каждый раз, даже когда жалоб не прибавилось: чат владельца
+        // забивался в один цикл curl. Шлём, только когда счётчик вырос.
+        const seen = await fetch(
+          `${env.SUPABASE_URL}/rest/v1/kv?key=eq.${encodeURIComponent("ping:" + id)}&select=value`,
+          { headers: sbHeaders(env) }).then(r => r.json()).catch(() => []);
+        if (seen && seen[0] && parseInt(seen[0].value, 10) >= n) return;
+        await fetch(`${env.SUPABASE_URL}/rest/v1/kv`, {
+          method: "POST",
+          headers: { ...sbHeaders(env), Prefer: "resolution=merge-duplicates,return=minimal" },
+          body: JSON.stringify({ key: "ping:" + id, value: String(n) }),
+        });
         // Подпись места раньше приходила из тела запроса и печаталась как факт:
         // текст карточки можно было написать любой, а кнопки под ним действовали
         // на совсем другую позицию. Для пользовательских точек берём правду из

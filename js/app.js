@@ -176,7 +176,10 @@
   }
   function loadOverrides() {
     if (!CFG.SUPABASE_URL) return;
-    fetch(CFG.SUPABASE_URL + "/rest/v1/overrides?select=item_id,disputed,hidden&limit=2000",
+    // Берём только решения, которые что-то меняют, и в понятном порядке:
+    // без фильтра пустые строки могли вытеснить нужные за предел выборки.
+    fetch(CFG.SUPABASE_URL + "/rest/v1/overrides?select=item_id,disputed,hidden" +
+          "&or=(disputed.is.true,hidden.is.true)&order=updated_at.desc&limit=2000",
           { headers: sbHeaders() })
       .then(function (r) { return r.json(); })
       .then(function (rows) {
