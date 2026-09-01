@@ -191,9 +191,16 @@
      под серой монетой предлагали «Ещё по этой цене?» — подтвердить цену,
      которой мы сами не верим. */
   function itemActionBtn(it) {
-    return isDisputed(it.id)
-      ? '<button class="fix-price" data-item="' + esc(it.id) + '">Знаю настоящую цену</button>'
-      : '<button class="reconfirm" data-item="' + esc(it.id) + '">Ещё по этой цене?</button>';
+    if (isDisputed(it.id)) {
+      return '<button class="fix-price" data-item="' + esc(it.id) + '">Знаю настоящую цену</button>';
+    }
+    // Подтверждать цену можно только из Telegram: там мы знаем, что это разные
+    // люди, а не одна вкладка в трёх окнах. Показывать кнопку, которую сервер
+    // отобьёт, — обманывать зря.
+    if (!rewardsAvailable()) {
+      return '<span class="act-hint">подтвердить — в Telegram</span>';
+    }
+    return '<button class="reconfirm" data-item="' + esc(it.id) + '">Ещё по этой цене?</button>';
   }
   function loadOverrides() {
     if (!CFG.SUPABASE_URL) return;

@@ -306,6 +306,8 @@ body{
 .reconfirm:hover{background:var(--stamp-tint)}
 .reconfirm:active{transform:scale(.96)}
 .reconfirm[disabled]{opacity:.55; cursor:default}
+.act-hint{font:600 10px/1 var(--font-display); text-transform:uppercase; letter-spacing:.06em;
+  color:var(--ink-soft); border:1px dashed var(--line); border-radius:var(--r-sm); padding:5px 10px}
 .photo-add{
   font:600 10px/1 var(--font-display); text-transform:uppercase; letter-spacing:.08em;
   color:var(--ink-soft); background:var(--paper-raised);
