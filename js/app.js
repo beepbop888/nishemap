@@ -1062,7 +1062,12 @@
         (SRV_STATE === "loading" ? "считаем монеты…"
          : SRV_STATE === "fail" ? "баланс не отвечает" : "монет на руках") + "</i>" +
       (pendingCoins() ? '<u>зреют: ещё ' + pendingCoins() + '</u>' : "") +
-      (next ? '<u>до «' + esc(next.t) + '»: ещё ' + (next.price - bal) + "</u>" : "") + "</span>";
+      (SRV_STATE === "fail" ? '<u><button type="button" class="bal-retry">спросить ещё раз</button></u>' : "") +
+      (SRV_STATE === "ok" && next ? '<u>до «' + esc(next.t) + '»: ещё ' + (next.price - bal) + "</u>" : "") + "</span>";
+    var retry = document.querySelector(".bal-retry");
+    if (retry) retry.addEventListener("click", function () {
+      SRV_STATE = "loading"; openShop(); loadBalance();
+    });
 
     /* вкладки */
     var tabs = el("div", "shop-tabs");
@@ -1112,7 +1117,11 @@
         body.appendChild(h);
         var grid = el("div", "shop-grid");
         list.forEach(function (a) {
-          var owned = ownsAvatar(a.id), active = myAvatar() === a.id, can = bal >= a.price;
+          // Пока баланс неизвестен, «не хватает монет» — выдумка: сервер может
+          // и продать. Показываем нейтрально и не запираем.
+          var unknown = SRV_STATE !== "ok";
+          var owned = ownsAvatar(a.id), active = myAvatar() === a.id;
+          var can = unknown ? true : bal >= a.price;
           var card = el("button", "shop-card" +
             (active ? " is-active" : "") + (!owned && !can ? " is-locked" : ""));
           card.type = "button";
@@ -1122,8 +1131,10 @@
             '<span class="shop-name">' + esc(a.t) + (a.sex ? ' <em>' + a.sex + "</em>" : "") + "</span>" +
             '<span class="shop-tag">' +
               (active ? "✓ надет" : owned ? "выбрать" :
-               can && a.price ? '<span class="coin coin--gold"></span>' + a.price :
-               a.price ? "ещё " + (a.price - bal) + " монет" : "выбрать") + "</span>";
+               !a.price ? "выбрать" :
+               unknown ? '<span class="coin coin--gold"></span>' + a.price :
+               can ? '<span class="coin coin--gold"></span>' + a.price :
+               "ещё " + (a.price - bal) + " монет") + "</span>";
           card.addEventListener("click", function () {
             if (owned || !a.price) {
               localStorage.setItem("nishemap.avatar", a.id);
@@ -1316,7 +1327,7 @@
           '<div class="fresh"><span class="badge ' + fb.cls + '">' + fb.text + "</span>" +
           itemActionBtn(it) + "</div>";
         li.addEventListener("click", function (e) {
-          if (e.target.closest(".reconfirm")) return;
+          if (e.target.closest(".reconfirm, .fix-price")) return;
           openSheet(v);
         });
         li.addEventListener("keydown", function (e) {
@@ -1846,7 +1857,7 @@
         if (resp && resp.ok) {
           markSent(entry.at);
           localStorage.setItem("nishemap.mine", String(myCount() + 1));
-          paintRank();
+          paintRank(); paintDoneSub();
           loadBalance();          // монета уже в журнале, но ещё зреет — покажем сколько
           resp.clone().json().then(function (rows) {
             if (rows && rows[0] && rows[0].id) {
@@ -1905,11 +1916,7 @@
     if (!CFG.SUPABASE_URL) { localStorage.setItem("nishemap.mine", String(myCount() + 1)); }
     paintRank();
     haptic("success");
-    var n = myCount(), nx = nextRank(n), sub = document.getElementById("done-sub");
-    if (sub) {
-      sub.textContent = "Сдано тобой: " + n + ". Звание — «" + rankFor(n).t + "»." +
-        (nx ? " До «" + nx.t + "» осталось " + (nx.n - n) + "." : " Выше только звёзды.");
-    }
+    paintDoneSub();
     form.hidden = true;
     formDone.hidden = false;
   });
@@ -2156,6 +2163,15 @@
   function inboxAll() {
     try { return JSON.parse(localStorage.getItem(LS_INBOX)) || []; } catch (e) { return []; }
   }
+  /* Экран «Принято» считался в синхронном хвосте, до ответа сервера: первый в
+     жизни человек читал «Сдано тобой: 0». Рисуем после того, как счётчик вырос. */
+  function paintDoneSub() {
+    var n = myCount(), nx = nextRank(n), sub = document.getElementById("done-sub");
+    if (!sub) return;
+    sub.textContent = "Сдано тобой: " + n + ". Звание — «" + rankFor(n).t + "»." +
+      (nx ? " До «" + nx.t + "» осталось " + (nx.n - n) + "." : " Выше только звёзды.");
+  }
+
   function markSent(at) {
     var arr = inboxAll();
     arr.forEach(function (x) { if (x.at === at) x.sent = true; });
@@ -2168,7 +2184,10 @@
     var okCount = 0;
     (function step(i) {
       if (i >= pending.length) {
-        if (okCount) { toast("Досдали " + okCount + " точек из очереди"); loadSubmissions(); }
+        if (okCount) {
+          toast("Досдали " + okCount + " точек из очереди");
+          paintRank(); loadSubmissions();
+        }
         return;
       }
       var x = pending[i];
@@ -2178,7 +2197,12 @@
                    "Authorization": "Bearer " + CFG.SUPABASE_ANON_KEY, "Prefer": "return=minimal" },
         body: JSON.stringify(x.body),
       }).then(function (r) {
-        if (r.ok) { markSent(x.at); okCount++; }
+        if (r.ok) {
+          markSent(x.at); okCount++;
+          // Досланная точка — такая же сданная: раньше очередь наполняла карту,
+          // а звание человека не двигала.
+          localStorage.setItem("nishemap.mine", String(myCount() + 1));
+        }
         step(i + 1);
       }).catch(function () { step(i + 1); });
     })(0);
@@ -2320,7 +2344,10 @@
         SRV_STATE = "ok";
         SRV = row;
         paintRank(); render();
-        checkNewCoins();                       // порог медали считается по этим же данным
+        checkMilestone();                      // порог медали считается по этим же данным
+                                               // (checkNewCoins() здесь стирал память
+                                               // о показанных монетах до прихода
+                                               // подтверждений и играл их заново)
         var shop = document.getElementById("shop-modal");
         if (shop && !shop.hidden) openShop();  // витрина открыта — обновим цифры в ней
       }).catch(function () {
@@ -2484,7 +2511,7 @@
     if (!CFG.SUPABASE_URL || !CFG.SUPABASE_ANON_KEY) return;
     // Одним запросом на 500 строк карта теряла всё, что старше пятисотой цены.
     // Читаем страницами, пока сервер отдаёт полные пачки.
-    var PAGE = 1000, acc = [];
+    var PAGE = 1000, acc = [], complete = false;
     (function page(from) {
       fetch(CFG.SUPABASE_URL +
         "/rest/v1/submissions?select=id,dish,price,category,venue,address,lat,lon,submitted_at,avatar" +
@@ -2494,15 +2521,24 @@
         .then(function (rows) {
           if (Array.isArray(rows)) acc = acc.concat(rows);
           if (Array.isArray(rows) && rows.length === PAGE && acc.length < 20000) return page(from + PAGE);
+          complete = true;
           done(acc);
         })
-        .catch(function () { if (acc.length) done(acc); });
+        // Оборванная страница даёт КУСОК списка. Подменять им полный набор
+        // нельзя: часть точек просто исчезла бы с карты до перезагрузки.
+        .catch(function () { if (!complete) return; done(acc); });
     })(0);
 
     function done(rows) {
         if (!Array.isArray(rows) || !rows.length) return;
         var vs = submissionToVenues(rows);
-        USER_VENUES = vs;                       // заменяем, а не дописываем
+        // Сохраняем то, что человек сдал, пока страницы ещё грузились: сервер
+        // о нём тогда не знал, и присвоение стёрло бы его точку с карты.
+        var seen = {};
+        vs.forEach(function (v) { seen[(v.name + "|" + v.address).toLowerCase()] = 1; });
+        USER_VENUES = vs.concat(USER_VENUES.filter(function (v) {
+          return !seen[(v.name + "|" + v.address).toLowerCase()];
+        }));
         render(); // список сразу, пины — по мере геокода
         geocodeQueue(vs, render);
         openDeepLink();                         // ссылка ждала именно эти точки

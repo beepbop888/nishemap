@@ -898,6 +898,8 @@ body.in-tg .tg-open{display:none}
 .shop-bal i{font:600 9.5px/1 var(--font-display); text-transform:uppercase; letter-spacing:.08em;
   color:var(--ink-soft); font-style:normal; margin-top:3px}
 .shop-bal u{font-size:10.5px; color:var(--ink-soft); text-decoration:none; margin-top:4px}
+.bal-retry{font:inherit; color:var(--stamp); background:none; border:0; padding:0;
+  cursor:pointer; text-decoration:underline}
 
 .shop-tabs{display:flex; gap:0; margin-bottom:14px; border:1px solid var(--line);
   border-radius:var(--r-pill); overflow:hidden; background:var(--paper)}

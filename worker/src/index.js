@@ -233,11 +233,6 @@ export default {
           `${env.SUPABASE_URL}/rest/v1/kv?key=eq.${encodeURIComponent("ping:" + id)}&select=value`,
           { headers: sbHeaders(env) }).then(r => r.json()).catch(() => []);
         if (seen && seen[0] && parseInt(seen[0].value, 10) >= n) return;
-        await fetch(`${env.SUPABASE_URL}/rest/v1/kv`, {
-          method: "POST",
-          headers: { ...sbHeaders(env), Prefer: "resolution=merge-duplicates,return=minimal" },
-          body: JSON.stringify({ key: "ping:" + id, value: String(n) }),
-        });
         // Подпись места раньше приходила из тела запроса и печаталась как факт:
         // текст карточки можно было написать любой, а кнопки под ним действовали
         // на совсем другую позицию. Для пользовательских точек берём правду из
@@ -258,7 +253,7 @@ export default {
           head = `<b>${esc(b.dish) || "позиция"}</b>` + (b.price ? ` — ${esc(b.price)} ₽` : "") + "\n" +
                  (b.venue ? esc(b.venue) + "\n" : "") + (b.address ? esc(b.address) + "\n" : "");
         }
-        await tg(env, "sendMessage", {
+        const sent = await tg(env, "sendMessage", {
           chat_id: env.OWNER_CHAT_ID,
           text: `\u{1F4E5} Жалоба #${n} на позицию\n\n` + head +
                 `\n<code>${esc(id)}</code>` +        // на что именно подействуют кнопки
@@ -266,6 +261,15 @@ export default {
                 (trusted ? "" : "\n<i>Подпись прислал сайт, в базе этой позиции нет.</i>"),
           parse_mode: "HTML",
           reply_markup: modKeyboard(id),
+        });
+        // Отметку «про эту жалобу уже сказали» ставим ПОСЛЕ отправки. Раньше
+        // она писалась заранее, и упавший sendMessage терял сигнал навсегда:
+        // счётчик уже «учтён», а владелец ничего не увидел.
+        if (!sent || sent.ok !== true) { console.log("ping send failed", JSON.stringify(sent)); return; }
+        await fetch(`${env.SUPABASE_URL}/rest/v1/kv`, {
+          method: "POST",
+          headers: { ...sbHeaders(env), Prefer: "resolution=merge-duplicates,return=minimal" },
+          body: JSON.stringify({ key: "ping:" + id, value: String(n) }),
         });
       })());
       return json({ ok: true });
@@ -298,7 +302,10 @@ export default {
       const plan = { h: { hidden: true, disputed: false, by_owner: true, note: "скрыто владельцем" },
                      g: { disputed: true, hidden: false, by_owner: true, note: "цена под вопросом" },
                      o: { disputed: false, hidden: false, by_owner: true, note: "проверено владельцем" } }[act];
-      const done = { h: "\u{1F6AB} Скрыто",
+      // «Всё верно» возвращает позицию на карту, но сожжённые монеты не
+      // воскрешает — про это честнее сказать прямо в карточке, чем оставлять
+      // кнопки выглядеть полностью обратимыми.
+      const done = { h: "\u{1F6AB} Скрыто · монеты за неё сожжены",
                      g: "⚪ Серая монета — ждём настоящую цену",
                      o: "✅ Оставлено как есть" }[act];
       const ok = plan && id ? await setOverride(env, id, plan) : false;
@@ -335,8 +342,12 @@ export default {
       const arg = (text.split(/\s+/)[1] || "").toLowerCase();
       const reset = arg === "reset" || arg === "0";
       const n = reset ? 0 : Math.max(0, Math.min(100000, parseInt(arg, 10) || 0));
+      // tg_users.device теперь замораживается на первом заходе, а настоящая
+      // привязка живёт в tg_devices. Берём последнюю оттуда, иначе после смены
+      // браузера /coins начислял бы на устройство, которым уже не пользуются.
       const u = await fetch(
-        `${env.SUPABASE_URL}/rest/v1/tg_users?tg_id=eq.${msg.chat.id}&select=device`,
+        `${env.SUPABASE_URL}/rest/v1/tg_devices?tg_id=eq.${msg.chat.id}` +
+        `&order=bound_at.desc&limit=1&select=device`,
         { headers: sbHeaders(env) }).then(r => r.json()).catch(() => []);
       const dev = u && u[0] && u[0].device;
       if (!dev) {
