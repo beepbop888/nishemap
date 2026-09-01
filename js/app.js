@@ -432,8 +432,12 @@
     el0.hidden = false;                       /* показываем всегда: это вход в лавку */
     el0.innerHTML =
       '<span class="rank-av">' + avatarSvg(me, 44) + '</span>' +
-      '<span class="rank-coins"><b>' + coins + '</b><i>монет</i></span>';
-    el0.title = "Твой аватар и монеты. Нажми, чтобы сменить аватар.";
+      (rewardsAvailable()
+        ? '<span class="rank-coins"><b>' + coins + '</b><i>монет</i></span>'
+        : '<span class="rank-coins"><b>\u{1F5FA}</b><i>в Telegram</i></span>');
+    el0.title = rewardsAvailable()
+      ? "Твой аватар и монеты. Нажми, чтобы сменить аватар."
+      : "Монеты и аватары — в приложении Telegram. Нажми, чтобы открыть.";
   }
 
   function coordsFromLink(s) {
@@ -984,9 +988,32 @@
   ];
   var shopTab = "av";   // av | tr | coin
 
+  /* Монеты и аватары живут только в приложении Telegram: там у человека есть
+     подписанная личность, а в браузере — только строка в localStorage, которую
+     чистят одним движением. Цены с сайта принимаем как принимали: карта важнее
+     наград. Показывать в браузере пустую витрину с нулём и замками было бы
+     враньём — объясняем прямо. */
+  function rewardsAvailable() { return !!TG; }
+
   function openShop() {
     var modal = document.getElementById("shop-modal");
     var body = document.getElementById("shop-body");
+    if (!rewardsAvailable()) {
+      document.getElementById("shop-balance").innerHTML =
+        '<span class="shop-me">' + avatarSvg(AVATARS[0] && AVATARS[0].id, 56) + "</span>" +
+        '<span class="shop-bal"><b>\u{1F5FA}</b><i>монеты — в Telegram</i></span>';
+      body.innerHTML =
+        '<div class="shop-locked">' +
+        "<p><b>Монеты, аватары и медали живут в приложении Telegram.</b></p>" +
+        "<p>Там мы знаем, что ты — это ты, поэтому награды нельзя накрутить, " +
+        "почистив браузер. На сайте карта работает целиком: смотри цены, ищи рядом, " +
+        "сдавай свои — они попадают на карту так же.</p>" +
+        '<a class="btn btn-primary" href="https://t.me/nishemap_bot/map" target="_blank" ' +
+        'rel="noopener">Открыть в Telegram</a></div>';
+      modal.hidden = false;
+      backdrop.hidden = false;
+      return;
+    }
     var bal = coinsBalance();
 
     /* шапка: твой аватар крупно + баланс + до следующей покупки */
@@ -2166,7 +2193,7 @@
   var SRV = null;                       // {balance, pending, next_at} или null
   var SRV_STATE = "loading";               // loading | ok | fail
   function loadBalance() {
-    if (!CFG.SUPABASE_URL) { SRV_STATE = "ok"; return; }
+    if (!CFG.SUPABASE_URL || !TG) { SRV_STATE = "ok"; return; }
     fetch(CFG.SUPABASE_URL + "/rest/v1/rpc/coin_stats", {
       method: "POST",
       headers: Object.assign({ "Content-Type": "application/json" }, sbHeaders()),

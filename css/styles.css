@@ -903,3 +903,9 @@ body.in-tg .tg-open{display:none}
   background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.28);
   border-radius:5px; padding:5px 7px}
 .devbar button:hover{background:rgba(255,255,255,.3)}
+
+/* витрина вне Telegram: объясняем, а не показываем пустые замки */
+.shop-locked{padding:8px 2px 4px; color:var(--ink)}
+.shop-locked p{margin:0 0 10px; font-size:var(--fs-sm); line-height:1.45}
+.shop-locked p:first-child{font-size:var(--fs-md)}
+.shop-locked .btn{display:inline-block; margin-top:4px; text-decoration:none}
