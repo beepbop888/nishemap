@@ -1986,11 +1986,71 @@
     }, function () { done(null); });
   }
 
+  /* ---------- кластеры ----------
+     В центре десятки заведений стоят вплотную, и ценники наезжали друг на друга:
+     «от 140» перекрывало «219», под ними ещё три. Читать было нечего. Теперь
+     близкие точки сходятся в одну метку со счётчиком и самой дешёвой ценой в
+     группе; клик по ней приближает карту, и группа рассыпается.
+
+     Цвет кластера — по самой дешёвой цене внутри: издалека видно, где дёшево. */
+  function clusterLayout() {
+    return ymaps.templateLayoutFactory.createClass(
+      '<div class="clusterpin clusterpin--{{ properties.band }}">' +
+        '<span class="clusterpin-coin">{{ properties.count }}</span>' +
+        '<span class="clusterpin-price">{{ properties.label }}</span>' +
+      "</div>"
+    );
+  }
+
+  function ensureClusterer() {
+    if (state.clusterer) return state.clusterer;
+    var c = new ymaps.Clusterer({
+      clusterIconLayout: clusterLayout(),
+      clusterIconShape: { type: "Circle", coordinates: [0, -20], radius: 24 },
+      gridSize: 72,
+      minClusterSize: 2,
+      hasBalloon: false,                 // клик приближает, а не открывает список
+      clusterDisableClickZoom: false,
+      groupByCoordinates: false,
+      margin: 48,
+    });
+    // Свойства кластера считаем сами: в шаблон попадают счётчик, самая дешёвая
+    // цена и полоса, по которой красится метка.
+    c.createCluster = function (center, geoObjects) {
+      var cluster = ymaps.Clusterer.prototype.createCluster.call(this, center, geoObjects);
+      var min = Infinity, anyTrusted = false;
+      geoObjects.forEach(function (g) {
+        var p = g.properties.get("minPrice");
+        if (g.properties.get("band") !== "grey") {
+          anyTrusted = true;
+          if (typeof p === "number" && p < min) min = p;
+        }
+      });
+      cluster.properties.set({
+        count: geoObjects.length,
+        band: anyTrusted ? bandOf(min) : "grey",
+        label: anyTrusted ? "от " + min : "цена?",
+      });
+      return cluster;
+    };
+    state.map.geoObjects.add(c);
+    state.clusterer = c;
+    return c;
+  }
+
   function renderMarkers() {
     if (!state.map) return;
     var gen = (state.renderGen = (state.renderGen || 0) + 1);
-    state.markers.forEach(function (m) { state.map.geoObjects.remove(m); });
+    var cl = ensureClusterer();
+    cl.removeAll();
     state.markers = [];
+    var pending = [], flushTimer = null;
+    function flush() {
+      flushTimer = null;
+      if (gen !== state.renderGen || !pending.length) return;
+      cl.add(pending);                   // пачкой: поштучно кластерер пересчитывает всё заново
+      pending = [];
+    }
     visibleVenues().forEach(function (v) {
       var items = venueItems(v);
       // Серым пин становится, только если под вопросом ВСЕ позиции места.
@@ -2010,14 +2070,17 @@
         );
         var pm = new ymaps.Placemark(coords, {
           hintContent: esc(v.name),
+          minPrice: min,
+          band: band,
         }, {
           iconLayout: Layout,
           // кликабельная зона — круг вокруг монеты (центр выше точки привязки)
           iconShape: { type: "Circle", coordinates: [0, -26], radius: 22 },
         });
         pm.events.add("click", function () { openSheet(v); });
-        state.map.geoObjects.add(pm);
+        pending.push(pm);
         state.markers.push(pm);
+        if (!flushTimer) flushTimer = setTimeout(flush, 0);
       });
     });
   }
