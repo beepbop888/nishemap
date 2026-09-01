@@ -2242,13 +2242,28 @@
     };
   }
 
+  /* Короткий устойчивый идентификатор из «заведение|адрес». Не криптография —
+     нужна только стабильность: один и тот же ключ всегда даёт одну и ту же строку. */
+  function venueKeyId(key) {
+    var h1 = 0x811c9dc5, h2 = 0x01000193;
+    for (var i = 0; i < key.length; i++) {
+      var c = key.charCodeAt(i);
+      h1 = ((h1 ^ c) * 16777619) >>> 0;
+      h2 = ((h2 + c * (i + 1)) * 2654435761) >>> 0;
+    }
+    return h1.toString(36) + h2.toString(36);
+  }
+
   function submissionToVenues(rows) {
     var byVenue = {};
     rows.forEach(function (s) {
       var key = (s.venue + "|" + s.address).toLowerCase();
       if (!byVenue[key]) {
         byVenue[key] = {
-          id: "u-" + s.id, name: s.venue, type: "от народа", district: "",
+          // id заведения выводим из самого ключа, а не из id первой строки:
+          // порядок у выборки «свежие сверху», поэтому новая цена в том же месте
+          // меняла id, и все разосланные ссылки ?v= переставали открываться.
+          id: "u-" + venueKeyId(key), name: s.venue, type: "от народа", district: "",
           address: s.address, lat: s.lat || null, lon: s.lon || null, source: "user",
           yandexUrl: "https://yandex.ru/maps/?text=" + encodeURIComponent(s.venue + " " + s.address),
           items: [],
