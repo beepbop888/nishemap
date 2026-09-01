@@ -468,19 +468,26 @@
      у которой не было стилей, и в телеграме её выносило за экран. */
   if (rankBtn) rankBtn.addEventListener("click", function () { openShop(); });
 
+  /* Разбор показывает то, что реально начислил сервер. Раньше он печатал
+     сумму, посчитанную браузером: «новые станции +10» (сервер не платит их
+     вовсе), «серия» (её некому начислить) — и человек ждал монет, которых
+     не будет. Цифры теперь из coin_stats. */
   function coinsBreakdownHtml() {
-    var b = coinBreakdown(), st = streakState(), nx = nextMilestone(scoredCount());
+    if (!SRV) {
+      return '<details class="coins-info"><summary>Откуда берутся монеты</summary>' +
+        "<p>" + (SRV_STATE === "fail" ? "Сервер не ответил — попробуй обновить страницу."
+                                      : "Считаем…") + "</p></details>";
+    }
+    var nx = nextMilestone(scoredCount());
     return '<details class="coins-info"><summary>Откуда берутся монеты</summary>' +
-      "<p>Монета приходит, когда район подтвердит твою цену. Заработано: <b>" + myCoins() +
-      "</b>, на руках: <b>" + coinsBalance() + "</b>.</p><ul>" +
-      "<li>Позиции: <b>" + b.items + "</b> <span>(до 3 с одного места)</span></li>" +
-      "<li>Новые заведения: <b>" + b.venues + "</b> <span>(+2 за первую цену в месте)</span></li>" +
-      "<li>Фото меню: <b>" + b.photos + "</b> <span>(+1 за место)</span></li>" +
-      "<li>Новые станции: <b>" + b.districts + "</b> <span>(+10 за станцию без цен)</span></li>" +
-      "<li>Серия: <b>" + b.streak + "</b> · недель подряд: " + st.weeks +
-        " · на этой неделе " + st.thisWeek + " из " + STREAK_NEED + "</li>" +
+      "<p>Монета приходит, когда район подтвердит твою цену. Заработано: <b>" + coinsEarned() +
+      "</b>, на руках: <b>" + coinsBalance() + "</b>" +
+      (pendingCoins() ? ", зреют: <b>" + pendingCoins() + "</b>" : "") + ".</p><ul>" +
+      "<li>Подтверждённые позиции: <b>" + (SRV.items || 0) + "</b> <span>(+1 каждая)</span></li>" +
+      "<li>Фото меню: <b>" + (SRV.photos || 0) + "</b> <span>(+1 за место)</span></li>" +
+      "<li>Жалобы, с которыми согласились: <b>" + (SRV.reports || 0) + "</b> <span>(+1)</span></li>" +
       (nx ? "<li>До вехи «" + nx.places + " позиций»: ещё <b>" + (nx.places - scoredCount()) +
-        "</b> (+" + nx.bonus + ")</li>" : "") + "</ul></details>";
+        "</b> <span>(+" + nx.bonus + ")</span></li>" : "") + "</ul></details>";
   }
 
   /* плитка для шеринга: рисуем на canvas, чтобы можно было кинуть картинкой в чат */
@@ -1953,7 +1960,13 @@
   function visibleGray() {
     if (!state.showGray) return [];
     var sel = Object.keys(state.districts).filter(function (k) { return state.districts[k]; });
-    return OSM.filter(function (v) { return !sel.length || !v.district || state.districts[v.district]; });
+    // У точек OSM district пустой, поэтому условие «|| !v.district» пропускало
+    // их всегда — фильтр станций на серые пины не действовал вовсе.
+    if (!sel.length) return OSM;
+    return OSM.filter(function (v) {
+      var d = v.district || (v.district = nearestStation(v.lat, v.lon));
+      return d && state.districts[d];
+    });
   }
 
   function renderGray() {
@@ -2297,17 +2310,31 @@
 
   function loadSubmissions() {
     if (!CFG.SUPABASE_URL || !CFG.SUPABASE_ANON_KEY) return;
-    fetch(CFG.SUPABASE_URL + "/rest/v1/submissions?select=id,dish,price,category,venue,address,lat,lon,submitted_at,avatar&order=submitted_at.desc&limit=500", { headers: sbHeaders() })
-      .then(function (r) { return r.json(); })
-      .then(function (rows) {
+    // Одним запросом на 500 строк карта теряла всё, что старше пятисотой цены.
+    // Читаем страницами, пока сервер отдаёт полные пачки.
+    var PAGE = 1000, acc = [];
+    (function page(from) {
+      fetch(CFG.SUPABASE_URL +
+        "/rest/v1/submissions?select=id,dish,price,category,venue,address,lat,lon,submitted_at,avatar" +
+        "&order=submitted_at.desc",
+        { headers: Object.assign({ Range: from + "-" + (from + PAGE - 1) }, sbHeaders()) })
+        .then(function (r) { return r.json(); })
+        .then(function (rows) {
+          if (Array.isArray(rows)) acc = acc.concat(rows);
+          if (Array.isArray(rows) && rows.length === PAGE && acc.length < 20000) return page(from + PAGE);
+          done(acc);
+        })
+        .catch(function () { if (acc.length) done(acc); });
+    })(0);
+
+    function done(rows) {
         if (!Array.isArray(rows) || !rows.length) return;
         var vs = submissionToVenues(rows);
         USER_VENUES = vs;                       // заменяем, а не дописываем
         render(); // список сразу, пины — по мере геокода
         geocodeQueue(vs, render);
         openDeepLink();                         // ссылка ждала именно эти точки
-      })
-      .catch(function () { /* сеть упала — карта живёт на сиде */ });
+    }
   }
 
   var deepLinkDone = false;
