@@ -31,6 +31,13 @@
     if (v.items) v.items = v.items.filter(function (it) { return !overCap(it); });
   });
   SEED.venues = SEED.venues.filter(function (v) { return v.noPrice || (v.items && v.items.length); });
+
+  /* Точки из базы держим в своей корзине. Пока их дописывали в SEED.venues,
+     повторный вызов — а он бывает после досылки очереди и на каждом «online» —
+     удваивал все пользовательские места на карте и в списке. */
+  var USER_VENUES = [];
+  function allVenues() { return SEED.venues.concat(USER_VENUES); }
+
   var OSM = (function () {
     var r = (window.NISHEMAP_OSM_ROWS && window.NISHEMAP_OSM_ROWS.rows) || [];
     return r.map(function (a, i) {
@@ -230,7 +237,7 @@
   }
   function visibleVenues() {
     var sel = Object.keys(state.districts).filter(function (k) { return state.districts[k]; });
-    return SEED.venues.filter(function (v) {
+    return allVenues().filter(function (v) {
       if (sel.length && !state.districts[v.district]) return false;
       return venueItems(v).length > 0;
     });
@@ -251,7 +258,7 @@
   }
   function streakState() {
     var byWeek = {}, ids = myItems();
-    SEED.venues.forEach(function (v) {
+    allVenues().forEach(function (v) {
       v.items.forEach(function (it) {
         if (ids.indexOf(it.id) === -1 || !isVerified(it.id) || !it.confirmedAt) return;
         var w = weekKey(it.confirmedAt);
@@ -978,7 +985,9 @@
                       .sort(function (x, y) { return x.price - y.price; })[0];
     document.getElementById("shop-balance").innerHTML =
       '<span class="shop-me">' + avatarSvg(me, 56) + "</span>" +
-      '<span class="shop-bal"><b>' + bal + '</b><i>монет на руках</i>' +
+      '<span class="shop-bal"><b>' + (SRV_STATE === "ok" ? bal : "—") + '</b><i>' +
+        (SRV_STATE === "loading" ? "считаем монеты…"
+         : SRV_STATE === "fail" ? "баланс не отвечает" : "монет на руках") + "</i>" +
       (pendingCoins() ? '<u>зреют: ещё ' + pendingCoins() + '</u>' : "") +
       (next ? '<u>до «' + esc(next.t) + '»: ещё ' + (next.price - bal) + "</u>" : "") + "</span>";
 
@@ -1173,7 +1182,7 @@
 
   (function populateDistricts() {
     var counts = {};
-    SEED.venues.forEach(function (v) {
+    allVenues().forEach(function (v) {
       if (v.district) counts[v.district] = (counts[v.district] || 0) + v.items.length;
     });
     var names = STATIONS.map(function (s) { return s[0]; });
@@ -1443,7 +1452,7 @@
       method: "POST",
       headers: { "Content-Type": "application/json", "apikey": CFG.SUPABASE_ANON_KEY,
                  "Authorization": "Bearer " + CFG.SUPABASE_ANON_KEY, "Prefer": "return=minimal" },
-      body: JSON.stringify({ venue_key: key, venue_name: v.name }),
+      body: JSON.stringify({ venue_key: key, venue_name: v.name, device: deviceId() }),
     }).catch(function () {});
   }
 
@@ -1678,7 +1687,7 @@
     var normV = f.venue.value.trim().toLowerCase().replace(/[«»"'ё]/g, function (c) { return c === "ё" ? "е" : ""; });
     var normD = f.dish.value.trim().toLowerCase().replace(/ё/g, "е");
     var dup = null;
-    SEED.venues.forEach(function (v) {
+    allVenues().forEach(function (v) {
       var vn = (v.name || "").toLowerCase().replace(/[«»"'ё]/g, function (c) { return c === "ё" ? "е" : ""; });
       if (vn.indexOf(normV) === -1 && normV.indexOf(vn) === -1) return;
       v.items.forEach(function (it) {
@@ -1759,6 +1768,8 @@
         }
         if (resp && resp.ok) {
           markSent(entry.at);
+          localStorage.setItem("nishemap.mine", String(myCount() + 1));
+          paintRank();
           loadBalance();          // монета уже в журнале, но ещё зреет — покажем сколько
           resp.clone().json().then(function (rows) {
             if (rows && rows[0] && rows[0].id) {
@@ -1772,7 +1783,7 @@
             submitted_at: new Date().toISOString(),
           }]);
           mine.forEach(function (v) { v.district = v.district || nearestStation(v.lat, v.lon); });
-          SEED.venues = SEED.venues.concat(mine);
+          USER_VENUES = USER_VENUES.concat(mine);
           render();
           geocodeQueue(mine, render);
         }
@@ -1800,7 +1811,9 @@
     // написанная ради метро и подвалов, не досылала ничего никогда.
     // Помечает теперь только успешный ответ сервера — выше по коду.
     state.lastVenue = { venue: record.venue, address: record.address, pos: state.formPos };
-    localStorage.setItem("nishemap.mine", String(myCount() + 1));
+    // Счётчик двигаем только когда точка действительно ушла. Раньше он рос в
+    // синхронном хвосте — то есть и на отказах сервера тоже.
+    if (!CFG.SUPABASE_URL) { localStorage.setItem("nishemap.mine", String(myCount() + 1)); }
     paintRank();
     haptic("success");
     var n = myCount(), nx = nextRank(n), sub = document.getElementById("done-sub");
@@ -1885,17 +1898,19 @@
   var geoCache;
   try { geoCache = JSON.parse(localStorage.getItem(GEO_LS)) || {}; } catch (e) { geoCache = {}; }
 
+  /* У промиса геокодера не было .catch, а ключ Яндекса геокодер не включает —
+     то есть заведение с неразобранным адресом тихо оставалось без пина. */
   function ensureCoords(v, done) {
     if (v.lat && v.lon) return done([v.lat, v.lon]);
     if (geoCache[v.id]) return done(geoCache[v.id]);
     ymaps.geocode("Москва, " + v.address, { results: 1 }).then(function (res) {
       var o = res.geoObjects.get(0);
-      if (!o) return;
+      if (!o) return done(null);
       var c = o.geometry.getCoordinates();
       geoCache[v.id] = c;
       localStorage.setItem(GEO_LS, JSON.stringify(geoCache));
       done(c);
-    });
+    }, function () { done(null); });
   }
 
   function renderMarkers() {
@@ -1913,6 +1928,7 @@
       var min = pool.reduce(function (a, b) { return b.price < a.price ? b : a; }).price;
       var band = trusted.length ? bandOf(min) : "grey";
       ensureCoords(v, function (coords) {
+        if (!coords) return;                 // адрес не разобрался — пина не будет
         if (gen !== state.renderGen) return; // фильтры сменились, пока геокодили
         var Layout = ymaps.templateLayoutFactory.createClass(
           '<div class="coinpin coinpin--' + band + '">' +
@@ -2075,7 +2091,7 @@
   /* находим наши проверенные позиции и группируем по заведению */
   function myVerifiedByVenue() {
     var mine = {}, ids = myItems();
-    SEED.venues.forEach(function (v) {
+    allVenues().forEach(function (v) {
       v.items.forEach(function (it) {
         if (ids.indexOf(it.id) === -1 || !isVerified(it.id)) return;
         var k = v.id || (v.name + "|" + v.address);
@@ -2115,7 +2131,7 @@
       var d = grp.venue.district;
       if (d && !seenDistricts[d]) {
         seenDistricts[d] = 1;
-        var districtHadOthers = SEED.venues.some(function (v) {
+        var districtHadOthers = allVenues().some(function (v) {
           return v.district === d && (v.items || []).some(function (it) { return myItems().indexOf(it.id) === -1; });
         });
         if (!districtHadOthers) b.districts += 5;
@@ -2132,8 +2148,9 @@
      Врать своему экрану человек может всегда — важно, что сервер этого не видит
      и ничего на этой цифре не строит. */
   var SRV = null;                       // {balance, pending, next_at} или null
+  var SRV_STATE = "loading";               // loading | ok | fail
   function loadBalance() {
-    if (!CFG.SUPABASE_URL) return;
+    if (!CFG.SUPABASE_URL) { SRV_STATE = "ok"; return; }
     fetch(CFG.SUPABASE_URL + "/rest/v1/rpc/coin_stats", {
       method: "POST",
       headers: Object.assign({ "Content-Type": "application/json" }, sbHeaders()),
@@ -2141,10 +2158,20 @@
     }).then(function (r) { return r.json(); })
       .then(function (rows) {
         var row = Array.isArray(rows) ? rows[0] : rows;
-        if (!row || typeof row.balance !== "number") return;
+        if (!row || typeof row.balance !== "number") { SRV_STATE = "fail"; return; }
+        SRV_STATE = "ok";
         SRV = row;
         paintRank(); render();
-      }).catch(function () {});
+        checkNewCoins();                       // порог медали считается по этим же данным
+        var shop = document.getElementById("shop-modal");
+        if (shop && !shop.hidden) openShop();  // витрина открыта — обновим цифры в ней
+      }).catch(function () {
+        // Молчаливый .catch оставлял SRV пустым навсегда: витрина показывала
+        // ноль монет и «заперто» на уже купленных аватарах, без единого слова.
+        SRV_STATE = "fail";
+        var shop = document.getElementById("shop-modal");
+        if (shop && !shop.hidden) openShop();
+      });
   }
   function pendingCoins() { return SRV ? (SRV.pending || 0) : 0; }
 
@@ -2275,14 +2302,17 @@
       .then(function (rows) {
         if (!Array.isArray(rows) || !rows.length) return;
         var vs = submissionToVenues(rows);
-        SEED.venues = SEED.venues.concat(vs);
+        USER_VENUES = vs;                       // заменяем, а не дописываем
         render(); // список сразу, пины — по мере геокода
         geocodeQueue(vs, render);
+        openDeepLink();                         // ссылка ждала именно эти точки
       })
       .catch(function () { /* сеть упала — карта живёт на сиде */ });
   }
 
+  var deepLinkDone = false;
   function openDeepLink() {
+    if (deepLinkDone) return;
     var id = null;
     var m = location.search.match(/[?&]v=([^&]+)/);
     if (m) id = decodeURIComponent(m[1]);
@@ -2292,8 +2322,9 @@
       if (sp.indexOf("v_") === 0) id = sp.slice(2).replace(/_/g, "-");
     }
     if (!id) return;
-    var v = SEED.venues.concat(OSM).filter(function (x) { return x.id === id; })[0];
-    if (!v) return;
+    var v = allVenues().concat(OSM).filter(function (x) { return x.id === id; })[0];
+    if (!v) return;                      // точки ещё нет — попробуем после загрузки
+    deepLinkDone = true;
     openSheet(v);
     if (state.map && v.lat) state.map.setCenter([v.lat, v.lon], 16);
   }

@@ -167,10 +167,18 @@ export default {
         last_name: user.last_name || null,
         language: user.language_code || null,
         is_premium: !!user.is_premium,
-        device: String(b.device || "").slice(0, 64) || null,
       };
+      const dev = String(b.device || "").slice(0, 64) || null;
       ctx.waitUntil((async () => {
-        // Первый заход создаёт строку, последующие двигают last_seen и счётчик.
+        // device присылает клиент, а привязка device→человек решает, чьи монеты
+        // читаются. Поэтому меняем её только когда её ещё нет: иначе любой,
+        // подсмотревший чужой device, переклеил бы его на себя.
+        const cur = await fetch(
+          `${env.SUPABASE_URL}/rest/v1/tg_users?tg_id=eq.${user.id}&select=device`,
+          { headers: sbHeaders(env) }).then(r2 => r2.json()).catch(() => []);
+        const known = cur && cur[0] ? cur[0].device : undefined;
+        if (known === undefined || known === null) row.device = dev;
+        else if (known !== dev) console.log("device mismatch", user.id, "known vs sent");
         const r = await fetch(`${env.SUPABASE_URL}/rest/v1/tg_users?on_conflict=tg_id`, {
           method: "POST",
           headers: { ...sbHeaders(env), Prefer: "resolution=merge-duplicates,return=minimal" },
@@ -264,9 +272,14 @@ export default {
         callback_query_id: cb.id, text: ok ? done : "Не вышло — смотри логи",
       });
       if (ok && cb.message) {
+        // Клавиатуру ОСТАВЛЯЕМ. Раньше editMessageText шёл без reply_markup, и
+        // Telegram убирал кнопки: промахнулся по «Скрыть» — исправить нечем,
+        // карточка мёртвая. Теперь любое решение перебивается соседней кнопкой.
+        const base = (cb.message.text || "").split("\n\n— ")[0];
         await tg(env, "editMessageText", {
           chat_id: cb.message.chat.id, message_id: cb.message.message_id,
-          text: (cb.message.text || "") + "\n\n— " + done,
+          text: base + "\n\n— " + done,
+          reply_markup: modKeyboard(id),
         });
       }
       return new Response("ok");
