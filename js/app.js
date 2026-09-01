@@ -105,7 +105,10 @@
     if (a.indexOf(id) === -1) { a.push(id); localStorage.setItem("nishemap.myitems", JSON.stringify(a)); }
   }
 
-  var CONFIRMS = {};   // itemId -> Set-подобный объект устройств
+  // Ключи здесь — item_id, то есть строки, которые выбирает пользователь.
+  // На обычном {} ключ "__proto__" возвращает Object.prototype: одна такая
+  // строка в базе роняла разбор целиком. Object.create(null) прототипа не имеет.
+  var CONFIRMS = Object.create(null);   // itemId -> Set-подобный объект устройств
   function confirmCount(id) { return CONFIRMS[id] ? Object.keys(CONFIRMS[id]).length : 0; }
   function hasPhoto(id) { return !!(PHOTOS[id] && PHOTOS[id].length); }
   var VERIFY_TTL = 30; // дней: дальше проверка считается устаревшей
@@ -144,10 +147,26 @@
   /* ---------- решения владельца: серая монета и скрытые позиции ----------
      OVR приезжает из таблицы overrides. Серая монета — не «плохая точка», а
      «цифре не верим»: место остаётся на карте и просит настоящую цену. */
-  var OVR = {};
-  function isHidden(id)   { return !!(OVR[id] && OVR[id].hidden); }
+  var OVR = Object.create(null);
+  /* Пожаловался — позиция уходит с твоего экрана сразу. Список писался и
+     раньше, но его никто не читал: человек жал «неверно», говорил «спасибо» и
+     видел ту же цену на месте. */
+  var LOCAL_HIDDEN = (function () {
+    try { return JSON.parse(localStorage.getItem("nishemap.hidden")) || []; } catch (e) { return []; }
+  })();
+  function isHidden(id) {
+    return LOCAL_HIDDEN.indexOf(id) !== -1 || !!(OVR[id] && OVR[id].hidden);
+  }
   function isDisputed(id) { return !!(OVR[id] && OVR[id].disputed); }
   function bandOfItem(it) { return isDisputed(it.id) ? "grey" : bandOf(it.price); }
+  /* Один и тот же выбор кнопки для списка и для шторки. Разъезжались: в списке
+     под серой монетой предлагали «Ещё по этой цене?» — подтвердить цену,
+     которой мы сами не верим. */
+  function itemActionBtn(it) {
+    return isDisputed(it.id)
+      ? '<button class="fix-price" data-item="' + esc(it.id) + '">Знаю настоящую цену</button>'
+      : '<button class="reconfirm" data-item="' + esc(it.id) + '">Ещё по этой цене?</button>';
+  }
   function loadOverrides() {
     if (!CFG.SUPABASE_URL) return;
     fetch(CFG.SUPABASE_URL + "/rest/v1/overrides?select=item_id,disputed,hidden&limit=2000",
@@ -1213,7 +1232,7 @@
           esc(v.name) + " · " + esc(v.type) +
           (v.district ? " · " + esc(v.district) : "") + " · " + esc(v.address) + "</div>" +
           '<div class="fresh"><span class="badge ' + fb.cls + '">' + fb.text + "</span>" +
-          '<button class="reconfirm" data-item="' + esc(it.id) + '">Ещё по этой цене?</button></div>';
+          itemActionBtn(it) + "</div>";
         li.addEventListener("click", function (e) {
           if (e.target.closest(".reconfirm")) return;
           openSheet(v);
@@ -1226,30 +1245,52 @@
     });
   }
 
-  /* one-tap reconfirm (event delegation: list + sheet) */
+  /* one-tap reconfirm (event delegation: list + sheet)
+     Раньше подтверждение красилось зелёным сразу и навсегда: и дата в
+     localStorage, и значок ставились до ответа сервера, а ответ не проверялся
+     вовсе. Сервер при этом отбивает своё же подтверждение и накрутку — то есть
+     человек видел «проверено», когда проверки не было. Теперь красит успех. */
   document.addEventListener("click", function (e) {
     var btn = e.target.closest(".reconfirm");
     if (!btn || btn.disabled) return;
     var id = btn.dataset.item;
-    var c = confirms();
-    c[id] = new Date().toISOString().slice(0, 10);
-    localStorage.setItem(LS_CONFIRM, JSON.stringify(c));
-    btn.disabled = true;
-    btn.textContent = "Спасибо, зафиксировали";
-    if (CFG.SUPABASE_URL) {
-      fetch(CFG.SUPABASE_URL + "/rest/v1/confirms", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "apikey": CFG.SUPABASE_ANON_KEY,
-                   "Authorization": "Bearer " + CFG.SUPABASE_ANON_KEY, "Prefer": "return=minimal" },
-        body: JSON.stringify({ item_id: id, device: deviceId() }),
-      }).then(function () {
-        (CONFIRMS[id] = CONFIRMS[id] || {})[deviceId()] = 1;
-        var badge = btn.parentElement.querySelector(".badge");
-        if (badge && isVerified(id)) { badge.textContent = "проверено народом"; badge.className = "badge is-fresh"; }
-      }).catch(function () {});
-    }
     var badge = btn.parentElement.querySelector(".badge");
-    if (badge) { badge.textContent = "цена жива · проверено сегодня"; badge.className = "badge is-fresh"; }
+    var was = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "отправляем…";
+    if (!CFG.SUPABASE_URL) {                       // сборка без бэкенда
+      var c0 = confirms(); c0[id] = new Date().toISOString().slice(0, 10);
+      localStorage.setItem(LS_CONFIRM, JSON.stringify(c0));
+      btn.textContent = "Спасибо, зафиксировали";
+      if (badge) { badge.textContent = "цена жива · проверено сегодня"; badge.className = "badge is-fresh"; }
+      return;
+    }
+    fetch(CFG.SUPABASE_URL + "/rest/v1/confirms", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "apikey": CFG.SUPABASE_ANON_KEY,
+                 "Authorization": "Bearer " + CFG.SUPABASE_ANON_KEY, "Prefer": "return=minimal" },
+      body: JSON.stringify({ item_id: id, device: deviceId() }),
+    }).then(function (r) {
+      if (!r.ok) {
+        return r.clone().json().catch(function () { return {}; }).then(function (err) {
+          btn.disabled = false; btn.textContent = was;
+          toast((err && (err.message || err.hint)) || "Подтверждение не прошло");
+        });
+      }
+      var c = confirms();
+      c[id] = new Date().toISOString().slice(0, 10);
+      localStorage.setItem(LS_CONFIRM, JSON.stringify(c));
+      (CONFIRMS[id] = CONFIRMS[id] || {})[deviceId()] = new Date().toISOString();
+      btn.textContent = "Спасибо, зафиксировали";
+      if (badge) {
+        var byCrowd = isVerified(id);
+        badge.textContent = byCrowd ? "проверено народом" : "цена жива · проверено сегодня";
+        badge.className = "badge is-fresh";
+      }
+    }).catch(function () {
+      btn.disabled = false; btn.textContent = was;
+      toast("Сеть не отвечает");
+    });
   });
 
   /* фото позиции: скрытый инпут, метаданные копим до подключения базы */
@@ -1321,6 +1362,33 @@
       uploadPhoto(file, btn, itemId);
     });
   });
+
+  /* Фото из формы отправки. Отдельно от uploadPhoto(), которому нужна кнопка
+     для статуса: в форме кнопки нет, а поле «Фото меню» до сих пор просто
+     выбрасывалось — человек прикреплял снимок, и тот никуда не уходил. */
+  function uploadFormPhoto(file, itemId) {
+    if (!file || !CFG.SUPABASE_URL) return;
+    if (file.size > 8 * 1024 * 1024) { toast("Фото тяжелее 8 МБ — не отправили"); return; }
+    var path = "items/" + itemId + "-" + Date.now() + "-" +
+               Math.random().toString(36).slice(2, 8) +
+               (file.name.match(/\.[a-z0-9]+$/i) || [".jpg"])[0];
+    fetch(CFG.SUPABASE_URL + "/storage/v1/object/menus/" + path, {
+      method: "POST",
+      headers: { "apikey": CFG.SUPABASE_ANON_KEY, "Authorization": "Bearer " + CFG.SUPABASE_ANON_KEY,
+                 "Content-Type": file.type || "image/jpeg", "x-upsert": "true" },
+      body: file,
+    }).then(function (r) {
+      if (!r.ok) throw new Error("upload " + r.status);
+      return fetch(CFG.SUPABASE_URL + "/rest/v1/item_photos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "apikey": CFG.SUPABASE_ANON_KEY,
+                   "Authorization": "Bearer " + CFG.SUPABASE_ANON_KEY, "Prefer": "return=minimal" },
+        body: JSON.stringify({ item_id: itemId, photo_url:
+          CFG.SUPABASE_URL + "/storage/v1/object/public/menus/" + path }),
+      });
+    }).then(function () { loadPhotos(); })
+      .catch(function () { toast("Фото не загрузилось, но цена ушла"); });
+  }
 
   function uploadPhoto(file, btn, itemId) {
     btn.textContent = "гружу…";
@@ -1442,9 +1510,7 @@
         (b === "grey" ? '<div class="grey-note">Цене не верим: пожаловались или проверил владелец. ' +
                         'Знаешь, сколько на самом деле?</div>' : "") +
         '<div class="fresh"><span class="badge ' + fb.cls + '">' + fb.text + "</span>" +
-        (b === "grey"
-          ? '<button class="fix-price" data-item="' + esc(it.id) + '">Знаю настоящую цену</button>'
-          : '<button class="reconfirm" data-item="' + esc(it.id) + '">Ещё по этой цене?</button>') +
+        itemActionBtn(it) +
         '<button class="photo-add" data-item="' + esc(it.id) + '" title="Меню/вывеска с ценами — или сама еда">📷 фото</button>' +
         '<button class="flag" data-item="' + esc(it.id) + '" title="Цена неверна или это не еда">неверно</button></div>' +
         (it.avatar ? '<div class="by-who">' + avatarSvg(it.avatar, 20) + "сдал " + esc(avatarTitle(it.avatar)) + "</div>" : "") +
@@ -1519,12 +1585,16 @@
                                venue: v.name, address: v.address }),
       }).catch(function () {});
     }
-    var hid; try { hid = JSON.parse(localStorage.getItem("nishemap.hidden")) || []; } catch (er) { hid = []; }
-    if (hid.indexOf(id) === -1) hid.push(id);
-    localStorage.setItem("nishemap.hidden", JSON.stringify(hid));
+    if (LOCAL_HIDDEN.indexOf(id) === -1) LOCAL_HIDDEN.push(id);
+    localStorage.setItem("nishemap.hidden", JSON.stringify(LOCAL_HIDDEN));
     btn.textContent = "спасибо";
     btn.disabled = true;
     toast("Отметили. Проверим.");
+    render();                                   // позиция уходит сразу
+    if (state.activeVenue) {
+      var left = (state.activeVenue.items || []).filter(function (x) { return !isHidden(x.id); });
+      if (left.length) openSheet(state.activeVenue); else closeSheet();
+    }
   });
 
   /* ---------- submission form ---------- */
@@ -1642,6 +1712,7 @@
       venue: f.venue.value.trim(),
       address: f.address.value.trim(),
     };
+    var formPhoto = f.photo && f.photo.files && f.photo.files[0];
     // бэкенд подключён — шлём в общую копилку (вердикт совета: мгновенно, без очереди)
     if (CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY) {
       var withGeo = Object.assign({ device: deviceId() }, record);
@@ -1654,7 +1725,9 @@
             "Content-Type": "application/json",
             "apikey": CFG.SUPABASE_ANON_KEY,
             "Authorization": "Bearer " + CFG.SUPABASE_ANON_KEY,
-            "Prefer": "return=minimal",
+            // Нужен id созданной строки: без него addMyItem() молчал, и «мои
+            // позиции» оставались пустыми — вместе с анимацией монеты и разбором.
+            "Prefer": "return=representation",
           },
           body: JSON.stringify(body),
         });
@@ -1688,7 +1761,10 @@
           markSent(entry.at);
           loadBalance();          // монета уже в журнале, но ещё зреет — покажем сколько
           resp.clone().json().then(function (rows) {
-            if (rows && rows[0] && rows[0].id) addMyItem("ui-" + rows[0].id);
+            if (rows && rows[0] && rows[0].id) {
+              addMyItem("ui-" + rows[0].id);
+              if (formPhoto) uploadFormPhoto(formPhoto, "ui-" + rows[0].id);
+            }
           }).catch(function () {});
           var mine = submissionToVenues([{
             id: "local-" + Date.now(), dish: record.dish, price: record.price,
@@ -1936,7 +2012,7 @@
   window.addEventListener("online", flushInbox);
 
   /* ---------- фото позиций ---------- */
-  var PHOTOS = {}, PHOTO_AT = {};
+  var PHOTOS = Object.create(null), PHOTO_AT = Object.create(null);
   function loadPhotos() {
     if (!CFG.SUPABASE_URL) return;
     fetch(CFG.SUPABASE_URL + "/rest/v1/item_photos?select=item_id,photo_url,status,submitted_at&limit=1000", { headers: sbHeaders() })
@@ -1944,9 +2020,12 @@
       .then(function (rows) {
         if (!Array.isArray(rows)) return;
         rows.forEach(function (p) {
+          try {
           if (p.status && p.status !== "live") return;
+          if (typeof p.item_id !== "string" || !p.item_id) return;
           (PHOTOS[p.item_id] = PHOTOS[p.item_id] || []).push(p.photo_url);
           if (p.submitted_at && (!PHOTO_AT[p.item_id] || p.submitted_at > PHOTO_AT[p.item_id])) PHOTO_AT[p.item_id] = p.submitted_at;
+          } catch (er) { /* кривая строка — пропускаем её, а не весь список */ }
         });
         if (state.activeVenue) openSheet(state.activeVenue); // перерисовать открытую шторку
         render(); checkNewCoins();

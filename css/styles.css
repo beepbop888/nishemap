@@ -253,6 +253,18 @@ body{
 .price--200{background:var(--silver-bg); color:var(--silver-ink)}
 .price--300{background:var(--bronze-bg); color:var(--bronze-ink)}
 .price--500{background:var(--bill-bg); color:var(--bill-ink)}
+/* ============ просмотр фото во весь экран ============
+   Правила .lightbox не было вовсе: body — это грид высотой 100dvh с
+   overflow:hidden, и картинка на несколько тысяч пикселей вставала третьей
+   строкой, сжимая карту в ноль. Тап по фото складывал приложение. */
+.lightbox{
+  position:fixed; inset:0; z-index:90; display:flex; align-items:center; justify-content:center;
+  background:rgba(0,0,0,.86); padding:16px; cursor:zoom-out;
+  animation:lb-in .12s ease-out;
+}
+.lightbox img{max-width:92vw; max-height:92vh; object-fit:contain; border-radius:var(--r-sm)}
+@keyframes lb-in{from{opacity:0}to{opacity:1}}
+
 /* ============ серая монета: цене не верим ============
    Не «плохое место», а «цифра под вопросом». Поэтому не красное и не
    зачёркнутое, а обесцвеченное: сумма ещё читается, но перестаёт быть обещанием. */
