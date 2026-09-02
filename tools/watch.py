@@ -23,7 +23,7 @@ SUS = """select who, devices, reports, upheld, reports_today, submissions, hidde
  order by (suspicion <> '') desc, reports desc
  limit 40"""
 
-PROFILE = """select who, reports, upheld, rejected, items, last_report
+PROFILE = """select who, reports, upheld, rejected, pending, last_report
   from public.reporter_profile
  order by reports desc
  limit 40"""
@@ -48,11 +48,11 @@ def main():
         if not rows:
             print("жалоб пока не было"); return
         print("%-24s%8s%10s%9s%9s  %s" %
-              ("кто", "жалоб", "поддерж", "отклон", "позиций", "последняя"))
+              ("кто", "позиций", "поддерж", "отклон", "ждут", "последняя"))
         for r in rows:
             print("%-24s%8d%10d%9d%9d  %s" % (
                 (r["who"] or "")[:23], r["reports"], r["upheld"],
-                r["rejected"], r["items"], (r["last_report"] or "")[:16]))
+                r["rejected"], r["pending"], (r["last_report"] or "")[:16]))
         return
 
     rows = ask(SUS.format(where="" if mode == "all" else "where suspicion <> ''"))
