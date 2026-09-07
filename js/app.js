@@ -2090,6 +2090,11 @@
 
   function renderMarkers() {
     if (!state.map) return;
+    if (DRISHA.on) {                        // включён другой слой — монет на нём нет
+      if (state.clusterer) state.clusterer.removeAll();
+      state.markers = [];
+      return;
+    }
     var gen = (state.renderGen = (state.renderGen || 0) + 1);
     var cl = ensureClusterer();
     cl.removeAll();
@@ -2135,6 +2140,173 @@
     });
   }
 
+  /* ---------- ДрищMap: платный слой ----------
+     Другой продукт поверх того же города: не «где дёшево», а «где было плохо».
+     Три источника в одной таблице — наши отметки, цитаты чужих отзывов и просто
+     ссылки, — и всё старше трёх месяцев не показывается: протухший отзыв о еде
+     ничего не говорит о сегодняшней кухне, а обвинение живёт вечно.
+
+     Платность держит СЕРВЕР: drisha_map() без действующей подписки возвращает
+     пустоту. Прятать ответ на клиенте бессмысленно — он уже пришёл. */
+  var DRISHA = { on: false, points: [], markers: [], loaded: false, teaser: null };
+
+  function drishaToggleEl() { return document.getElementById("drisha-toggle"); }
+
+  function loadDrishaTeaser() {
+    if (!CFG.SUPABASE_URL) return;
+    fetch(CFG.SUPABASE_URL + "/rest/v1/rpc/drisha_teaser", {
+      method: "POST",
+      headers: Object.assign({ "Content-Type": "application/json" }, sbHeaders()),
+      body: "{}",
+    }).then(function (r) { return r.json(); })
+      .then(function (rows) {
+        var row = Array.isArray(rows) ? rows[0] : rows;
+        if (!row) return;
+        DRISHA.teaser = row;
+        var b = drishaToggleEl();
+        if (b && row.venues) b.hidden = false;    // нечего показывать — нет и кнопки
+      }).catch(function () {});
+  }
+
+  function loadDrishaPoints(done) {
+    if (!CFG.SUPABASE_URL) return done(false);
+    fetch(CFG.SUPABASE_URL + "/rest/v1/rpc/drisha_map", {
+      method: "POST",
+      headers: Object.assign({ "Content-Type": "application/json" }, sbHeaders()),
+      body: JSON.stringify({ p_device: deviceId(), p_key: deviceKey() }),
+    }).then(function (r) { return r.json(); })
+      .then(function (rows) {
+        DRISHA.points = Array.isArray(rows) ? rows : [];
+        DRISHA.loaded = true;
+        done(DRISHA.points.length > 0);
+      }).catch(function () { done(false); });
+  }
+
+  function renderDrisha() {
+    if (!state.map) return;
+    DRISHA.markers.forEach(function (m) { state.map.geoObjects.remove(m); });
+    DRISHA.markers = [];
+    if (!DRISHA.on) return;
+    DRISHA.points.forEach(function (p) {
+      if (!p.lat || !p.lon) return;
+      var severe = (p.severe || 0) > 0;
+      var Layout = ymaps.templateLayoutFactory.createClass(
+        '<div class="drishapin' + (severe ? " drishapin--severe" : "") + '">' +
+        '<span class="drishapin-mark">' + (p.reports || 0) + "</span>" +
+        '<span class="drishapin-label">' + (severe ? "отравления" : "жалобы") + "</span></div>"
+      );
+      var pm = new ymaps.Placemark([p.lat, p.lon], { hintContent: esc(p.venue_name || "") }, {
+        iconLayout: Layout,
+        iconShape: { type: "Circle", coordinates: [0, -24], radius: 20 },
+      });
+      pm.events.add("click", function () { openDrishaVenue(p); });
+      state.map.geoObjects.add(pm);
+      DRISHA.markers.push(pm);
+    });
+  }
+
+  /* Что именно писали. Цитата ВСЕГДА с автором, датой и ссылкой: приложение
+     ничего не утверждает, оно показывает чужие слова и ведёт к первоисточнику. */
+  function openDrishaVenue(p) {
+    var modal = document.getElementById("shop-modal");
+    var body = document.getElementById("shop-body");
+    document.getElementById("shop-balance").innerHTML =
+      '<span class="shop-bal"><b>\u{1F6BD}</b><i>' + esc(p.venue_name || "место") + "</i></span>";
+    body.innerHTML = '<p class="drisha-sell fine">Загружаем…</p>';
+    modal.hidden = false; backdrop.hidden = false;
+    fetch(CFG.SUPABASE_URL + "/rest/v1/rpc/drisha_venue", {
+      method: "POST",
+      headers: Object.assign({ "Content-Type": "application/json" }, sbHeaders()),
+      body: JSON.stringify({ p_device: deviceId(), p_key: deviceKey(), p_venue: p.venue_key }),
+    }).then(function (r) { return r.json(); })
+      .then(function (rows) {
+        if (!Array.isArray(rows) || !rows.length) {
+          body.innerHTML = '<p class="drisha-sell fine">Ничего не нашли.</p>'; return;
+        }
+        var KIND = { poisoning: "отравление", diarrhea: "расстройство",
+                     vomit: "рвота", bad: "жалоба" };
+        body.innerHTML =
+          '<div class="drisha-sell"><p class="fine">' + esc(p.address || "") +
+          " · случаев за три месяца: <b>" + (p.reports || 0) + "</b></p></div>" +
+          rows.map(function (c) {
+            var when = (c.happened_on || "").slice(0, 10);
+            if (c.source === "crowd") {
+              return '<div class="drisha-case"><q>' + esc(KIND[c.kind] || c.kind) +
+                     "</q><cite>отметил посетитель НищеMap · " + esc(when) + "</cite></div>";
+            }
+            var src = esc(c.site || "отзыв");
+            var link = safeExt(c.url);
+            return '<div class="drisha-case">' +
+              (c.quote ? "<q>" + esc(c.quote) + "</q>" : "<q>" + esc(KIND[c.kind] || c.kind) + "</q>") +
+              "<cite>" + (c.author ? esc(c.author) + " · " : "") + src + " · " + esc(when) +
+              (link ? ' · <a href="' + esc(link) + '" target="_blank" rel="noopener nofollow">читать</a>' : "") +
+              "</cite></div>";
+          }).join("");
+      }).catch(function () {
+        body.innerHTML = '<p class="drisha-sell fine">Не открылось.</p>';
+      });
+  }
+
+  /* Ссылку наружу пускаем только на известные сайты отзывов: чужой url в
+     разметке — это чужая страница под нашим именем. */
+  function safeExt(u) {
+    if (typeof u !== "string") return null;
+    return /^https:\/\/([a-z0-9-]+\.)*(yandex\.[a-z]+|2gis\.[a-z]+|google\.[a-z]+|tripadvisor\.[a-z]+)\//i
+      .test(u) ? u : null;
+  }
+
+  function drishaSell() {
+    var modal = document.getElementById("shop-modal");
+    var body = document.getElementById("shop-body");
+    var t = DRISHA.teaser || { venues: 0, severe: 0 };
+    document.getElementById("shop-balance").innerHTML =
+      '<span class="shop-bal"><b>\u{1F6BD}</b><i>ДрищMap</i></span>';
+    body.innerHTML =
+      '<div class="drisha-sell">' +
+      "<h3>Где пожалеешь, что поел</h3>" +
+      '<p><span class="big">' + (t.venues || 0) + "</span> мест в городе, про которые за последние " +
+      "три месяца писали, что после них было плохо" +
+      (t.severe ? ", из них <b>" + t.severe + "</b> с отравлениями" : "") + ".</p>" +
+      '<div class="drisha-src"><span>наши отметки</span><span>Яндекс</span>' +
+      "<span>2ГИС</span><span>Google</span></div>" +
+      "<p>Слой ложится поверх обычной карты: те же улицы, другие пины. " +
+      "Открываешь место — видишь, кто и когда это написал, и ссылку на сам отзыв.</p>" +
+      '<p class="fine">499 ₽ в месяц. Оплата звёздами Telegram — напиши боту ' +
+      "<b>/drisha</b>, и он пришлёт счёт.</p>" +
+      '<p class="fine">Мы не утверждаем, что заведение кого-то отравило. Мы показываем, ' +
+      "что писали посетители, с датой и ссылкой на первоисточник. Всё старше трёх " +
+      "месяцев исчезает само.</p></div>";
+    modal.hidden = false; backdrop.hidden = false;
+  }
+
+  (function () {
+    var b = document.getElementById("drisha-toggle");
+    if (!b) return;
+    b.addEventListener("click", function () {
+      if (DRISHA.on) {                      // выключаем — возвращаем монеты
+        DRISHA.on = false;
+        b.classList.remove("is-on");
+        b.setAttribute("aria-pressed", "false");
+        renderDrisha(); renderMarkers(); renderGray();
+        return;
+      }
+      if (DRISHA.loaded && DRISHA.points.length) {
+        DRISHA.on = true; b.classList.add("is-on"); b.setAttribute("aria-pressed", "true");
+        renderMarkers(); renderGray(); renderDrisha();
+        return;
+      }
+      b.disabled = true;
+      loadDrishaPoints(function (has) {
+        b.disabled = false;
+        // Пусто может значить и «нет подписки», и «в городе чисто». Сервер
+        // намеренно не различает их в ответе, поэтому решаем по витрине.
+        if (!has) { drishaSell(); return; }
+        DRISHA.on = true; b.classList.add("is-on"); b.setAttribute("aria-pressed", "true");
+        renderMarkers(); renderGray(); renderDrisha();
+      });
+    });
+  })();
+
   /* ---------- серые точки (OSM, без цен) ---------- */
   function visibleGray() {
     if (!state.showGray) return [];
@@ -2150,6 +2322,13 @@
 
   function renderGray() {
     if (!state.map || typeof ymaps === "undefined") return;
+    if (DRISHA.on) {
+      state.grayMarkers.forEach(function (m) { state.map.geoObjects.remove(m); });
+      state.grayMarkers = [];
+      var gh = document.getElementById("gray-hint");
+      if (gh) gh.hidden = true;
+      return;
+    }
     state.grayMarkers.forEach(function (m) { state.map.geoObjects.remove(m); });
     state.grayMarkers = [];
     var hint = document.getElementById("gray-hint");
@@ -2610,6 +2789,7 @@
   loadSubmissions();
   loadPhotos();
   loadOverrides();
+  loadDrishaTeaser();
   sendIdentity();          // сначала подпись и ключ, потом баланс
   loadConfirms(function () { render(); checkNewCoins(); });
   loadTotals();

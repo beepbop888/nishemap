@@ -296,6 +296,36 @@ export default {
     let upd;
     try { upd = await request.json(); } catch { return new Response("ok"); }
 
+    /* ---- оплата подписки ДрищMap звёздами Telegram ---- */
+    // Stars — единственный способ брать деньги внутри мини-аппа без своего
+    // мерчанта и без вывода людей из Telegram. Валюта XTR, сумма в звёздах.
+    if (upd.pre_checkout_query) {
+      // Ответить надо за 10 секунд, иначе Telegram отменит платёж сам.
+      await tg(env, "answerPreCheckoutQuery", {
+        pre_checkout_query_id: upd.pre_checkout_query.id, ok: true,
+      });
+      return new Response("ok");
+    }
+    const paid = upd.message && upd.message.successful_payment;
+    if (paid) {
+      const who = upd.message.from && upd.message.from.id;
+      const stars = paid.total_amount || 0;
+      const r = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/sub_extend`, {
+        method: "POST", headers: sbHeaders(env),
+        body: JSON.stringify({ p_tg_id: who, p_days: 31, p_stars: stars }),
+      });
+      const until = r.ok ? await r.json() : null;
+      if (!r.ok) console.log("sub_extend", r.status, await r.text());
+      await tg(env, "sendMessage", {
+        chat_id: who,
+        text: until
+          ? "\u{1F6BD} ДрищMap открыт до " + String(until).slice(0, 10) +
+            ".\nОткрой карту и включи слой кнопкой внизу."
+          : "Оплата прошла, но подписку записать не вышло. Напиши мне — разберусь.",
+      });
+      return new Response("ok");
+    }
+
     /* нажата кнопка модерации */
     const cb = upd.callback_query;
     if (cb) {
@@ -373,6 +403,28 @@ export default {
     }
     // Нужен один раз при настройке: OWNER_CHAT_ID неоткуда взять, пока включён
     // вебхук — getUpdates при нём отвечает 409.
+    /* Витрина и покупка подписки. Цену в звёздах держим в переменной окружения:
+       курс звезды к рублю Telegram меняет сам, и зашивать его в код нельзя. */
+    if (text === "/drisha") {
+      const price = parseInt(env.DRISHA_STARS || "250", 10);
+      const t = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/drisha_teaser`, {
+        method: "POST", headers: sbHeaders(env), body: "{}",
+      }).then(r => r.ok ? r.json() : null).catch(() => null);
+      const row = Array.isArray(t) ? t[0] : t;
+      await tg(env, "sendInvoice", {
+        chat_id: msg.chat.id,
+        title: "ДрищMap — месяц",
+        description:
+          "Слой поверх карты: места, про которые за последние три месяца писали, " +
+          "что после них было плохо. Отзывы с разных сайтов и отметки наших " +
+          (row ? `людей. Сейчас отмечено мест: ${row.venues}.` : "людей."),
+        payload: "drisha:" + msg.chat.id,
+        currency: "XTR",
+        prices: [{ label: "Месяц доступа", amount: price }],
+      });
+      return new Response("ok");
+    }
+
     if (text === "/id") {
       await tg(env, "sendMessage", { chat_id: msg.chat.id, text: "chat_id: " + msg.chat.id });
       return new Response("ok");

@@ -10,3 +10,7 @@ workers_dev = true
 [vars]
 SITE = "https://beepbop888.github.io/nishemap/"
 SUPABASE_URL = "https://svfnjfpawljkdcehzkgv.supabase.co"
+# Цена месяца ДрищMap в звёздах Telegram. Курс звезды к рублю Telegram меняет
+# сам, поэтому держим числом здесь, а не в коде: 499 ₽ — это примерно 250 звёзд,
+# но перед запуском стоит свериться с текущим курсом в @BotFather.
+DRISHA_STARS = "250"
