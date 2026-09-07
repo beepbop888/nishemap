@@ -168,7 +168,13 @@ export default {
         language: user.language_code || null,
         is_premium: !!user.is_premium,
       };
-      const dev = String(b.device || "").slice(0, 64) || null;
+      // Личность выводим из подписанного tg_id, а НЕ из того, что прислал
+      // клиент. В webview Telegram localStorage не переживает открытие
+      // приложения: deviceId() заводил новое устройство каждый раз, и монеты
+      // с аватарами оставались на брошенных личностях. Здесь терять нечего —
+      // и device, и секрет считаются заново при каждом входе.
+      const dev = "tg" + user.id;
+      const key = hex(await hmac(enc.encode(env.BOT_TOKEN), "dk:" + user.id));
       ctx.waitUntil((async () => {
         // device присылает клиент, а привязка device→человек решает, чьи монеты
         // читаются. Поэтому меняем её только когда её ещё нет: иначе любой,
@@ -188,24 +194,20 @@ export default {
         // Привязка устройства к человеку: первая побеждает и не переписывается.
         // На ней стоит защита от самоподтверждения и от колец сговора — три
         // вкладки одного аккаунта перестают быть тремя разными людьми.
-        if (dev) {
+        {
           const b2 = await fetch(`${env.SUPABASE_URL}/rest/v1/tg_devices?on_conflict=device`, {
             method: "POST",
             headers: { ...sbHeaders(env), Prefer: "resolution=ignore-duplicates,return=minimal" },
             body: JSON.stringify({ device: dev, tg_id: user.id }),
           });
           if (!b2.ok) console.log("tg_devices bind", b2.status, await b2.text());
-          // Ключ устройства заводим здесь и только здесь: подпись initData уже
-          // проверена, значит это действительно его хозяин. Привязка «первому
-          // спросившему» на стороне базы отдавала аккаунт чужому.
-          const key = String(b.device_key || "");
-          if (key.length >= 16) {
-            const b3 = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/bind_device_key`, {
-              method: "POST", headers: sbHeaders(env),
-              body: JSON.stringify({ p_device: dev, p_key: key }),
-            });
-            if (!b3.ok) console.log("bind_device_key", b3.status, await b3.text());
-          }
+          // Ключ считается из ключа бота: одинаковый при каждом входе, но
+          // угадать его без токена нельзя. Хранить его на телефоне не нужно.
+          const b3 = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/bind_device_key`, {
+            method: "POST", headers: sbHeaders(env),
+            body: JSON.stringify({ p_device: dev, p_key: key }),
+          });
+          if (!b3.ok) console.log("bind_device_key", b3.status, await b3.text());
         }
         await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/bump_opens`, {
           method: "POST", headers: sbHeaders(env),
@@ -215,6 +217,7 @@ export default {
       // Признак владельца выдаёт сервер после проверки подписи. Сайт сам решить
       // это не может: он лежит на публичном GitHub Pages и верит чему угодно.
       return json({ ok: true, id: user.id, username: user.username || null,
+                    device: dev, key: key,
                     owner: String(user.id) === String(env.OWNER_CHAT_ID) });
     }
 
@@ -353,16 +356,10 @@ export default {
       // tg_users.device теперь замораживается на первом заходе, а настоящая
       // привязка живёт в tg_devices. Берём последнюю оттуда, иначе после смены
       // браузера /coins начислял бы на устройство, которым уже не пользуются.
-      const u = await fetch(
-        `${env.SUPABASE_URL}/rest/v1/tg_devices?tg_id=eq.${msg.chat.id}` +
-        `&order=bound_at.desc&limit=1&select=device`,
-        { headers: sbHeaders(env) }).then(r => r.json()).catch(() => []);
-      const dev = u && u[0] && u[0].device;
-      if (!dev) {
-        await tg(env, "sendMessage", { chat_id: msg.chat.id,
-          text: "Сначала открой карту в Telegram — иначе не за кем закрепить монеты." });
-        return new Response("ok");
-      }
+      // Раньше брали последнее привязанное устройство — а их накапливалось по
+      // одному на каждое открытие, и монеты уходили на ту личность, которой
+      // телефон уже не пользуется. Теперь device у человека ровно один.
+      const dev = "tg" + msg.chat.id;
       const r = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/dev_grant`, {
         method: "POST", headers: sbHeaders(env),
         body: JSON.stringify({ p_device: dev, p_amount: n, p_reset: reset }),

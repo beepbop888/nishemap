@@ -100,8 +100,14 @@
      читает. Право действовать от его имени даёт этот секрет: он не уходит
      никуда, кроме двух вызовов баланса и покупки, и заводится на сервере
      только через воркер, под проверенной подписью Telegram. */
+  /* Секрет для чтения баланса и покупки. Внутри Telegram его выдаёт воркер:
+     он считает его из ключа бота, поэтому секрет одинаков при каждом входе и
+     не зависит от того, переживёт ли что-нибудь localStorage. */
+  var SRV_KEY = "";
   function deviceKey() {
-    var k = localStorage.getItem("nishemap.dkey");
+    if (SRV_KEY) return SRV_KEY;
+    var k = null;
+    try { k = localStorage.getItem("nishemap.dkey"); } catch (e) {}
     if (!k) {
       // Math.random() здесь не годится: это не криптогенератор, его поток
       // предсказуем по нескольким выданным значениям — а угадавший ключ
@@ -112,16 +118,30 @@
       k = Array.prototype.map.call(buf, function (b) {
         return (b + 0x100).toString(16).slice(1);
       }).join("");
-      localStorage.setItem("nishemap.dkey", k);
+      try { localStorage.setItem("nishemap.dkey", k); } catch (e) {}
     }
     return k;
   }
 
+  /* Кто это. В webview Telegram localStorage не переживает открытие
+     приложения — проверено на живом человеке: семь новых «личностей» за четыре
+     минуты, а вместе с ними каждый раз новый пустой кошелёк. Поэтому внутри
+     Telegram личность выводится из подписанного tg_id и хранить её не нужно
+     вовсе. В обычном браузере остаётся прежняя строка: наград там всё равно нет. */
+  function tgUserId() {
+    try {
+      var u = TG && TG.initDataUnsafe && TG.initDataUnsafe.user;
+      return u && u.id ? String(u.id) : "";
+    } catch (e) { return ""; }
+  }
   function deviceId() {
-    var d = localStorage.getItem("nishemap.device");
+    var t = tgUserId();
+    if (t) return "tg" + t;
+    var d = null;
+    try { d = localStorage.getItem("nishemap.device"); } catch (e) {}
     if (!d) {
       d = "d" + Math.random().toString(36).slice(2) + Date.now().toString(36);
-      localStorage.setItem("nishemap.device", d);
+      try { localStorage.setItem("nishemap.device", d); } catch (e) {}
     }
     return d;
   }
@@ -2371,18 +2391,15 @@
      здесь нет и быть не должно, — поэтому строку целиком отдаём воркеру: он
      сверяет её и только после этого записывает человека. */
   function sendIdentity() {
-    setDev(false);                       // до ответа сервера прав нет ни у кого
     if (!CFG.WORKER_URL || !TG || !TG.initData) return;
     fetch(CFG.WORKER_URL + "/auth", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ init_data: TG.initData, device: deviceId(),
-                             device_key: deviceKey() }),
+      body: JSON.stringify({ init_data: TG.initData, device: deviceId() }),
     }).then(function (r) { return r.json(); })
       .then(function (res) {
         if (!res || !res.ok) return;
-        loadBalance();                       // ключ заведён — теперь можно спрашивать
-        if (!res.owner) return;
-        setDev(true); devPanel();
+        if (res.key) SRV_KEY = res.key;      // секрет пришёл с сервера, хранить не надо
+        loadBalance();                       // теперь можно спрашивать баланс
       }).catch(function () {});
   }
   function myCoins() {
@@ -2581,51 +2598,12 @@
      устройстве и только в интерфейсе. На сервер она не уходит.
      Включение: ?dev=<ключ> или t.me/nishemap_bot/map?startapp=<ключ>.
      Дальше режим держится сам, выключение — ?dev=0. */
-  /* Кто такой «dev».
-     Раньше панель открывал адрес: сначала ?dev=1, потом ?dev=<ключ> с проверкой
-     по SHA-256. И то и другое — решение на стороне клиента, то есть подделывается
-     тем, кто откроет исходник. Теперь решает сервер: воркер проверяет подпись
-     initData ключом бота и отвечает owner:true только для OWNER_CHAT_ID.
-     Подделать это, не имея ключа бота, нельзя.
+  /* Панель разработчика убрана по просьбе владельца. Проверять анимации и
+     пороги теперь нечем из интерфейса — тестовые монеты выдаёт бот командой
+     /coins, а медали появляются от них сами. Кода панели нет вовсе: даже
+     запертая, она была лишней дверью в готовом продукте. */
+  function devOn() { return false; }
 
-     Панель по-прежнему живёт в браузере, и упорный человек нарисует её себе
-     сам, — но делать ей будет нечего: монеты выдаёт /coins из чата владельца,
-     покупки решает buy_avatar, медали считает coin_stats. */
-  function devOn() {
-    try { return sessionStorage.getItem("nishemap.dev") === "1"; } catch (e) { return false; }
-  }
-  function setDev(on) {
-    try {
-      if (on) sessionStorage.setItem("nishemap.dev", "1");
-      else sessionStorage.removeItem("nishemap.dev");
-    } catch (e) {}
-    try { localStorage.removeItem("nishemap.dev"); } catch (e) {}   // хвост старой схемы
-    try { localStorage.removeItem("nishemap.dev.coins"); } catch (e) {}
-  }
-
-  function devPanel() {
-    if (!devOn() || document.getElementById("devbar")) return;
-    var bar = el("div", "devbar"); bar.id = "devbar";
-    function btn(label, fn) {
-      var b = el("button", "", label); b.type = "button";
-      b.addEventListener("click", fn); bar.appendChild(b); return b;
-    }
-    bar.appendChild(el("b", "", "DEV"));
-    // Монеты выдаёт бот: /coins 500 в чате с @nishemap_bot. Отсюда их выдать
-    // нельзя и не нужно — здесь нет ключа, которым пишут в журнал, и в этом
-    // весь смысл переезда баланса на сервер.
-    btn("обновить баланс", function () { loadBalance(); toast("Спросили сервер"); });
-    btn("монеты: /coins", function () { toast("Выдаёт бот: напиши ему /coins 500"); });
-    btn("+монеты", function () { coinCelebration(3); });
-    // по кнопке на каждую медаль: анимация проигрывается сразу, порог не нужен
-    Object.keys(TROPHIES).map(Number).sort(function (a, b) { return a - b; })
-      .forEach(function (p) { btn(String(p), function () { showTrophy(p, 10); }); });
-    btn("×", function () {
-      localStorage.removeItem("nishemap.dev");
-      bar.parentNode && bar.parentNode.removeChild(bar);
-    });
-    document.body.appendChild(bar);
-  }
 
   initMap();
   render();
@@ -2637,6 +2615,5 @@
   loadTotals();
   flushInbox();
   paintRank();
-  devPanel();
   setTimeout(openDeepLink, 1200);
 })();
