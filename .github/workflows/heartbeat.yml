@@ -36,14 +36,6 @@ jobs:
 
       - name: Напомнить владельцу
         env:
-          BOT: ${{ secrets.BOT_TOKEN }}
-        run: |
-          [ -n "$BOT" ] || { echo "нет BOT_TOKEN — напоминание пропущено"; exit 0; }
-          TEXT=$'\xf0\x9f\xab\x80 Ежемесячная проверка НищеMap\n\nРепозиторий шевельнулся сам, расписания в порядке.\n\nЧто стоит глянуть:\n• карта открывается: beepbop888.github.io/nishemap\n• база не уснула: supabase.com/dashboard\n• ./tools/watch.py — не накручивает ли кто\n\nЕсли месяц не трогать проект вообще, GitHub через 60 дней выключит расписания, и пульс базы замолчит.'
-          curl -s -o /dev/null -X POST "https://api.telegram.org/bot$BOT/sendMessage" \
-            -H 'Content-Type: application/json' \
-            --data-raw "$(python3 -c "
-import json, os
-print(json.dumps({'chat_id': '8362316002', 'text': os.environ['TEXT']}))
-" TEXT="$TEXT")"
-          echo "напоминание отправлено"
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          OWNER_CHAT_ID: "8362316002"
+        run: python3 .github/scripts/heartbeat_note.py
