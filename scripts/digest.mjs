@@ -166,6 +166,23 @@ const hook = await fetch(`https://api.telegram.org/bot${BOT}/getWebhookInfo`)
   .then(r => r.json()).catch(() => null);
 if (hook?.result?.url) {
   console.log("подписчиков собирает вебхук:", hook.result.url);
+  // ПУЛЬС для Supabase — главный. С включённым вебхуком этот запуск перестал
+  // трогать базу вообще, а на бесплатном тарифе неделя тишины усыпляет проект:
+  // вместе с ценами, монетами и модерацией. Раз в шесть часов дёргаем базу
+  // отсюда — этот путь проверяемый, его видно в Actions и в таблице kv.
+  const alive = await fetch(`${SB}/rest/v1/kv`, {
+    method: "POST",
+    headers: { ...sbHeaders, Prefer: "resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify({ key: "keepalive", value: new Date().toISOString() }),
+  }).then(r => r.ok).catch(() => false);
+  console.log("supabase keepalive:", alive ? "ok" : "СБОЙ");
+  if (!alive) {
+    // Молчащая база — не мелочь: карта уже наполовину мертва. Пусть владелец
+    // узнает об этом от бота, а не от посетителей.
+    await tg("sendMessage", { chat_id: process.env.OWNER_CHAT_ID || "",
+      text: "\u26A0\uFE0F База не ответила на пульс. Проверь, не уснул ли проект: supabase.com/dashboard" })
+      .catch(() => {});
+  }
 } else {
   const added = await collectSubscribers();
   console.log("new subscribers:", added);

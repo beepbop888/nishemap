@@ -24,5 +24,6 @@ jobs:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          OWNER_CHAT_ID: "8362316002"
           SEND_DIGEST: ${{ github.event.schedule == '0 12 * * 5' || inputs.send }}
         run: node scripts/digest.mjs

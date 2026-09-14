@@ -144,6 +144,32 @@ async function checkInitData(env, initData) {
 }
 
 export default {
+  /* Пульс раз в шесть часов. Бесплатный Supabase усыпляет проект примерно
+     после недели тишины — вместе с ценами, монетами и модерацией. Запрос
+     нарочно дешёвый: нам нужен сам факт обращения, а не данные.
+     Метку времени кладём в kv, чтобы можно было посмотреть, что пульс живой. */
+  async scheduled(event, env, ctx) {
+    const t0 = Date.now();
+    const r = await fetch(`${env.SUPABASE_URL}/rest/v1/kv?select=key&limit=1`,
+                          { headers: sbHeaders(env) }).catch(e => ({ ok: false, status: String(e) }));
+    const note = r.ok ? "ok" : "СБОЙ " + r.status;
+    console.log("keepalive", note, Date.now() - t0, "ms");
+    if (r.ok) {
+      await fetch(`${env.SUPABASE_URL}/rest/v1/kv`, {
+        method: "POST",
+        headers: { ...sbHeaders(env), Prefer: "resolution=merge-duplicates,return=minimal" },
+        body: JSON.stringify({ key: "keepalive", value: new Date().toISOString() }),
+      }).catch(() => {});
+    } else {
+      // Молчащая база — это не мелочь: значит карта уже наполовину мертва.
+      await tg(env, "sendMessage", {
+        chat_id: env.OWNER_CHAT_ID,
+        text: "\u26A0\uFE0F База не отвечает на пульс (" + note + ").\n" +
+              "Проверь, не уснул ли проект: supabase.com/dashboard",
+      }).catch(() => {});
+    }
+  },
+
   async fetch(request, env, ctx) {
     const path = new URL(request.url).pathname;
     if (request.method === "OPTIONS") {
