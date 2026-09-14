@@ -1,0 +1,49 @@
+name: Сердцебиение репозитория
+
+# GitHub отключает расписания в репозитории, где 60 дней ничего не происходило.
+# Отключится — умрёт пульс Supabase, а следом уснёт база: цены, монеты,
+# модерация и ДрищMap разом. Причём молча.
+#
+# Поэтому раз в месяц репозиторий «шевелится» сам: коммит с отметкой времени
+# плюс сообщение владельцу в Telegram. Месяц, а не 45 дней, потому что cron не
+# умеет «каждые 45 дней», а раз в месяц — с запасом внутри шестидесяти.
+#
+# Два действия, а не одно, нарочно: коммит должен сбрасывать счётчик GitHub сам,
+# но если вдруг не сбрасывает — приходит сообщение, и человек делает это руками.
+on:
+  schedule:
+    - cron: "0 9 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  beat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Отметить, что репозиторий жив
+        run: |
+          mkdir -p .github
+          date -u +"%Y-%m-%d %H:%M UTC" > .github/HEARTBEAT
+          git config user.name  "nishemap-heartbeat"
+          git config user.email "heartbeat@users.noreply.github.com"
+          git add .github/HEARTBEAT
+          git commit -m "Сердцебиение: репозиторий жив, расписания не трогать" || exit 0
+          git push
+
+      - name: Напомнить владельцу
+        env:
+          BOT: ${{ secrets.BOT_TOKEN }}
+        run: |
+          [ -n "$BOT" ] || { echo "нет BOT_TOKEN — напоминание пропущено"; exit 0; }
+          TEXT=$'\xf0\x9f\xab\x80 Ежемесячная проверка НищеMap\n\nРепозиторий шевельнулся сам, расписания в порядке.\n\nЧто стоит глянуть:\n• карта открывается: beepbop888.github.io/nishemap\n• база не уснула: supabase.com/dashboard\n• ./tools/watch.py — не накручивает ли кто\n\nЕсли месяц не трогать проект вообще, GitHub через 60 дней выключит расписания, и пульс базы замолчит.'
+          curl -s -o /dev/null -X POST "https://api.telegram.org/bot$BOT/sendMessage" \
+            -H 'Content-Type: application/json' \
+            --data-raw "$(python3 -c "
+import json, os
+print(json.dumps({'chat_id': '8362316002', 'text': os.environ['TEXT']}))
+" TEXT="$TEXT")"
+          echo "напоминание отправлено"
