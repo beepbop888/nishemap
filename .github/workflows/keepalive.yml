@@ -1,0 +1,31 @@
+name: Пульс Supabase
+
+# Бесплатный тариф Supabase усыпляет проект примерно после недели без обращений,
+# и вместе с ним засыпают цены, монеты, модерация и ДрищMap. Этот воркфлоу —
+# самый простой из возможных: он НЕ требует ни одного секрета, потому что бьёт
+# публичным ключом из config.js. Всё, что требует секретов, однажды окажется без
+# них — так уже случилось с рассылкой, которая месяц «успешно» ничего не делала.
+on:
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Разбудить базу
+        run: |
+          URL="https://svfnjfpawljkdcehzkgv.supabase.co"
+          KEY="sb_publishable_tUkrLQj0a8Lgod0f5UP5ng_QKD4vQlu"
+          CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 25 \
+            "$URL/rest/v1/avatar_prices?select=avatar_id&limit=1" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY")
+          echo "Supabase ответил: $CODE"
+          # 200 — живая. Всё остальное значит, что карта уже наполовину мертва,
+          # и воркфлоу обязан упасть: молчаливый зелёный галочка здесь хуже, чем
+          # красный крест.
+          test "$CODE" = "200"
