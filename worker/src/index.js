@@ -127,6 +127,23 @@ const modKeyboard = (id) => ({
   ],
 });
 
+/** Где лежат карточки жалобы: [[chat_id, message_id], ...] в kv под card:<id>.
+ *  Нужно, чтобы решение одного админа убирало карточку у всех. */
+const cardKey = (id) => "card:" + id;
+async function getCards(env, id) {
+  const rows = await fetch(
+    `${env.SUPABASE_URL}/rest/v1/kv?key=eq.${encodeURIComponent(cardKey(id))}&select=value`,
+    { headers: sbHeaders(env) }).then(r => r.ok ? r.json() : []).catch(() => []);
+  try { return rows && rows[0] ? JSON.parse(rows[0].value) : []; } catch { return []; }
+}
+async function setCards(env, id, cards) {
+  await fetch(`${env.SUPABASE_URL}/rest/v1/kv`, {
+    method: "POST",
+    headers: { ...sbHeaders(env), Prefer: "resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify({ key: cardKey(id), value: JSON.stringify(cards) }),
+  }).catch(() => {});
+}
+
 /** Сайт зовёт /report с другого домена — без CORS ответ до него не доедет. */
 function json(body) {
   return new Response(JSON.stringify(body), {
@@ -342,6 +359,11 @@ export default {
         // счётчик уже «учтён», а владелец ничего не увидел.
         // Дошло хотя бы одному админу — сигнал не потерян.
         if (!sent.some(s => s && s.ok === true)) { console.log("ping send failed", JSON.stringify(sent)); return; }
+        // Запоминаем каждую разосланную карточку, включая прошлые по этой же
+        // позиции: решение уберёт их все разом.
+        const fresh = sent.filter(s => s && s.ok && s.result)
+                          .map(s => [s.result.chat.id, s.result.message_id]);
+        await setCards(env, id, (await getCards(env, id)).concat(fresh));
         await fetch(`${env.SUPABASE_URL}/rest/v1/kv`, {
           method: "POST",
           headers: { ...sbHeaders(env), Prefer: "resolution=merge-duplicates,return=minimal" },
@@ -388,16 +410,26 @@ export default {
       await tg(env, "answerCallbackQuery", {
         callback_query_id: cb.id, text: ok ? done : "Не вышло — смотри логи",
       });
-      if (ok && cb.message) {
-        // Клавиатуру ОСТАВЛЯЕМ. Раньше editMessageText шёл без reply_markup, и
-        // Telegram убирал кнопки: промахнулся по «Скрыть» — исправить нечем,
-        // карточка мёртвая. Теперь любое решение перебивается соседней кнопкой.
-        const base = (cb.message.text || "").split("\n\n— ")[0];
-        await tg(env, "editMessageText", {
-          chat_id: cb.message.chat.id, message_id: cb.message.message_id,
-          text: base + "\n\n— " + done,
-          reply_markup: modKeyboard(id),
-        });
+      if (ok) {
+        // Решение принято — жалоба больше не нужна ни одному админу: карточка
+        // исчезает у всех. Цена — промах по кнопке уже не перебить соседней;
+        // итог виден во всплывашке выше, а новая жалоба пришлёт новую карточку.
+        const cards = await getCards(env, id);
+        if (cb.message) cards.push([cb.message.chat.id, cb.message.message_id]);
+        const seen = new Set();
+        for (const [chat, mid] of cards) {
+          if (seen.has(chat + ":" + mid)) continue;
+          seen.add(chat + ":" + mid);
+          const d = await tg(env, "deleteMessage", { chat_id: chat, message_id: mid });
+          // Старше 48 часов Telegram удалять не даёт — тогда хотя бы гасим кнопки.
+          if (!d || !d.ok) {
+            await tg(env, "editMessageReplyMarkup", {
+              chat_id: chat, message_id: mid, reply_markup: { inline_keyboard: [] },
+            });
+          }
+        }
+        await fetch(`${env.SUPABASE_URL}/rest/v1/kv?key=eq.${encodeURIComponent(cardKey(id))}`,
+                    { method: "DELETE", headers: sbHeaders(env) }).catch(() => {});
       }
       return new Response("ok");
     }
