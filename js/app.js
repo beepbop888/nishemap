@@ -98,7 +98,8 @@
   /* ---------- личность устройства и вклад ---------- */
   /* device — публичное имя: он лежит в submissions и views, которые аноним
      читает. Право действовать от его имени даёт этот секрет: он не уходит
-     никуда, кроме двух вызовов баланса и покупки, и заводится на сервере
+     никуда, кроме вызовов баланса, покупки и сдачи цены (там его сверяет
+     и стирает триггер автопроверки админов), и заводится на сервере
      только через воркер, под проверенной подписью Telegram. */
   /* Секрет для чтения баланса и покупки. Внутри Telegram его выдаёт воркер:
      он считает его из ключа бота, поэтому секрет одинаков при каждом входе и
@@ -168,6 +169,7 @@
   function verifiedAt(id) {
     var best = null;
     if (PHOTO_AT[id]) best = PHOTO_AT[id];
+    if (TEAM_AT[id] && (!best || TEAM_AT[id] > best)) best = TEAM_AT[id];
     var c = CONFIRMS[id] || {};
     Object.keys(c).forEach(function (d) { if (c[d] && (!best || c[d] > best)) best = c[d]; });
     return best;
@@ -185,7 +187,7 @@
   }
   function isVerified(id) {
     if (verifyAgeDays(id) > VERIFY_TTL) return false;   // проверка протухла
-    if (hasPhoto(id)) return true;
+    if (hasPhoto(id) || TEAM_AT[id]) return true;
     return confirmCount(id) >= 2 && confirmsSpread(id) >= CONFIRM_GAP_MS;
   }
 
@@ -257,7 +259,7 @@
     if (isVerified(it.id)) {
       var n = confirmCount(it.id), age = verifyAgeDays(it.id);
       var when = age === 0 ? "сегодня" : age + " дн. назад";
-      return { text: (hasPhoto(it.id) ? "проверено фото · " : "проверено народом · ") + when, cls: "is-fresh" };
+      return { text: (hasPhoto(it.id) ? "проверено фото · " : TEAM_AT[it.id] ? "проверено командой · " : "проверено народом · ") + when, cls: "is-fresh" };
     }
     if (confirmCount(it.id) >= 2 && confirmsSpread(it.id) < CONFIRM_GAP_MS) {
       return { text: "проверяем цену…", cls: "" };
@@ -1835,7 +1837,9 @@
     var formPhoto = f.photo && f.photo.files && f.photo.files[0];
     // бэкенд подключён — шлём в общую копилку (вердикт совета: мгновенно, без очереди)
     if (CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY) {
-      var withGeo = Object.assign({ device: deviceId() }, record);
+      // dkey нужен только админам: по нему сервер ставит «проверено командой».
+      // У остальных триггер его просто стирает, в таблице он не хранится.
+      var withGeo = Object.assign({ device: deviceId(), dkey: deviceKey() }, record);
       if (myAvatar()) withGeo.avatar = myAvatar();
       if (state.formPos) { withGeo.lat = state.formPos[0]; withGeo.lon = state.formPos[1]; }
       function post(body) {
@@ -1864,7 +1868,7 @@
             throw new Error("rejected");
           }
           // Без device строку отобьёт rl_submissions — повтор обязан его нести.
-          return post(Object.assign({ device: deviceId() }, record));
+          return post(Object.assign({ device: deviceId(), dkey: deviceKey() }, record));
         });
       }).then(function (resp) {
         // Раньше здесь не было ветки «не ок»: любой отказ сервера прятался за
@@ -1888,6 +1892,7 @@
           loadBalance();          // монета уже в журнале, но ещё зреет — покажем сколько
           resp.clone().json().then(function (rows) {
             if (rows && rows[0] && rows[0].id) {
+              if (rows[0].verified_at) TEAM_AT["ui-" + rows[0].id] = rows[0].verified_at;
               addMyItem("ui-" + rows[0].id);
               if (formPhoto) {
                 // Те же ворота, что у кнопки «📷 фото»: вчерашний снимок меню
@@ -2238,6 +2243,9 @@
 
   /* ---------- фото позиций ---------- */
   var PHOTOS = Object.create(null), PHOTO_AT = Object.create(null);
+  /* Цены админов: сервер ставит verified_at при записи, сверив секрет
+     устройства (миграция 41). Клиент только читает — решить сам не может. */
+  var TEAM_AT = Object.create(null);
   function loadPhotos() {
     if (!CFG.SUPABASE_URL) return;
     fetch(CFG.SUPABASE_URL + "/rest/v1/item_photos?select=item_id,photo_url,status,submitted_at&limit=1000", { headers: sbHeaders() })
@@ -2457,6 +2465,7 @@
   function submissionToVenues(rows) {
     var byVenue = {};
     rows.forEach(function (s) {
+      if (s.verified_at) TEAM_AT["ui-" + s.id] = s.verified_at;
       var key = (s.venue + "|" + s.address).toLowerCase();
       if (!byVenue[key]) {
         byVenue[key] = {
@@ -2538,7 +2547,7 @@
     var PAGE = 1000, acc = [], complete = false;
     (function page(from) {
       fetch(CFG.SUPABASE_URL +
-        "/rest/v1/submissions?select=id,dish,price,category,venue,address,lat,lon,submitted_at,avatar" +
+        "/rest/v1/submissions?select=id,dish,price,category,venue,address,lat,lon,submitted_at,avatar,verified_at" +
         "&order=submitted_at.desc",
         { headers: Object.assign({ Range: from + "-" + (from + PAGE - 1) }, sbHeaders()) })
         .then(function (r) { return r.json(); })

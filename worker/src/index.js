@@ -12,6 +12,8 @@
  * секретом воркера и наружу не выходит — владелец жмёт кнопку, ключ остаётся тут.
  *
  * Секреты: BOT_TOKEN, WEBHOOK_SECRET, SUPABASE_SERVICE_KEY, OWNER_CHAT_ID.
+ * Кроме владельца, админы — строки таблицы admins: им те же кнопки, жалобы,
+ * /coins и сообщение о каждом новом человеке.
  */
 
 // Кнопку «Запустить» Telegram не даёт повесить на мини-апп: она всегда шлёт
@@ -69,6 +71,27 @@ async function remember(env, chat) {
     // приветствие, а в пятничную рассылку не попадает. Видно в `wrangler tail`.
     if (!r.ok) console.log("subscribers insert", r.status, await r.text());
   } catch (e) { console.log("subscribers insert failed", String(e)); }
+}
+
+/* ---------- админы ---------- */
+
+/** Владелец из секрета плюс строки таблицы admins (миграция 41). Читаем на
+ *  каждый запрос: админов двое, а кэш держал бы снятого человека ещё долго.
+ *  База молчит — остаётся владелец: без него бот не должен терять управление. */
+async function admins(env) {
+  const ids = new Set([String(env.OWNER_CHAT_ID)]);
+  const rows = await fetch(`${env.SUPABASE_URL}/rest/v1/admins?select=tg_id`,
+                           { headers: sbHeaders(env) })
+    .then(r => r.ok ? r.json() : []).catch(() => []);
+  if (Array.isArray(rows)) rows.forEach(r => ids.add(String(r.tg_id)));
+  return [...ids];
+}
+const isAdmin = async (env, id) => (await admins(env)).includes(String(id));
+
+/** Одно сообщение всем админам. Возвращает ответы Telegram по каждому. */
+async function tellAdmins(env, body) {
+  const ids = await admins(env);
+  return Promise.all(ids.map(id => tg(env, "sendMessage", { ...body, chat_id: id })));
 }
 
 /* ---------- модерация ---------- */
@@ -162,8 +185,7 @@ export default {
       }).catch(() => {});
     } else {
       // Молчащая база — это не мелочь: значит карта уже наполовину мертва.
-      await tg(env, "sendMessage", {
-        chat_id: env.OWNER_CHAT_ID,
+      await tellAdmins(env, {
         text: "\u26A0\uFE0F База не отвечает на пульс (" + note + ").\n" +
               "Проверь, не уснул ли проект: supabase.com/dashboard",
       }).catch(() => {});
@@ -207,8 +229,11 @@ export default {
         // подсмотревший чужой device, переклеил бы его на себя.
         const cur = await fetch(
           `${env.SUPABASE_URL}/rest/v1/tg_users?tg_id=eq.${user.id}&select=device`,
-          { headers: sbHeaders(env) }).then(r2 => r2.json()).catch(() => []);
+          { headers: sbHeaders(env) }).then(r2 => r2.ok ? r2.json() : null).catch(() => null);
         const known = cur && cur[0] ? cur[0].device : undefined;
+        // Новый — только если база ответила «такого нет». Упавший запрос тоже
+        // даёт пустоту, и тогда админам прилетал бы «новичок» на каждый сбой.
+        const isNew = Array.isArray(cur) && cur.length === 0;
         if (known === undefined || known === null) row.device = dev;
         else if (known !== dev) console.log("device mismatch", user.id, "known vs sent");
         const r = await fetch(`${env.SUPABASE_URL}/rest/v1/tg_users?on_conflict=tg_id`, {
@@ -217,6 +242,20 @@ export default {
           body: JSON.stringify(row),
         });
         if (!r.ok) { console.log("tg_users upsert", r.status, await r.text()); return; }
+        if (isNew) {
+          const all = await fetch(`${env.SUPABASE_URL}/rest/v1/tg_users?select=tg_id`,
+            { headers: { ...sbHeaders(env), Prefer: "count=exact", Range: "0-0" } })
+            .then(r2 => parseInt((r2.headers.get("content-range") || "").split("/")[1] || "0", 10))
+            .catch(() => 0);
+          const name = esc([user.first_name, user.last_name].filter(Boolean).join(" ")) || "без имени";
+          await tellAdmins(env, {
+            text: "\u{1F195} Новый человек открыл карту\n" +
+                  `<a href="tg://user?id=${user.id}">${name}</a>` +
+                  (user.username ? " @" + esc(user.username) : "") +
+                  (all ? `\nВсего людей: ${all}` : ""),
+            parse_mode: "HTML",
+          });
+        }
         // Привязка устройства к человеку: первая побеждает и не переписывается.
         // На ней стоит защита от самоподтверждения и от колец сговора — три
         // вкладки одного аккаунта перестают быть тремя разными людьми.
@@ -289,8 +328,7 @@ export default {
           body: JSON.stringify({ p_item: id }),
         }).then(r => r.ok ? r.json() : null).catch(() => null);
 
-        const sent = await tg(env, "sendMessage", {
-          chat_id: env.OWNER_CHAT_ID,
+        const sent = await tellAdmins(env, {
           text: `\u{1F4E5} Жалоба #${n} на позицию\n\n` + head +
                 `\n<code>${esc(id)}</code>` +        // на что именно подействуют кнопки
                 `\nПожаловались: ${n}` +
@@ -302,7 +340,8 @@ export default {
         // Отметку «про эту жалобу уже сказали» ставим ПОСЛЕ отправки. Раньше
         // она писалась заранее, и упавший sendMessage терял сигнал навсегда:
         // счётчик уже «учтён», а владелец ничего не увидел.
-        if (!sent || sent.ok !== true) { console.log("ping send failed", JSON.stringify(sent)); return; }
+        // Дошло хотя бы одному админу — сигнал не потерян.
+        if (!sent.some(s => s && s.ok === true)) { console.log("ping send failed", JSON.stringify(sent)); return; }
         await fetch(`${env.SUPABASE_URL}/rest/v1/kv`, {
           method: "POST",
           headers: { ...sbHeaders(env), Prefer: "resolution=merge-duplicates,return=minimal" },
@@ -325,9 +364,9 @@ export default {
     /* нажата кнопка модерации */
     const cb = upd.callback_query;
     if (cb) {
-      // Кнопки видит только владелец, но сообщение можно переслать: проверяем,
+      // Кнопки видят только админы, но сообщение можно переслать: проверяем,
       // кто нажал, а не где лежит сообщение.
-      if (String(cb.from && cb.from.id) !== String(env.OWNER_CHAT_ID)) {
+      if (!cb.from || !(await isAdmin(env, cb.from.id))) {
         await tg(env, "answerCallbackQuery", { callback_query_id: cb.id, text: "Не твоя кнопка" });
         return new Response("ok");
       }
@@ -369,12 +408,12 @@ export default {
     if (!msg || !msg.chat || msg.chat.type !== "private") return new Response("ok");
 
     const text = (msg.text || "").trim();
-    /* Тестовые монеты ВЛАДЕЛЬЦУ: /coins 500 прибавляет, /coins reset обнуляет
+    /* Тестовые монеты АДМИНУ (себе): /coins 500 прибавляет, /coins reset обнуляет
        вместе с покупками. Чужому чату отвечаем молчанием, а не отказом: знать,
        что такая команда вообще есть, ему незачем. Начисляет СЕРВЕР, поэтому
        проверяются настоящие пути — покупка аватара, медали, витрина. */
     if (text.split(/\s+/)[0] === "/coins") {
-      if (String(msg.chat.id) !== String(env.OWNER_CHAT_ID)) return new Response("ok");
+      if (!(await isAdmin(env, msg.chat.id))) return new Response("ok");
       const arg = (text.split(/\s+/)[1] || "").toLowerCase();
       const reset = arg === "reset" || arg === "0";
       const n = reset ? 0 : Math.max(0, Math.min(100000, parseInt(arg, 10) || 0));
